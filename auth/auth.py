@@ -1,0 +1,6 @@
+BOT_TOKEN=''
+DB_CONF=''
+##############
+SUPPORT_USERNAME=''
+SUPPORT_USER_ID=''
+ADMIN_USER_ID=''
