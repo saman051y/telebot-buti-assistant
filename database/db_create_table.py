@@ -92,9 +92,9 @@ def createTimingTable():
         return False
 #######################################################################################
 def createReserveTable():
-    """reserve(id,user_id,date,start_time,end_time,payment)"""
+    """reserve(id,user_id,date,start_time,end_time,approved,payment)"""
     try:
-        sql=f""" CREATE TABLE IF NOT EXISTS users  (
+        sql=f""" CREATE TABLE IF NOT EXISTS reserve  (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id BIGINT NOT NULL ,
         date DATE NOT NULL,
@@ -102,6 +102,29 @@ def createReserveTable():
         end_time TIME NOT NULL,
         approved bool NOT NULl DEFAULT 0,
         payment INT NOT NULL DEFAULT 0
+    );"""
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor()  as cursor:
+                     cursor.execute(sql)
+                     connection.commit()# when something is created or updated or inserted;
+                     cursor.close()
+                     connection.close()
+                     return True
+            else:
+                logging.error("connection to database is not working")
+    except Error as e :
+        logging.error(f"in createReserveTable : {e}") 
+        return False
+#######################################################################################
+def createServicesTable():# todo work on this
+    """Services(id,time_slots,price,is_active)"""
+    try:
+        sql=f""" CREATE TABLE IF NOT EXISTS Services  (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        time_slots INT NOT NULL ,
+        price INT NOT NULL DEFAULT 0,
+        is_active BOOL NOT NULL DEFAULT TRUE
     );"""
         with mysql.connector.connect(**DB_CONFIG) as connection:
             if connection.is_connected():
