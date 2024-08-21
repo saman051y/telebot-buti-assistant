@@ -3,7 +3,7 @@ BOT_TOKEN='380744213:AAEA1Y8Y4mDjUDzbuJQzxceZbaUWcr80iAU' # @Test051ybot
 
 DB_CONFIG={
     'host':'localhost',
-    'port':'3333',
+    'port':'3306',
     'user':'root',
     'password':'root',
     'database':'beauty_ass'}

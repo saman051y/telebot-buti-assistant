@@ -1,7 +1,6 @@
 import logging
 import mysql.connector # type: ignore
 from mysql.connector import Error
-
 from auth.auth import DB_CONFIG
 #######################################################################################
 def createTables():
