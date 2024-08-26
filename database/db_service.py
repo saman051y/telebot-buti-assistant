@@ -205,6 +205,27 @@ def getServiceWithName(service_name:str):
                 return False
     except Error as e:
         logging.error(f" getServiceWithName: {e}") 
+##############################################################################
+def getAllServices():
+    try:
+        sql = f"""SELECT * FROM services ;"""
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor()  as cursor:
+                     cursor.execute(sql)
+                     service=cursor.fetchone()
+                     cursor.close()
+                     connection.close()
+                     if service is None:
+                        logging.error("service name not fund")
+                        return None
+                     return service
+                       
+            else:
+                logging.error("connection to database is not working")
+                return False
+    except Error as e:
+        logging.error(f" getAllServices: {e}") 
 
 ##############################################################################
 def serviceValidId(service_id:int):
