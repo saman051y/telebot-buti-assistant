@@ -1,0 +1,4 @@
+telebot
+mysql-connector-python
+convertdate
+schedule
