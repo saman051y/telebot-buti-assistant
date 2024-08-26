@@ -15,7 +15,14 @@ def createTables():
         created=createReserveTable()
         if not created:
             return False
+        created=createServicesTable()
+        if not created:
+            return False
+        created=createReserveServicesTable()
+        if not created:
+            return False
         logging.info("data base is working")
+        return True
     except Error as e:
         logging.error(f"createTables: {e}")
 #######################################################################################
@@ -118,14 +125,36 @@ def createReserveTable():
         return False
 #######################################################################################
 def createServicesTable():# todo work on this
-    """Services(id,time_slots,price,is_active)"""
+    """Services(id,name,time_slots,price,is_active)"""
     try:
-        sql=f""" CREATE TABLE IF NOT EXISTS Services  (
+        sql=f""" CREATE TABLE IF NOT EXISTS services  (
         id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL ,
         time_slots INT NOT NULL ,
         price INT NOT NULL DEFAULT 0,
         is_active BOOL NOT NULL DEFAULT TRUE
     );"""
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor()  as cursor:
+                     cursor.execute(sql)
+                     connection.commit()# when something is created or updated or inserted;
+                     cursor.close()
+                     connection.close()
+                     return True
+            else:
+                logging.error("connection to database is not working")
+    except Error as e :
+        logging.error(f"in createReserveTable : {e}") 
+        return False
+#######################################################################################
+def createReserveServicesTable():
+    """createReserveServicesTable(id,reserve_id,service_id)"""
+    try:
+        sql=f""" CREATE TABLE IF NOT EXISTS reserve_services (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        reserve_id INT NOT NULL ,
+        service_id INT NOT NULL DEFAULT 0);"""
         with mysql.connector.connect(**DB_CONFIG) as connection:
             if connection.is_connected():
                 with connection.cursor()  as cursor:

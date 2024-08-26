@@ -30,7 +30,7 @@ def insertReserve(user_id:int ,date:str,start_time:str,end_time:str,payment:int)
 def getReserveWithId(reserve_id :int):
     valid_id=reserveValidId(reserve_id=reserve_id)
     if not valid_id:
-        logging.error("DeleteReserve: id is not valid")
+        logging.error("getReserveWithId: id is not valid")
         return False
     try:
         sql =f"""SELECT * FROM reserve WHERE id = {reserve_id};"""
@@ -51,7 +51,7 @@ def getReserveWithId(reserve_id :int):
 def updateDateOfReserve(reserve_id:int,new_date:str):
     valid_id=reserveValidId(reserve_id=reserve_id)
     if not valid_id:
-        logging.error("DeleteReserve: id is not valid")
+        logging.error("updateDateOfReserve: id is not valid")
         return False
     try:
         sql = f"""UPDATE reserve 
@@ -74,7 +74,7 @@ def updateDateOfReserve(reserve_id:int,new_date:str):
 def updateTimeOfReserve(reserve_id:int,new_start_time:str,new_end_time:str):
     valid_id=reserveValidId(reserve_id=reserve_id)
     if not valid_id:
-        logging.error("DeleteReserve: id is not valid")
+        logging.error("updateTimeOfReserve: id is not valid")
         return False
     try:
         sql = f"""UPDATE reserve 
@@ -97,7 +97,7 @@ def updateTimeOfReserve(reserve_id:int,new_start_time:str,new_end_time:str):
 def updatePaymentOfReserve(reserve_id:int,new_payment:int):
     valid_id=reserveValidId(reserve_id=reserve_id)
     if not valid_id:
-        logging.error("DeleteReserve: id is not valid")
+        logging.error("updatePaymentOfReserve: id is not valid")
         return False
     try:
         sql = f"""UPDATE reserve 
@@ -120,7 +120,7 @@ def updatePaymentOfReserve(reserve_id:int,new_payment:int):
 def updateApprovedOfReserve(reserve_id:int,approved:bool):
     valid_id=reserveValidId(reserve_id=reserve_id)
     if not valid_id:
-        logging.error("DeleteReserve: id is not valid")
+        logging.error("updateApprovedOfReserve: id is not valid")
         return False
     try:
         sql = f"""UPDATE reserve 
