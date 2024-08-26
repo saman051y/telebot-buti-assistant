@@ -196,3 +196,26 @@ def updateUsername(user_id:int, username:str):
         logging.error(f"in updateUsername : {e}") 
         return False
 #######################################################################################
+def getUser(user_id:str):
+    """users(user_id,phone_number,username,join_date,name,last_name)"""
+    try:
+        sql=f"""SELECT *
+                FROM users
+                WHERE user_id = {user_id};"""
+        
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor()  as cursor:
+                     cursor.execute(sql)
+                     user=cursor.fetchall()
+                     cursor.close()
+                     connection.close()
+                     if user is None:
+                        return False
+                     else: 
+                         return user
+            else:
+                logging.error("can't find user that exist or not !")
+    except Error as e :
+        logging.error(f"in getAllInfo : {e}") 
+        return False

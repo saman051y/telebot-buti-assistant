@@ -73,8 +73,7 @@ def createTimingTable():
      hour_20 CHAR(4) NOT NULL DEFAULT 0,
      hour_21 CHAR(4) NOT NULL DEFAULT 0,
      hour_22 CHAR(4) NOT NULL DEFAULT 0,
-     hour_23 CHAR(4) NOT NULL DEFAULT 0,
-     hour_24 CHAR(4) NOT NULL DEFAULT 0
+     hour_23 CHAR(4) NOT NULL DEFAULT 0
     );"""
         with mysql.connector.connect(**DB_CONFIG) as connection:
             if connection.is_connected():
