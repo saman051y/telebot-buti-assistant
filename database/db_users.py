@@ -29,7 +29,7 @@ VALUES ({user_id}, '{phone_number}', '{username}' , '{join_date}' , '{name}' , '
 def findUserById(user_id):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:
-        user_exist = existUser(user_id)
+        user_exist = userValidId(user_id)
         if user_exist : 
             sql=f"""SELECT *
                     FROM users
@@ -51,7 +51,7 @@ def findUserById(user_id):
         logging.error(f"in findUserById : {e}") 
         return False
 #######################################################################################
-def existUser(user_id):
+def userValidId(user_id):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:
         sql=f"""SELECT user_id
@@ -78,7 +78,7 @@ def existUser(user_id):
 def getJoinDate(user_id):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:
-        user_exist= existUser(user_id)
+        user_exist= userValidId(user_id)
         if user_exist:
             sql=f"""SELECT join_date
                     FROM users
@@ -103,7 +103,7 @@ def getJoinDate(user_id):
 def updatePhone_Number(user_id:int, phone_number:str):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:
-        user_exist= existUser(user_id)
+        user_exist= userValidId(user_id)
         if user_exist:
             sql=f"""UPDATE users
                     SET phone_number = {phone_number}
@@ -127,7 +127,7 @@ def updatePhone_Number(user_id:int, phone_number:str):
 def updateName(user_id:int, name:str):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:
-        user_exist= existUser(user_id)
+        user_exist= userValidId(user_id)
         if user_exist:
             sql=f"""UPDATE users
                     SET name = '{name}'
@@ -151,7 +151,7 @@ def updateName(user_id:int, name:str):
 def updateLast_Name(user_id:int, last_name:str):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:
-        user_exist= existUser(user_id)
+        user_exist= userValidId(user_id)
         if user_exist:
             sql=f"""UPDATE users
                     SET last_name = '{last_name}'
@@ -175,7 +175,7 @@ def updateLast_Name(user_id:int, last_name:str):
 def updateUsername(user_id:int, username:str):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:
-        user_exist= existUser(user_id)
+        user_exist= userValidId(user_id)
         if user_exist:
             sql=f"""UPDATE users
                     SET username = '{username}'
