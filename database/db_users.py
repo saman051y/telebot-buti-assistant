@@ -124,7 +124,7 @@ def updatePhone_Number(user_id:int, phone_number:str):
         logging.error(f"in updatePhone_Number : {e}") 
         return False
 #######################################################################################
-def updateName(user_id:int, name:str):
+def update_Name_User(user_id:int, name:str):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:
         user_exist= userValidId(user_id)
@@ -148,7 +148,7 @@ def updateName(user_id:int, name:str):
         logging.error(f"in updateName : {e}") 
         return False
 #######################################################################################
-def updateLast_Name(user_id:int, last_name:str):
+def update_Last_Name_User(user_id:int, last_name:str):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:
         user_exist= userValidId(user_id)
@@ -207,7 +207,7 @@ def getUser(user_id:str):
             if connection.is_connected():
                 with connection.cursor()  as cursor:
                      cursor.execute(sql)
-                     user=cursor.fetchall()
+                     user=cursor.fetchone()
                      cursor.close()
                      connection.close()
                      if user is None:
@@ -217,5 +217,102 @@ def getUser(user_id:str):
             else:
                 logging.error("can't find user that exist or not !")
     except Error as e :
-        logging.error(f"in getAllInfo : {e}") 
+        logging.error(f"in getUser : {e}") 
         return False
+#######################################################################################
+def get_Name_User(user_id:str):
+    """users(user_id,phone_number,username,join_date,name,last_name)"""
+    try:
+        sql=f"""SELECT name
+                FROM users
+                WHERE user_id = {user_id};"""
+        
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor()  as cursor:
+                     cursor.execute(sql)
+                     user=cursor.fetchone()
+                     cursor.close()
+                     connection.close()
+                     if user is None:
+                        return False
+                     else: 
+                         return user[0]
+            else:
+                logging.error("can't get name of user")
+    except Error as e :
+        logging.error(f"in get_Name_User : {e}") 
+        return False
+#######################################################################################
+def get_Last_Name_User(user_id:str):
+    """users(user_id,phone_number,username,join_date,name,last_name)"""
+    try:
+            sql=f"""SELECT last_name
+                    FROM users
+                    WHERE user_id = {user_id};"""
+            
+            with mysql.connector.connect(**DB_CONFIG) as connection:
+                if connection.is_connected():
+                    with connection.cursor()  as cursor:
+                        cursor.execute(sql)
+                        user=cursor.fetchone()
+                        cursor.close()
+                        connection.close()
+                        if user is None:
+                            return False
+                        else: 
+                            return user[0]
+                else:
+                    logging.error("can't get last_name of user")
+    except Error as e :
+        logging.error(f"in get_Last_Name_User : {e}") 
+        return False
+#######################################################################################
+def get_phone_Number_User(user_id:str):
+    """users(user_id,phone_number,username,join_date,name,last_name)"""
+    try:
+            sql=f"""SELECT phone_number
+                    FROM users
+                    WHERE user_id = {user_id};"""
+            
+            with mysql.connector.connect(**DB_CONFIG) as connection:
+                if connection.is_connected():
+                    with connection.cursor()  as cursor:
+                        cursor.execute(sql)
+                        user=cursor.fetchone()
+                        cursor.close()
+                        connection.close()
+                        if user is None:
+                            return False
+                        else: 
+                            return user[0]
+                else:
+                    logging.error("can't phone_number of user")
+    except Error as e :
+        logging.error(f"in get_phone_Number_User : {e}") 
+        return False
+#######################################################################################
+def update_Phone_Number_User(user_id:int, phone_number:str):
+    """users(user_id,phone_number,username,join_date,name,last_name)"""
+    try:
+        user_exist= userValidId(user_id)
+        if user_exist:
+            sql=f"""UPDATE users
+                    SET phone_number = '{phone_number}'
+                    WHERE user_id = {user_id};"""
+            with mysql.connector.connect(**DB_CONFIG) as connection:
+                if connection.is_connected():
+                    with connection.cursor()  as cursor:
+                        cursor.execute(sql)
+                        connection.commit()
+                        cursor.close()
+                        connection.close()
+                        return True
+                else:
+                    logging.error("can't update username")
+        else: 
+            return False
+    except Error as e :
+        logging.error(f"in updateUsername : {e}") 
+        return False
+#######################################################################################

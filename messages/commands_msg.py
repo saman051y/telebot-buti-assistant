@@ -1,3 +1,10 @@
-start_msg="سلام خوش امدید"
-
-user_not_created='مشکلی پیش امده است لطفا مجدد ربات را راه انندازی کنید'
+text_start_msg="سلام خوش امدید"
+text_user_not_created='مشکلی پیش امده است لطفا مجدد ربات را راه انندازی کنید'
+text_enter_name = 'نام خود را وارد کنید'
+text_enter_last_name = 'نام خانوادگی خود را وارد کنید'
+text_enter_phone_number = 'شماره تماس خود را وارد کنید'
+text_compelet_enter_info = 'اطلاغات شما با موفیقت درج شد'
+text_update_name='نام ویرایش  شد'
+text_update_last_name='نام خانوادگی ویرایش شد'
+text_update_phone_number= 'شماره تماس ویرایش شد'
+text_account_info='شما میتوانید اطلاعات خود را ویرایش کنید '
