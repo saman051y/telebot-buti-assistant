@@ -1,4 +1,3 @@
-#at start
 mark_text_reserve_time='رزرو وقت'
 mark_text_reserved_time='مشاهده رزرو ها '
 mark_text_text_support='پشتیبانی'

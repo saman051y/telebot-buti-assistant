@@ -4,10 +4,10 @@ from mysql.connector import Error
 from auth.auth import DB_CONFIG
 ######################################################################################################
 """each hour save as  4 part like 0200 => {0 = not working, 1 = working ,2 = full} for each bit
-      0000 : {0 to 15 min ,15 to 30 min,30 min to 45,45 to 60}
-"""
+      0000 : {0 to 15 min ,15 to 30 min,30 min to 45,45 to 60}"""
 ######################################################################################################
-def insertTiming(record_date: str , hour_00 :str  , hour_01 :str  , hour_02 :str  , hour_03 :str  ,
+#######################################################################################################!Insert Section
+def db_Timing_Insert_Time(record_date: str , hour_00 :str  , hour_01 :str  , hour_02 :str  , hour_03 :str  ,
                   hour_04 :str  , hour_05 :str  , hour_06 :str  , hour_07 :str  , hour_08 :str  , hour_09 :str  ,
                     hour_10 :str  , hour_11 :str  , hour_12 :str  , hour_13 :str  , hour_14 :str  ,
                       hour_15 :str  , hour_16 :str  , hour_17 :str  , hour_18 :str  , hour_19 :str  ,
@@ -33,33 +33,13 @@ VALUES ('{record_date}', '{hour_00}', '{hour_01}' , '{hour_02}' , '{hour_03}' , 
                      connection.close()
                      return True
             else:
-                logging.error("can't insert new Timing")
+                logging.error("Error in db_Timing_Insert_Time")
     except Error as e :
-        logging.error(f"in insertTiming : {e}") 
+        logging.error(f"Error in db_Timing_Insert_Time : {e}") 
         return False
-    ######################################################################################################
-def updateTime(record_date:str, hour:str , value:str):
-    """ hour should be like {01}  & value should be like 0100"""
-    try:
-            sql=f"""UPDATE timing
-                    SET hour_{hour} = '{value}'
-                    WHERE record_date = '{record_date}';"""
-            
-            with mysql.connector.connect(**DB_CONFIG) as connection:
-                if connection.is_connected():
-                    with connection.cursor()  as cursor:
-                        cursor.execute(sql)
-                        connection.commit()# when something is created or updated or inserted;
-                        cursor.close()
-                        connection.close()
-                        return True
-                else:
-                    logging.error("can't update hour")
-    except Error as e :
-        logging.error(f"in updateTime : {e}") 
-        return False
- ######################################################################################################               
-def getDate(record_date:str):
+########################################################################################################
+#########################################################################################################!Get Section             
+def db_Timing_Get_Date(record_date:str):
     """value should be like 2023-02-07"""
     try:
         sql=f"""SELECT *
@@ -78,12 +58,12 @@ def getDate(record_date:str):
                      else: 
                          return date
             else:
-                logging.error("can't get a date")
+                logging.error("Error in db_Timing_Get_Date")
     except Error as e :
-        logging.error(f"in getDate : {e}") 
+        logging.error(f"Error in db_Timing_Get_Date : {e}") 
         return False       
 ######################################################################################################
-def getTime(record_date:str , hour:str):
+def db_Timing_Get_Time(record_date:str , hour:str):
     """hour should be like {04}"""
     try:
         sql=f"""SELECT hour_{hour}
@@ -102,8 +82,30 @@ def getTime(record_date:str , hour:str):
                      else: 
                          return date[0]
             else:
-                logging.error("can't get time of a day")
+                logging.error("Error in db_Timing_Get_Time")
     except Error as e :
-        logging.error(f"in getTime : {e}") 
+        logging.error(f"Error in db_Timing_Get_Time : {e}") 
         return False     
 ######################################################################################################
+#######################################################################################################!Update Section
+def db_Timing_Update_Time(record_date:str, hour:str , value:str):
+    """ hour should be like {01}  & value should be like 0100"""
+    try:
+            sql=f"""UPDATE timing
+                    SET hour_{hour} = '{value}'
+                    WHERE record_date = '{record_date}';"""
+            
+            with mysql.connector.connect(**DB_CONFIG) as connection:
+                if connection.is_connected():
+                    with connection.cursor()  as cursor:
+                        cursor.execute(sql)
+                        connection.commit()# when something is created or updated or inserted;
+                        cursor.close()
+                        connection.close()
+                        return True
+                else:
+                    logging.error("Error in db_Timing_Update_Time")
+    except Error as e :
+        logging.error(f"Error in db_Timing_Update_Time: {e}") 
+        return False
+ #######################################################################################################

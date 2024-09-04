@@ -18,9 +18,9 @@ bot =TeleBot(token = BOT_TOKEN, parse_mode="HTML")
 @bot.message_handler(commands=['start'])
 def start(msg : Message):
     user_id=msg.from_user.id
-    user_is_valid=userValidId(user_id=user_id)
+    user_is_valid=db_Users_Validation_User_By_Id(user_id=user_id)
     if not user_is_valid:
-        user_is_created =insertNewUser(user_id=user_id,username=msg.from_user.username,join_date=current_date(),name='empty',last_name='empty',phone_number='0')
+        user_is_created =db_Users_Insert_New_User(user_id=user_id,username=msg.from_user.username,join_date=current_date(),name='empty',last_name='empty',phone_number='0')
         if not user_is_created:
             text=text_user_not_created
             bot.send_message(chat_id=user_id,text=text,reply_markup=ReplyKeyboardRemove())
@@ -33,12 +33,14 @@ def start(msg : Message):
     text=text_start_msg
     bot.send_message(chat_id=user_id,text=text,reply_markup=markup)
 #######################################################################
+#######################################################################! Insert Reserve Time Section
 #* mark_text_reserve_time handler
 @bot.message_handler(func= lambda m:m.text == mark_text_reserve_time)
 def reserve_time(msg : Message):
-        name = get_Name_User(msg.from_user.id)
-        last_name = get_Last_Name_User(msg.from_user.id)
-        phone_number = get_phone_Number_User(msg.from_user.id)
+        name = db_Users_Get_Name_User(msg.from_user.id)
+        last_name = db_Users_Get_Last_Name_User(msg.from_user.id)
+        phone_number = db_Users_Get_Phone_Number_User(msg.from_user.id)
+        db_Users_Update_Username_User(user_id=msg.from_user.id , username=msg.from_user.username)#update Username while every reservation
         if name == 'empty' :
             bot.send_message(chat_id=msg.from_user.id,text=text_enter_name)
             bot.set_state(user_id=msg.chat.id,state=user_State.state_enter_name,chat_id=msg.chat.id)
@@ -47,26 +49,27 @@ def reserve_time(msg : Message):
             return True
 #######################################################################
 @bot.message_handler(state=user_State.state_enter_name)
-def get_name(msg : Message):
-    update_Name_User(user_id=msg.from_user.id ,name=msg.text)
+def reserve_section_enter_name_frist_time(msg : Message):
+    db_Users_Update_Name_User(user_id=msg.from_user.id ,name=msg.text)
     bot.send_message(chat_id=msg.from_user.id,text=text_enter_last_name)
     bot.set_state(user_id=msg.chat.id,state=user_State.state_enter_last_name,chat_id=msg.chat.id)
 #######################################################################
 @bot.message_handler(state=user_State.state_enter_last_name)
-def get_lastname(msg : Message):
-    update_Last_Name_User(user_id=msg.from_user.id,last_name=msg.text)
+def reserve_section_state_enter_lastname(msg : Message):
+    db_Users_Update_Last_Name_User(user_id=msg.from_user.id,last_name=msg.text)
     bot.send_message(chat_id=msg.from_user.id,text=text_enter_phone_number)
     bot.set_state(user_id=msg.chat.id,state=user_State.state_enter_phone_number,chat_id=msg.chat.id)
 #######################################################################
 @bot.message_handler(state=user_State.state_enter_phone_number)
-def get_phone_number(msg : Message):
-    update_Phone_Number_User(user_id=msg.from_user.id ,phone_number=msg.text)
+def reserve_section_state_enter_phone_number(msg : Message):
+    db_Users_Update_Phone_Number_User(user_id=msg.from_user.id ,phone_number=msg.text)
     bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)
     bot.send_message(chat_id=msg.from_user.id,text=text_compelet_enter_info)
 #######################################################################
+########################################################################!Account Info Section
 @bot.message_handler(func= lambda m:m.text == mark_text_account_info)
 def account_info(msg : Message):
-    data=getUser(msg.from_user.id)
+    data=db_Users_Find_User_By_Id(msg.from_user.id)
     text = text_cleaner_info(data)
     bot.send_message(chat_id=msg.from_user.id,text=text)
     markup=ReplyKeyboardMarkup(resize_keyboard=True)
@@ -77,35 +80,35 @@ def account_info(msg : Message):
     bot.send_message(chat_id=msg.from_user.id,text=text,reply_markup=markup)
 #######################################################################
 @bot.message_handler(func= lambda m:m.text == mark_text_update_name)
-def update_name(msg : Message):
+def account_info_update_last_name(msg : Message):
     bot.send_message(chat_id=msg.from_user.id,text=text_enter_name)
     bot.set_state(user_id=msg.chat.id,state=user_State.state_update_name,chat_id=msg.chat.id)
 #######################################################################
 @bot.message_handler(state=user_State.state_update_name)
-def update_name2(msg : Message):
-    update_Name_User(user_id=msg.from_user.id , name=msg.text )
+def account_info_state_update_last_name(msg : Message):
+    db_Users_Update_Name_User(user_id=msg.from_user.id , name=msg.text )
     bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)
     bot.send_message(chat_id=msg.from_user.id,text=text_update_name)
 #######################################################################
 @bot.message_handler(func= lambda m:m.text == mark_text_update_last_name)
-def update_last_name(msg : Message):
+def account_info_update_last_name(msg : Message):
     bot.send_message(chat_id=msg.from_user.id,text=text_enter_last_name)
     bot.set_state(user_id=msg.chat.id,state=user_State.state_update_last_name,chat_id=msg.chat.id)
 ######################################################################
 @bot.message_handler(state=user_State.state_update_last_name)
-def update_last_name2(msg : Message):
-    update_Last_Name_User(user_id=msg.from_user.id , last_name=msg.text )
+def account_info_state_update_last_name(msg : Message):
+    db_Users_Update_Last_Name_User(user_id=msg.from_user.id , last_name=msg.text )
     bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)
-    bot.send_message(chat_id=msg.from_user.id,text=text_update_name)
+    bot.send_message(chat_id=msg.from_user.id,text=text_update_last_name)
 ######################################################################
 @bot.message_handler(func= lambda m:m.text == mark_text_update_phone_number)
-def update_phone_number(msg : Message):
+def account_info_update_phone_number(msg : Message):
     bot.send_message(chat_id=msg.from_user.id,text=text_enter_phone_number)
     bot.set_state(user_id=msg.chat.id,state=user_State.state_update_phone_number,chat_id=msg.chat.id)
 #######################################################################
 @bot.message_handler(state=user_State.state_update_phone_number)
-def udpate_phone_number(msg : Message):
-    update_Phone_Number_User(user_id=msg.from_user.id , phone_number=msg.text )
+def account_info_state_udpate_phone_number(msg : Message):
+    db_Users_Update_Phone_Number_User(user_id=msg.from_user.id , phone_number=msg.text )
     bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)
     bot.send_message(chat_id=msg.from_user.id,text=text_update_phone_number)
 #######################################################################
