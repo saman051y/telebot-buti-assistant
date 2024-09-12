@@ -8,7 +8,7 @@ DB_CONFIG={
     'password':'root',
     'database':'beauty_ass'}
 ##############
-SUPPORT_USERNAME=''
+SUPPORT_USERNAME='https://t.me/Ho3einNa3iri'
 SUPPORT_USER_ID=''
-MAIN_ADMIN_USER_ID=340500740
+MAIN_ADMIN_USER_ID=[423977498, 0 , 0]
 ADMIN_USER_ID=''

@@ -196,6 +196,50 @@ def db_Users_Get_Phone_Number_User(user_id:str):
         logging.error(f"Error in db_Users_Get_Phone_Number_User : {e}") 
         return False
 #######################################################################################
+def db_Users_Get_All_Users():
+    try:
+        sql = f"""SELECT * FROM users ;"""
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor()  as cursor:
+                     cursor.execute(sql)
+                     users=cursor.fetchall()
+                     cursor.close()
+                     connection.close()
+                     if users is None:
+                        logging.error("service name not fund")
+                        return None
+                     return users
+                       
+            else:
+                logging.error("connection to database is not working")
+                return False
+    except Error as e:
+        logging.error(f" db_Users_Get_All_Users: {e}") 
+#######################################################################################   
+def db_Users_Get_Username_user(user_id:str):
+    """users(user_id,phone_number,username,join_date,name,last_name)"""
+    try:
+            sql=f"""SELECT username
+                    FROM users
+                    WHERE user_id = {user_id};"""
+            
+            with mysql.connector.connect(**DB_CONFIG) as connection:
+                if connection.is_connected():
+                    with connection.cursor()  as cursor:
+                        cursor.execute(sql)
+                        user=cursor.fetchone()
+                        cursor.close()
+                        connection.close()
+                        if user is None:
+                            return False
+                        else: 
+                            return user[0]
+                else:
+                    logging.error("Error in db_Users_Get_Username_user")
+    except Error as e :
+        logging.error(f"Error in db_Users_Get_Username_user : {e}") 
+        return False
 ########################################################################################!Update Section
 def db_Users_Update_Name_User(user_id:int, name:str):
     """users(user_id,phone_number,username,join_date,name,last_name)"""

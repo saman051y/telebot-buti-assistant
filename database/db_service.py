@@ -6,7 +6,7 @@ from mysql.connector import Error
 from auth.auth import DB_CONFIG
     # """Services(id,name,time_slots,price,is_active)"""
 #todo: insert new timing for today
-def insertService(name :str,time_slots:int,price:int,is_active:bool):
+def db_Service_Insert_Service(name :str,time_slots:int,price:int,is_active:bool):
     try:
         sql =f"""INSERT INTO services (name,time_slots,price,is_active) 
         VALUES ('{name}',{time_slots},{price},{is_active});"""
@@ -24,9 +24,8 @@ def insertService(name :str,time_slots:int,price:int,is_active:bool):
     except Error as e:
         logging.error(f" insertService : {e}") 
 ##############################################################################
-#todo update a time 
-def updateServicePrice(service_id:int,price:int):
-    valid_id=serviceValidId(service_id=service_id)
+def db_Service_Update_Service_Price(service_id:int,price:int):
+    valid_id=db_Service_Service_Valid_Id(service_id=service_id)
     if not valid_id:
         logging.error("updateServicePrice: id is not valid")
         return False
@@ -46,10 +45,10 @@ def updateServicePrice(service_id:int,price:int):
                 logging.error("connection to database is not working")
                 return False
     except Error as e:
-        logging.error(f" updateServicePrice: {e}") 
+        logging.error(f" updateServicePrice: {e}")
 ##############################################################################
-def updateServiceTimeSlot(service_id:int,time_slots:int):
-    valid_id=serviceValidId(service_id=service_id)
+def db_Service_Update_Service_Time_Slot(service_id:int,time_slots:int):
+    valid_id=db_Service_Service_Valid_Id(service_id=service_id)
     if not valid_id:
         logging.error("updateServiceTimeSlot: id is not valid")
         return False
@@ -69,10 +68,10 @@ def updateServiceTimeSlot(service_id:int,time_slots:int):
                 logging.error("connection to database is not working")
                 return False
     except Error as e:
-        logging.error(f" updateServiceTimeSlot: {e}") 
+        logging.error(f" updateServiceTimeSlot: {e}")
 ##############################################################################
-def updateServiceName(service_id:int,name:str):
-    valid_id=serviceValidId(service_id=service_id)
+def db_Service_Update_Service_Name(service_id:int,name:str):
+    valid_id=db_Service_Service_Valid_Id(service_id=service_id)
     if not valid_id:
         logging.error("updateServiceName: id is not valid")
         return False
@@ -93,9 +92,33 @@ def updateServiceName(service_id:int,name:str):
                 return False
     except Error as e:
         logging.error(f" updateServiceName: {e}") 
+
 ##############################################################################
-def getIsActiveServices(service_id:int) -> bool:
-    valid_id=serviceValidId(service_id=service_id)
+def db_Service_Update_Service_Is_Active(service_id:int , is_active:bool):
+    valid_id=db_Service_Service_Valid_Id(service_id=service_id)
+    if not valid_id:
+        logging.error("enableService: id is not valid")
+        return False
+    try:
+        sql = f"""UPDATE services 
+                  SET is_active = '{is_active}'  
+                  WHERE id = {service_id};"""
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor()  as cursor:
+                     cursor.execute(sql)
+                     connection.commit()
+                     cursor.close()
+                     connection.close()
+                     return True
+            else:
+                logging.error("connection to database is not working")
+                return False
+    except Error as e:
+        logging.error(f" update is_active service: {e}") 
+##############################################################################
+def db_Service_Get_Is_Active_Services(service_id:int) -> bool:
+    valid_id=db_Service_Service_Valid_Id(service_id=service_id)
     if not valid_id:
         logging.error("getIsActiveServices: id is not valid")
         return False
@@ -116,8 +139,8 @@ def getIsActiveServices(service_id:int) -> bool:
     except Error as e:
         logging.error(f" getIsActiveServices: {e}") 
 ##############################################################################
-def enableService(service_id:int):
-    valid_id=serviceValidId(service_id=service_id)
+def db_Service_Enable_Service(service_id:int):
+    valid_id=db_Service_Service_Valid_Id(service_id=service_id)
     if not valid_id:
         logging.error("enableService: id is not valid")
         return False
@@ -139,8 +162,8 @@ def enableService(service_id:int):
     except Error as e:
         logging.error(f" enableService: {e}") 
 ##############################################################################
-def disableService(service_id:int):
-    valid_id=serviceValidId(service_id=service_id)
+def db_Service_Disable_Service(service_id:int):
+    valid_id=db_Service_Service_Valid_Id(service_id=service_id)
     if not valid_id:
         logging.error("disableService: id is not valid")
         return False
@@ -162,8 +185,8 @@ def disableService(service_id:int):
     except Error as e:
         logging.error(f" disableService: {e}") 
 ##############################################################################
-def getServiceWithId(service_id:int):
-    valid_id=serviceValidId(service_id=service_id)
+def db_Service_Get_Service_With_Id(service_id:int):
+    valid_id=db_Service_Service_Valid_Id(service_id=service_id)
     if not valid_id:
         logging.error("getServiceWithId: id is not valid")
         return False
@@ -184,7 +207,7 @@ def getServiceWithId(service_id:int):
     except Error as e:
         logging.error(f" getServiceWithId: {e}") 
 ##############################################################################
-def getServiceWithName(service_name:str):
+def db_Service_Get_Service_With_Name(service_name:str):
     try:
         sql = f"""SELECT * FROM services 
                   WHERE name = '{service_name}';"""
@@ -206,21 +229,20 @@ def getServiceWithName(service_name:str):
     except Error as e:
         logging.error(f" getServiceWithName: {e}") 
 ##############################################################################
-def getAllServices():
+def db_Service_Get_All_Services():
     try:
         sql = f"""SELECT * FROM services ;"""
         with mysql.connector.connect(**DB_CONFIG) as connection:
             if connection.is_connected():
                 with connection.cursor()  as cursor:
                      cursor.execute(sql)
-                     service=cursor.fetchone()
+                     service=cursor.fetchall()
                      cursor.close()
                      connection.close()
                      if service is None:
                         logging.error("service name not fund")
                         return None
                      return service
-                       
             else:
                 logging.error("connection to database is not working")
                 return False
@@ -228,7 +250,7 @@ def getAllServices():
         logging.error(f" getAllServices: {e}") 
 
 ##############################################################################
-def serviceValidId(service_id:int):
+def db_Service_Service_Valid_Id(service_id:int):
     try:
         sql = f"""SELECT COUNT(*) 
                   FROM services 
@@ -249,8 +271,8 @@ def serviceValidId(service_id:int):
         logging.error(f"serviceValidId : {e}")
         return False
 ########################################################
-def DeleteService(service_id:int):
-    valid_id=serviceValidId(service_id=service_id)
+def db_Service_Delete_Service(service_id:int):
+    valid_id=db_Service_Service_Valid_Id(service_id=service_id)
     if not valid_id:
         logging.error("DeleteService: id is not valid")
         return False
@@ -270,3 +292,4 @@ def DeleteService(service_id:int):
                 return False
     except Error as e:
         logging.error(f"DeleteService : {e}")
+########################################################
