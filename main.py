@@ -327,7 +327,7 @@ def get_message_to_send(msg : Message):
             bot.get_chat(user[0])
             bot.send_message(chat_id=user[0],text=text)
         except apihelper.ApiTelegramException as e:
-            logging.error(f"{user[0]} not found")
+            logging.error(f"user with ID {user[0]} not found to send message")
     bot.send_message(chat_id=msg.chat.id,text=text_sent_message_to_all_users)
     bot.delete_state(user_id= msg.from_user.id,chat_id=msg.chat.id)
 ###########################################
@@ -479,7 +479,7 @@ def startMessageToAdmin(enable=True,disable_notification=True):
                 bot.send_document(admin, log_file,caption=f"{text}\n{error_message}",disable_notification=disable_notification)
             logging.info(f"send last log to admin [{admin}] : {latest_log_file}")
         else:
-            logging.info("هیچ فایل لاگی پیدا نشد.")
+            logging.info("ther is no log file to show")
             bot.send_message(chat_id=admin,text=f"{text}\n ⛔️فایل log وجود ندارد⛔️",disable_notification=disable_notification)
 
 ########################################################################! END :)
