@@ -1,6 +1,7 @@
 from auth.auth import *
 from database.db_service import *
 from database.db_users import *
+from functions.time_date import convert_time_slot_to_time
 #######################################################################
 def text_cleaner_info(data):
     user_id = data[0]
@@ -21,7 +22,7 @@ def validation_admin(user_id):
 def createLableServicesToShowOnButton(user_id):
     data = db_Service_Get_Service_With_Id(user_id)
     name=data[1]
-    time_slot=data[2]
+    time_slot=convert_time_slot_to_time(data[2])
     price=data[3]
     is_active=data[4]
     if is_active == 1:

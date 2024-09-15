@@ -21,7 +21,7 @@ text_update_service_time_slots = 'زمان مورد نیاز را وارد کن�
 text_update_service_price = 'قیمت این خدمات را وارد کنید'
 text_update_service_is_active = 'فعال باشد یا خیر(با 0 و 1 جواب بدهید)'
 text_update_service_error_name_duplicated='خدماتی با این اسم وجود دارد '
-text_update_service_enter_all_info = 'نمام اطلاعات با موفقیت درج شد'
+text_update_service_enter_all_info = 'تمام اطلاعات با موفقیت درج شد'
 text_update_service_error_int ='لطفا فقط مقادیر عددی وارد کنید'
 text_update_service_error_is_active='فقط مقدار 0 یا1 وارد کنید'
 text_update_services_all = 'شما میتوانید با انتخاب هر خدمات ، آن را ویرایش کنید'
@@ -29,8 +29,11 @@ text_updated_service_name='نام خدمات ویرایش شد'
 text_updated_service_time_slots='تایم خدمات ویرایش شد'
 text_updated_service_price='قیمت خدمات ویرایش شد'
 text_updated_service_is_active='فعال بودن خدمات ویرایش شد'
-
+text_time_is_not_valid="ساعت ورودی معتبر نمیباشد"
 
 text_user_find ='شناسه عددی مور نظر خود را ارسال کتید'
 text_user_not_find ='کاربری با این شناسه عددی یافت نشد، لظفا مجددا سعی کنید'
 text_users_list='لیست مخاطبین'
+msg_restart='ربات مجددا راه اندازی شد'
+text_message_to_all_users="پیامی برای ارسال به همه برای من بنویسید"
+text_sent_message_to_all_users="پیام شما ارسال شد"

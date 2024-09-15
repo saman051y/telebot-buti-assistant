@@ -1,4 +1,8 @@
 #messages for all users
+from telebot.types import InlineKeyboardButton ,InlineKeyboardMarkup
+
+from messages.messages_function import createLableServicesToShowOnButton
+
 ###############################################################! for client
 mark_text_reserve_time='رزرو وقت'
 mark_text_reserved_time='مشاهده رزرو ها '
@@ -26,3 +30,20 @@ mark_text_admin_update_price='ویرایش قیمت'
 mark_text_admin_update_is_active='تغییر فعال بودن'
 mark_text_admin_delete_service='حذف سرویس'
 
+def markup_service(ServiceID:int):
+    markup = InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton(text=mark_text_admin_update_name ,callback_data=f'editServiceName_{ServiceID}'))
+    markup.add(InlineKeyboardButton(text=mark_text_admin_update_time_slots ,callback_data=f'editServiceTimeSlot_{ServiceID}'))
+    markup.add(InlineKeyboardButton(text=mark_text_admin_update_price ,callback_data=f'editServicePrice_{ServiceID}'))
+    markup.add(InlineKeyboardButton(text=mark_text_admin_update_is_active ,callback_data=f'editServiceIsAcive_{ServiceID}'))
+    markup.add(InlineKeyboardButton(text=mark_text_admin_delete_service ,callback_data=f'editServiceDelete_{ServiceID}'))
+    return markup
+
+def makrup_service_list(sorted_serviceData):
+    markup = InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton(text=mark_text_admin_service_insert ,callback_data=mark_text_admin_service_insert))
+    for item in sorted_serviceData :
+        text=createLableServicesToShowOnButton(item[0])
+        button = InlineKeyboardButton(text=text ,callback_data=f'showServiceList_{item[0]}')
+        markup.add(button)
+    return markup

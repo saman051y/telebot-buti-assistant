@@ -1,33 +1,34 @@
 from datetime import datetime,timedelta
 import logging
-from telebot import TeleBot , custom_filters , types
+from telebot import TeleBot , custom_filters , types,apihelper
 from telebot.storage import StateMemoryStorage
 from telebot.types import InlineKeyboardButton ,InlineKeyboardMarkup,ReplyKeyboardMarkup,KeyboardButton,Message,CallbackQuery,ReplyKeyboardRemove
 from auth.auth import *
 from database.db_create_table import createTables
 from database.db_users import *
+from functions.log_functions import get_last_errors, get_latest_log_file, log_test_error, remove_old_logs
 from functions.time_date import *
 from messages.commands_msg import *
 from messages.markups_text import *
 from messages.messages_function import *
 from states import *
 from database.db_service import *
+from functions.time_date import *
 bot =TeleBot(token = BOT_TOKEN, parse_mode="HTML")
 
 #######################################################################!  Admin Panel
 @bot.message_handler(commands=['admin'])
 def start(msg : Message):
-    if validation_admin :
-            markup=ReplyKeyboardMarkup(resize_keyboard=True)
-            markup.add(mark_text_admin_reserved_time , mark_text_admin_empty_time)
-            markup.add(mark_text_admin_set_work_time)
-            markup.add(mark_text_admin_set_service)
-            markup.add(mark_text_admin_users_list , mark_text_admin_find_user)
-            markup.add(mark_text_admin_bot_info , mark_text_admin_send_message_to_all)
-            text=text_user_is_admin
-            bot.send_message(chat_id=msg.from_user.id,text=text_user_is_admin, reply_markup=markup)
-    else : 
+    if not validation_admin (msg.from_user.id):
          bot.send_message(chat_id=msg.from_user.id,text=text_user_is_not_admin)
+         return False
+    markup=ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.add(mark_text_admin_reserved_time , mark_text_admin_empty_time)
+    markup.add(mark_text_admin_set_work_time)
+    markup.add(mark_text_admin_set_service)
+    markup.add(mark_text_admin_users_list , mark_text_admin_find_user)
+    markup.add(mark_text_admin_bot_info , mark_text_admin_send_message_to_all)
+    bot.send_message(chat_id=msg.from_user.id,text=text_user_is_admin, reply_markup=markup)
 ####################################################################### markup reserve time
 @bot.message_handler(func= lambda m:m.text == mark_text_admin_reserved_time)
 def reserve_time(msg : Message):
@@ -63,12 +64,7 @@ def reserve_time(msg : Message):
     markuptext = text_admin_update_service
     serviceData=list(db_Service_Get_All_Services())
     sorted_serviceData = sorted(serviceData, key=lambda item: item[4], reverse=True)
-    markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton(text=mark_text_admin_service_insert ,callback_data=mark_text_admin_service_insert))
-    for item in sorted_serviceData :
-        text=createLableServicesToShowOnButton(item[0])
-        button = InlineKeyboardButton(text=text ,callback_data=f'showServiceList_{item[0]}')
-        markup.add(button)
+    markup=makrup_service_list(sorted_serviceData)
     bot.send_message(chat_id=msg.chat.id,text=markuptext, reply_markup=markup)
 ###########################################   insert service
 @bot.callback_query_handler(func=lambda call: call.data == mark_text_admin_service_insert)
@@ -76,6 +72,7 @@ def callback_query(call : CallbackQuery):
     if not validation_admin(call.message.chat.id) : 
         bot.send_message(chat_id=call.message.chat.id,text=text_user_is_not_admin)
         return False
+    bot.delete_message(chat_id=call.message.chat.id,message_id=call.message.id)
     bot.send_message(chat_id=call.message.chat.id,text=text_update_service_name)
     bot.set_state(user_id=call.message.chat.id,state=admin_State.state_service_enter_name,chat_id=call.message.chat.id)
 
@@ -94,11 +91,14 @@ def service_section_state_enter_name(msg : Message):
 #get time_slots for new service
 @bot.message_handler(state=admin_State.state_service_enter_time_slots)
 def service_section_state_enter_time_slots(msg : Message):
-    service_time_slots=msg.text
+    user_time_input=msg.text
+    if not is_valid_time_format(user_time_input):
+        bot.send_message(chat_id=msg.chat.id,text=text_time_is_not_valid)
+        return False
+    time_slot=convert_time_to_slot(user_time_input)
     try:
-        time_slots = int(msg.text)
         with bot.retrieve_data(user_id=msg.chat.id,chat_id=msg.chat.id) as data:
-            data['service_time_slots']=service_time_slots
+            data['service_time_slots']=time_slot
         bot.set_state(user_id=msg.chat.id,state=admin_State.state_service_enter_price,chat_id=msg.chat.id)
         bot.send_message(chat_id=msg.chat.id,text=text_update_service_price)
     except ValueError:
@@ -125,15 +125,20 @@ def service_section_state_enter_price(msg : Message):
         if service_is_active_int ==0 or service_is_active_int ==1:
             service_is_active=bool(service_is_active_int)
         else:
-             return False 
+            bot.send_message(msg.chat.id,text=text_update_service_error_is_active)
+            return False 
+        
         with bot.retrieve_data(user_id=msg.chat.id,chat_id=msg.chat.id) as data:
             data['service_is_active']=service_is_active_int
             service_name =str(data['service_name'])
             service_time_slots =int(data['service_time_slots'])
             service_price =int(data['service_price'])
             service_is_active_int =bool(data['service_is_active'])
-        db_Service_Insert_Service(name=service_name ,time_slots=service_time_slots , price=service_price , is_active=service_is_active_int )
-        bot.send_message(chat_id=msg.chat.id,text=text_update_service_enter_all_info)
+        service_id =db_Service_Insert_Service(name=service_name ,time_slots=service_time_slots , price=service_price , is_active=service_is_active_int )
+        service_info= createLableServicesToShowOnButton(int(service_id))
+        markup=markup_service(service_id)
+        text=f"{text_update_service_enter_all_info}\n{service_info} "
+        bot.send_message(chat_id=msg.chat.id,text=text,reply_markup=markup)
         bot.delete_state(user_id=msg.chat.id,chat_id=msg.chat.id) 
     except ValueError:
         bot.send_message(chat_id=msg.chat.id,text=text_update_service_error_is_active)
@@ -141,23 +146,16 @@ def service_section_state_enter_price(msg : Message):
 ###########################################  get list services
 @bot.callback_query_handler(func= lambda m:m.data.startswith("showServiceList_"))
 def convertServiceID(call:CallbackQuery):
-    bot.delete_message(message_id=call.message.id,chat_id=call.message.chat.id)
     ServiceID=int(call.data.split('_')[1])
-    markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton(text=mark_text_admin_update_name ,callback_data=f'editServiceName_{ServiceID}'))
-    markup.add(InlineKeyboardButton(text=mark_text_admin_update_time_slots ,callback_data=f'editServiceTimeSlot_{ServiceID}'))
-    markup.add(InlineKeyboardButton(text=mark_text_admin_update_price ,callback_data=f'editServicePrice_{ServiceID}'))
-    markup.add(InlineKeyboardButton(text=mark_text_admin_update_is_active ,callback_data=f'editServiceIsAcive_{ServiceID}'))
-    markup.add(InlineKeyboardButton(text=mark_text_admin_delete_service ,callback_data=f'editServiceDelete_{ServiceID}'))
-    bot.send_message(chat_id=call.message.chat.id,text=createLableServicesToShowOnButton(ServiceID), reply_markup=markup)
+    markup =markup_service(ServiceID)
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=createLableServicesToShowOnButton(ServiceID), reply_markup=markup)
 
 
 #### markup Update name Service Panel
 @bot.callback_query_handler(func= lambda m:m.data.startswith("editServiceName_"))
 def service_update_name(call:CallbackQuery):
-    bot.delete_message(message_id=call.message.id,chat_id=call.message.chat.id)
     serviceid=int(call.data.split('_')[1])
-    bot.send_message(chat_id=call.message.chat.id,text=text_update_service_name)
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text_update_service_name)
     bot.set_state(user_id=call.message.chat.id,state=admin_State.state_service_update_name,chat_id=call.message.chat.id)
     with bot.retrieve_data(user_id=call.message.chat.id,chat_id=call.message.chat.id,) as data:
         data['service_id']= serviceid 
@@ -168,7 +166,8 @@ def service_section_update_name(msg : Message):
         serviceid = int(data['service_id'])
         db_Service_Update_Service_Name(service_id=serviceid , name=msg.text)
         showtext=createLableServicesToShowOnButton(serviceid)
-        bot.send_message(chat_id=msg.chat.id,text=f'{showtext}\n\n نام آیتم بالا با موفقیت تغییر کرد')
+        markup=markup_service(serviceid)
+        bot.send_message(chat_id=msg.chat.id,text=f'{showtext}\n\n نام آیتم بالا با موفقیت تغییر کرد',reply_markup=markup)
     bot.delete_state(user_id=msg.chat.id,chat_id=msg.chat.id)
 
 
@@ -177,9 +176,8 @@ def service_section_update_name(msg : Message):
 #### markup Update time_slot Service Panel
 @bot.callback_query_handler(func= lambda m:m.data.startswith("editServiceTimeSlot_"))
 def service_update_timeslot(call:CallbackQuery):
-    bot.delete_message(message_id=call.message.id,chat_id=call.message.chat.id)
     serviceid=int(call.data.split('_')[1])
-    bot.send_message(chat_id=call.message.chat.id,text=text_update_service_time_slots)
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text_update_service_time_slots)
     bot.set_state(user_id=call.message.chat.id,state=admin_State.state_service_update_time_slots,chat_id=call.message.chat.id)
     with bot.retrieve_data(user_id=call.message.chat.id,chat_id=call.message.chat.id,) as data:
         data['service_id']= serviceid
@@ -187,12 +185,17 @@ def service_update_timeslot(call:CallbackQuery):
 @bot.message_handler(state=admin_State.state_service_update_time_slots)
 def service_section_update_timeslot(msg : Message):
     try:
-        updated_time_slots=int(msg.text)
+        user_time_input=str(msg.text)# like "01:30"
+        if not is_valid_time_format(user_time_input):
+            bot.send_message(chat_id=msg.chat.id,text=text_time_is_not_valid)
+            return False
+        time_slot=convert_time_to_slot(user_time_input)
         with bot.retrieve_data(user_id=msg.chat.id,chat_id=msg.chat.id,) as data:
             serviceid = int(data['service_id'])
-            db_Service_Update_Service_Time_Slot(service_id=serviceid , time_slots=updated_time_slots)
+            db_Service_Update_Service_Time_Slot(service_id=serviceid , time_slots=time_slot)
             showtext=createLableServicesToShowOnButton(serviceid)
-            bot.send_message(chat_id=msg.chat.id,text=f'{showtext}\n\n زمان آیتم بالا با موفقیت تغییر کرد')
+            markup=markup_service(serviceid)
+            bot.send_message(chat_id=msg.chat.id,text=f'{showtext}\n\n زمان آیتم بالا با موفقیت تغییر کرد',reply_markup=markup)
         bot.delete_state(user_id=msg.chat.id,chat_id=msg.chat.id)
     except ValueError:
         bot.send_message(chat_id=msg.chat.id,text=text_update_service_error_int)
@@ -203,9 +206,8 @@ def service_section_update_timeslot(msg : Message):
 #### markup Update price Service Panel
 @bot.callback_query_handler(func= lambda m:m.data.startswith("editServicePrice_"))
 def service_section_update_price(call:CallbackQuery):
-    bot.delete_message(message_id=call.message.id,chat_id=call.message.chat.id)
     serviceid=int(call.data.split('_')[1])
-    bot.send_message(chat_id=call.message.chat.id,text=text_update_service_price)
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text_update_service_price)
     bot.set_state(user_id=call.message.chat.id,state=admin_State.state_service_update_price,chat_id=call.message.chat.id)
     with bot.retrieve_data(user_id=call.message.chat.id,chat_id=call.message.chat.id,) as data:
         data['service_id']= serviceid
@@ -218,7 +220,8 @@ def service_section_update_price(msg : Message):
             serviceid = int(data['service_id'])
             db_Service_Update_Service_Price(service_id=serviceid , price=updated_price)
             showtext=createLableServicesToShowOnButton(serviceid)
-            bot.send_message(chat_id=msg.chat.id,text=f'{showtext}\n\n  قیمت آیتم بالا با موفقیت تغییر کرد')
+            markup=markup_service(serviceid)
+            bot.send_message(chat_id=msg.chat.id,text=f'{showtext}\n\n  قیمت آیتم بالا با موفقیت تغییر کرد',reply_markup=markup)
         bot.delete_state(user_id=msg.chat.id,chat_id=msg.chat.id)
     except ValueError:
         bot.send_message(chat_id=msg.chat.id,text=text_update_service_error_int)
@@ -229,17 +232,17 @@ def service_section_update_price(msg : Message):
 #### markup Update is_active Service Panel
 @bot.callback_query_handler(func= lambda m:m.data.startswith("editServiceIsAcive_"))
 def service_section_update_is_active(call:CallbackQuery):
-    bot.delete_message(message_id=call.message.id,chat_id=call.message.chat.id)
     serviceid=int(call.data.split('_')[1])
     data=db_Service_Get_Is_Active_Services(serviceid)
-    if data==0 :
+    data_str="فعال"
+    if data == 1 :
+        data_str="غیرفعال"
+        db_Service_Disable_Service(service_id=serviceid)
+    else:
         db_Service_Enable_Service(serviceid)
-        showtext=createLableServicesToShowOnButton(serviceid)
-        bot.send_message(chat_id=call.message.chat.id,text=f'{showtext}\n\n  آیتم بالا با موفقیت فعال شد')
-    else :
-        db_Service_Disable_Service(serviceid)
-        showtext=createLableServicesToShowOnButton(serviceid)
-        bot.send_message(chat_id=call.message.chat.id,text=f'{showtext}\n\n  آیتم بالا با موفقیت غیرفعال شد')
+    showtext=createLableServicesToShowOnButton(serviceid)
+    markup=markup_service(serviceid)
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=f'{showtext}\n\n  آیتم بالا با موفقیت {data_str} شد',reply_markup=markup)
     
 
 
@@ -251,7 +254,10 @@ def service_update_name(call:CallbackQuery):
     serviceid=int(call.data.split('_')[1])
     showtext=createLableServicesToShowOnButton(serviceid)
     db_Service_Delete_Service(service_id=serviceid)
-    bot.send_message(chat_id=call.message.chat.id,text=f'{showtext}\n\n  آیتم بالا با موفقیت حذف شد')
+    serviceData=list(db_Service_Get_All_Services())
+    sorted_serviceData = sorted(serviceData, key=lambda item: item[4], reverse=True)
+    markup=makrup_service_list(sorted_serviceData)
+    bot.send_message(chat_id=call.message.chat.id,text=f'{showtext}\n\n  آیتم بالا با موفقیت حذف شد',reply_markup=markup)
 
 ######################################################################## access to all users
 
@@ -299,7 +305,33 @@ def convertUserID(call:CallbackQuery):
     name_lasname=createLabelUsersToShowOnButton(user_id=user_id)
     showtext=f"{name_lasname} \n {url}"
     bot.send_message(chat_id=call.message.chat.id,text=showtext)
-                     
+###########################################  send message to all
+    #?send msg to all
+@bot.message_handler(func=lambda m:m.text == mark_text_admin_send_message_to_all)
+def msg_to_all(msg : Message):
+    if not validation_admin (msg.from_user.id):
+         bot.send_message(chat_id=msg.from_user.id,text=text_user_is_not_admin)
+         return False
+    bot.send_message(msg.chat.id,text=text_message_to_all_users)
+    bot.set_state(user_id=msg.from_user.id,state=admin_State.message_to_all,chat_id=msg.chat.id)
+
+
+@bot.message_handler(state =admin_State.message_to_all)
+def get_message_to_send(msg : Message):
+    with bot.retrieve_data(msg.from_user.id,msg.chat.id) as data :
+        data['msg']=msg.text
+    text=f"یک پیام از سمت ادمین :\n <strong> {data['msg']} </strong> "
+    users=db_Users_Get_All_Users()
+    for user in users:
+        try:
+            bot.get_chat(user[0])
+            bot.send_message(chat_id=user[0],text=text)
+        except apihelper.ApiTelegramException as e:
+            logging.error(f"{user[0]} not found")
+    bot.send_message(chat_id=msg.chat.id,text=text_sent_message_to_all_users)
+    bot.delete_state(user_id= msg.from_user.id,chat_id=msg.chat.id)
+###########################################
+
 #######################################################################!   User Panel
 #* /start
 @bot.message_handler(commands=['start'])
@@ -429,14 +461,43 @@ def account_info_state_update_name(msg : Message):
 @bot.message_handler(func= lambda m:m.text == mark_text_support)
 def text_to_support(msg : Message):
     bot.send_message(msg.chat.id, f"{text_support}\n{SUPPORT_USERNAME}", parse_mode='Markdown')
+#######################################################################
+def startMessageToAdmin(enable=True,disable_notification=True):
+    if not enable:
+        return False
+
+    text=f'{msg_restart} \n 🚫{get_current_datetime()}🚫'
+
+    #get last log    
+    latest_log_file = get_latest_log_file()
+
+    for admin in MAIN_ADMIN_USER_ID:#send for all admins
+        if latest_log_file:
+            last_3_errors=get_last_errors(latest_log_file)
+            error_message = "\n".join(last_3_errors)
+            with open(latest_log_file, 'rb') as log_file:
+                bot.send_document(admin, log_file,caption=f"{text}\n{error_message}",disable_notification=disable_notification)
+            logging.info(f"send last log to admin [{admin}] : {latest_log_file}")
+        else:
+            logging.info("هیچ فایل لاگی پیدا نشد.")
+            bot.send_message(chat_id=admin,text=f"{text}\n ⛔️فایل log وجود ندارد⛔️",disable_notification=disable_notification)
+
 ########################################################################! END :)
 if __name__ == "__main__":
+    #log init
     log_filename = f"./logs/output_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"
     logging.basicConfig(filename=log_filename,
                     level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logging.info("logging is running")
+
+    remove_old_logs()
+    
+    #db setting
     createTables()
-    print()
+
+    #basic functions 
+    startMessageToAdmin()
+    #bot setting
     bot.add_custom_filter(custom_filters.StateFilter(bot))
     bot.polling()

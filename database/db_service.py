@@ -15,9 +15,10 @@ def db_Service_Insert_Service(name :str,time_slots:int,price:int,is_active:bool)
                 with connection.cursor()  as cursor:
                      cursor.execute(sql)
                      connection.commit()
+                     id= cursor.lastrowid
                      cursor.close()
                      connection.close()
-                     return True
+                     return id
             else:
                 logging.error("connection to database is not working")
                 return False
