@@ -3,10 +3,8 @@ import mysql.connector # type: ignore
 from mysql.connector import Error
 from auth.auth import DB_CONFIG
 #######################################################################################
- # """reserve(id,user_id,date,start_time,end_time,payment)"""
- #todo : get all users
-#######################################################################################
-def insertNewUser(user_id : int,phone_number :str,username :str,join_date :str,name:str,last_name:str):
+########################################################################################! Insert Sectin
+def db_Users_Insert_New_User(user_id : int,phone_number :str,username :str,join_date :str,name:str,last_name:str):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:
         sql=f"""INSERT INTO users (user_id,phone_number,username,join_date,name,last_name)
@@ -21,15 +19,16 @@ VALUES ({user_id}, '{phone_number}', '{username}' , '{join_date}' , '{name}' , '
                      connection.close()
                      return True
             else:
-                logging.error("can't insert new user")
+                logging.error("Error in db_Users_Insert_New_User")
     except Error as e :
-        logging.error(f"in insertNewUser : {e}") 
+        logging.error(f"Error in db_Users_Insert_New_User : {e}") 
         return False
 #######################################################################################
-def findUserById(user_id):
+########################################################################################! Find Sectin
+def db_Users_Find_User_By_Id(user_id):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:
-        user_exist = userValidId(user_id)
+        user_exist = db_Users_Validation_User_By_Id(user_id)
         if user_exist : 
             sql=f"""SELECT *
                     FROM users
@@ -42,16 +41,16 @@ def findUserById(user_id):
                         user=cursor.fetchone()
                         cursor.close()
                         connection.close()
-                        return user[0]
+                        return user
                 else:
-                    logging.error("can't find user")
+                    logging.error("Error in db_Users_Find_User_By_Id")
         else :
                 return False
     except Error as e :
-        logging.error(f"in findUserById : {e}") 
+        logging.error(f"Error in db_Users_Find_User_By_Id : {e}") 
         return False
 #######################################################################################
-def userValidId(user_id):
+def db_Users_Validation_User_By_Id(user_id):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:
         sql=f"""SELECT user_id
@@ -70,15 +69,16 @@ def userValidId(user_id):
                      else: 
                          return True
             else:
-                logging.error("can't find user that exist or not !")
+                logging.error("Error in db_Users_Validation_User_By_Id")
     except Error as e :
-        logging.error(f"in existUser : {e}") 
+        logging.error(f"Error in db_Users_Validation_User_By_Id : {e}") 
         return False
- #######################################################################################
-def getJoinDate(user_id):
+#######################################################################################
+########################################################################################!Get Section
+def db_Users_Get_Join_Date(user_id):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:
-        user_exist= userValidId(user_id)
+        user_exist= db_Users_Validation_User_By_Id(user_id)
         if user_exist:
             sql=f"""SELECT join_date
                     FROM users
@@ -93,41 +93,158 @@ def getJoinDate(user_id):
                         connection.close()
                         return user[0]
                 else:
-                    logging.error("can't find user for getting join date")
+                    logging.error("Error in db_Users_Get_Join_Date")
         else: 
             return False
     except Error as e :
-        logging.error(f"in getJoinDate : {e}") 
+        logging.error(f"Error in db_Users_Get_Join_Date : {e}") 
         return False
 #######################################################################################
-def updatePhone_Number(user_id:int, phone_number:str):
+def db_Users_Get_Name_User(user_id:str):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:
-        user_exist= userValidId(user_id)
-        if user_exist:
-            sql=f"""UPDATE users
-                    SET phone_number = {phone_number}
+        sql=f"""SELECT name
+                FROM users
+                WHERE user_id = {user_id};"""
+        
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor()  as cursor:
+                     cursor.execute(sql)
+                     user=cursor.fetchone()
+                     cursor.close()
+                     connection.close()
+                     if user is None:
+                        return False
+                     else: 
+                         return user[0]
+            else:
+                logging.error("Error in db_Users_Get_Name_User")
+    except Error as e :
+        logging.error(f"Error in db_Users_Get_Name_User : {e}") 
+        return False
+#######################################################################################
+def db_Users_Get_Last_Name_User(user_id:str):
+    """users(user_id,phone_number,username,join_date,name,last_name)"""
+    try:
+            sql=f"""SELECT last_name
+                    FROM users
                     WHERE user_id = {user_id};"""
+            
             with mysql.connector.connect(**DB_CONFIG) as connection:
                 if connection.is_connected():
                     with connection.cursor()  as cursor:
                         cursor.execute(sql)
-                        connection.commit()# when something is created or updated or inserted;
+                        user=cursor.fetchone()
                         cursor.close()
                         connection.close()
-                        return True
+                        if user is None:
+                            return False
+                        else: 
+                            return user[0]
                 else:
-                    logging.error("can't Update Phone number")
-        else: 
-            return False
+                    logging.error("Error in db_Users_Get_Last_Name_User")
     except Error as e :
-        logging.error(f"in updatePhone_Number : {e}") 
+        logging.error(f"Error in db_Users_Get_Last_Name_User : {e}") 
         return False
 #######################################################################################
-def updateName(user_id:int, name:str):
+def db_Users_Get_Phone_Number_User(user_id:str):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:
-        user_exist= userValidId(user_id)
+            sql=f"""SELECT phone_number
+                    FROM users
+                    WHERE user_id = {user_id};"""
+            
+            with mysql.connector.connect(**DB_CONFIG) as connection:
+                if connection.is_connected():
+                    with connection.cursor()  as cursor:
+                        cursor.execute(sql)
+                        user=cursor.fetchone()
+                        cursor.close()
+                        connection.close()
+                        if user is None:
+                            return False
+                        else: 
+                            return user[0]
+                else:
+                    logging.error("Error in db_Users_Get_Username_User")
+    except Error as e :
+        logging.error(f"Error in db_Users_Get_Username_User : {e}") 
+        return False
+#######################################################################################   
+def db_Users_Get_Phone_Number_User(user_id:str):
+    """users(user_id,phone_number,username,join_date,name,last_name)"""
+    try:
+            sql=f"""SELECT phone_number
+                    FROM users
+                    WHERE user_id = {user_id};"""
+            
+            with mysql.connector.connect(**DB_CONFIG) as connection:
+                if connection.is_connected():
+                    with connection.cursor()  as cursor:
+                        cursor.execute(sql)
+                        user=cursor.fetchone()
+                        cursor.close()
+                        connection.close()
+                        if user is None:
+                            return False
+                        else: 
+                            return user[0]
+                else:
+                    logging.error("Error in db_Users_Get_Phone_Number_User")
+    except Error as e :
+        logging.error(f"Error in db_Users_Get_Phone_Number_User : {e}") 
+        return False
+#######################################################################################
+def db_Users_Get_All_Users():
+    try:
+        sql = f"""SELECT * FROM users ;"""
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor()  as cursor:
+                     cursor.execute(sql)
+                     users=cursor.fetchall()
+                     cursor.close()
+                     connection.close()
+                     if users is None:
+                        logging.error("service name not fund")
+                        return None
+                     return users
+                       
+            else:
+                logging.error("connection to database is not working")
+                return False
+    except Error as e:
+        logging.error(f" db_Users_Get_All_Users: {e}") 
+#######################################################################################   
+def db_Users_Get_Username_user(user_id:str):
+    """users(user_id,phone_number,username,join_date,name,last_name)"""
+    try:
+            sql=f"""SELECT username
+                    FROM users
+                    WHERE user_id = {user_id};"""
+            
+            with mysql.connector.connect(**DB_CONFIG) as connection:
+                if connection.is_connected():
+                    with connection.cursor()  as cursor:
+                        cursor.execute(sql)
+                        user=cursor.fetchone()
+                        cursor.close()
+                        connection.close()
+                        if user is None:
+                            return False
+                        else: 
+                            return user[0]
+                else:
+                    logging.error("Error in db_Users_Get_Username_user")
+    except Error as e :
+        logging.error(f"Error in db_Users_Get_Username_user : {e}") 
+        return False
+########################################################################################!Update Section
+def db_Users_Update_Name_User(user_id:int, name:str):
+    """users(user_id,phone_number,username,join_date,name,last_name)"""
+    try:
+        user_exist= db_Users_Validation_User_By_Id(user_id)
         if user_exist:
             sql=f"""UPDATE users
                     SET name = '{name}'
@@ -141,17 +258,17 @@ def updateName(user_id:int, name:str):
                         connection.close()
                         return True
                 else:
-                    logging.error("can't update name")
+                    logging.error("Error in db_Users_Update_Name_User")
         else: 
             return False
     except Error as e :
-        logging.error(f"in updateName : {e}") 
+        logging.error(f"Error in db_Users_Update_Name_User : {e}") 
         return False
 #######################################################################################
-def updateLast_Name(user_id:int, last_name:str):
+def db_Users_Update_Last_Name_User(user_id:int, last_name:str):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:
-        user_exist= userValidId(user_id)
+        user_exist= db_Users_Validation_User_By_Id(user_id)
         if user_exist:
             sql=f"""UPDATE users
                     SET last_name = '{last_name}'
@@ -165,17 +282,17 @@ def updateLast_Name(user_id:int, last_name:str):
                         connection.close()
                         return True
                 else:
-                    logging.error("can't update last_name")
+                    logging.error("Error in db_Users_Update_Last_Name_User")
         else: 
             return False
     except Error as e :
-        logging.error(f"in updateLast_Name : {e}") 
+        logging.error(f"Error in db_Users_Update_Last_Name_User : {e}") 
         return False
 #######################################################################################
-def updateUsername(user_id:int, username:str):
+def db_Users_Update_Username_User(user_id:int, username:str):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:
-        user_exist= userValidId(user_id)
+        user_exist= db_Users_Validation_User_By_Id(user_id)
         if user_exist:
             sql=f"""UPDATE users
                     SET username = '{username}'
@@ -189,33 +306,34 @@ def updateUsername(user_id:int, username:str):
                         connection.close()
                         return True
                 else:
-                    logging.error("can't update username")
+                    logging.error("Error in db_Users_Update_Username_User")
         else: 
             return False
     except Error as e :
-        logging.error(f"in updateUsername : {e}") 
+        logging.error(f"Error in db_Users_Update_Username_User : {e}") 
         return False
 #######################################################################################
-def getUser(user_id:str):
+def db_Users_Update_Phone_Number_User(user_id:int, phone_number:str):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:
-        sql=f"""SELECT *
-                FROM users
-                WHERE user_id = {user_id};"""
-        
-        with mysql.connector.connect(**DB_CONFIG) as connection:
-            if connection.is_connected():
-                with connection.cursor()  as cursor:
-                     cursor.execute(sql)
-                     user=cursor.fetchall()
-                     cursor.close()
-                     connection.close()
-                     if user is None:
-                        return False
-                     else: 
-                         return user
-            else:
-                logging.error("can't find user that exist or not !")
+        user_exist= db_Users_Validation_User_By_Id(user_id)
+        if user_exist:
+            sql=f"""UPDATE users
+                    SET phone_number = '{phone_number}'
+                    WHERE user_id = {user_id};"""
+            with mysql.connector.connect(**DB_CONFIG) as connection:
+                if connection.is_connected():
+                    with connection.cursor()  as cursor:
+                        cursor.execute(sql)
+                        connection.commit()# when something is created or updated or inserted;
+                        cursor.close()
+                        connection.close()
+                        return True
+                else:
+                    logging.error("Error in db_Users_Update_Phone_Number_User")
+        else: 
+            return False
     except Error as e :
-        logging.error(f"in getAllInfo : {e}") 
+        logging.error(f"Error in db_Users_Update_Phone_Number_User : {e}") 
         return False
+#######################################################################################

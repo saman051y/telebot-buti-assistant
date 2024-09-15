@@ -6,7 +6,7 @@ from mysql.connector import Error
 
 from auth.auth import DB_CONFIG
 ##################################################
-def insertReserve(user_id:int ,date:str,start_time:str,end_time:str,payment:int):
+def db_Reserve_insert_Reserve(user_id:int ,date:str,start_time:str,end_time:str,payment:int):
     """return reserve_id"""
     try:
         sql =f"""INSERT INTO reserve (user_id,date,start_time,end_time,payment) 
@@ -27,8 +27,8 @@ def insertReserve(user_id:int ,date:str,start_time:str,end_time:str,payment:int)
         logging.error(f"insertReserve : {e}")
         return False
 ##################################################
-def getReserveWithId(reserve_id :int):
-    valid_id=reserveValidId(reserve_id=reserve_id)
+def db_Reserve_Get_Reserve_With_Id(reserve_id :int):
+    valid_id=db_Reserve_Reserve_Valid_Id(reserve_id=reserve_id)
     if not valid_id:
         logging.error("getReserveWithId: id is not valid")
         return False
@@ -48,8 +48,8 @@ def getReserveWithId(reserve_id :int):
     except Error as e:
         logging.error(f"getReserveWithId : {e}")
 ##################################################
-def updateDateOfReserve(reserve_id:int,new_date:str):
-    valid_id=reserveValidId(reserve_id=reserve_id)
+def db_Reserve_Update_Date_Of_Reserve(reserve_id:int,new_date:str):
+    valid_id=db_Reserve_Reserve_Valid_Id(reserve_id=reserve_id)
     if not valid_id:
         logging.error("updateDateOfReserve: id is not valid")
         return False
@@ -71,8 +71,8 @@ def updateDateOfReserve(reserve_id:int,new_date:str):
     except Error as e:
         logging.error(f"updateDateOfReserve : {e}")
 ##################################################
-def updateTimeOfReserve(reserve_id:int,new_start_time:str,new_end_time:str):
-    valid_id=reserveValidId(reserve_id=reserve_id)
+def db_Reserve_Update_Time_Of_Reserve(reserve_id:int,new_start_time:str,new_end_time:str):
+    valid_id=db_Reserve_Reserve_Valid_Id(reserve_id=reserve_id)
     if not valid_id:
         logging.error("updateTimeOfReserve: id is not valid")
         return False
@@ -94,8 +94,8 @@ def updateTimeOfReserve(reserve_id:int,new_start_time:str,new_end_time:str):
     except Error as e:
         logging.error(f"updateTimeOfReserve : {e}")
 ##################################################
-def updatePaymentOfReserve(reserve_id:int,new_payment:int):
-    valid_id=reserveValidId(reserve_id=reserve_id)
+def db_Reserve_Update_Payment_Of_Reserve(reserve_id:int,new_payment:int):
+    valid_id=db_Reserve_Reserve_Valid_Id(reserve_id=reserve_id)
     if not valid_id:
         logging.error("updatePaymentOfReserve: id is not valid")
         return False
@@ -117,8 +117,8 @@ def updatePaymentOfReserve(reserve_id:int,new_payment:int):
     except Error as e:
         logging.error(f"updatePaymentOfReserve : {e}")
 ##################################################
-def updateApprovedOfReserve(reserve_id:int,approved:bool):
-    valid_id=reserveValidId(reserve_id=reserve_id)
+def db_Reserve_Update_Approved_Of_Reserve(reserve_id:int,approved:bool):
+    valid_id=db_Reserve_Reserve_Valid_Id(reserve_id=reserve_id)
     if not valid_id:
         logging.error("updateApprovedOfReserve: id is not valid")
         return False
@@ -140,8 +140,7 @@ def updateApprovedOfReserve(reserve_id:int,approved:bool):
     except Error as e:
         logging.error(f"updateApprovedOfReserve : {e}")
 ##################################################
-def getReserveOfDate(date:str):
-
+def db_Reserve_Get_Reserve_Of_Date(date:str):
     try:
         sql = f"""SELECT * FROM reserve 
                   WHERE date = '{date}';"""
@@ -159,8 +158,8 @@ def getReserveOfDate(date:str):
     except Error as e:
         logging.error(f"getReserveOfDate : {e}")
 ##################################################
-def DeleteReserve(reserve_id:int):
-    valid_id=reserveValidId(reserve_id=reserve_id)
+def db_Reserve_Delete_Reserve(reserve_id:int):
+    valid_id=db_Reserve_Reserve_Valid_Id(reserve_id=reserve_id)
     if not valid_id:
         logging.error("DeleteReserve: id is not valid")
         return False
@@ -181,7 +180,7 @@ def DeleteReserve(reserve_id:int):
     except Error as e:
         logging.error(f"DeleteReserve : {e}")
 ##################################################
-def reserveValidId(reserve_id:int):
+def db_Reserve_Reserve_Valid_Id(reserve_id:int):
     try:
         sql = f"""SELECT COUNT(*) 
                   FROM reserve 
@@ -201,3 +200,4 @@ def reserveValidId(reserve_id:int):
     except Error as e:
         logging.error(f"reserveValidId : {e}")
         return False
+##################################################

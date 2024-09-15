@@ -1,15 +1,17 @@
-from datetime import datetime,timedelta
-from database.db_reserve_service import *
-from database.db_create_table import createTables
-# result= None
-log_filename = f"./logs/output.log"
-logging.basicConfig(filename=log_filename,
-                level=logging.INFO,
-                format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logging.info("logging is running")
-# result =createTables()
-# result=getIsActiveServices(1)
-# result = DeleteService(1)
-result = insertReserveService(reserve_id=2,service_id=2)
-result =getResSerWithResId(2)
-print  (result)
+from database.db_functions import convert_time_to_slot
+from database.db_users import *
+from database.db_service import *
+from functions.time_date import convert_time_slot_to_time
+from messages.commands_msg import *
+from messages.markups_text import *
+from messages.messages_function import *
+
+#db_Users_Update_Name_User(423977498 , 'empty')
+#db_Users_Update_Last_Name_User(423977498 , 'empty')
+#db_Users_Update_Phone_Number_User(423977498 , 'empty') 
+#print(' OK ')
+#print(db_Service_Get_Service_With_Name('name'))
+#print(db_Users_Get_All_Users())
+# print(change_Username_To_URL('Ho3einNa3iri','09033883130'))
+result = convert_time_slot_to_time(700)
+print (result)
