@@ -95,16 +95,16 @@ def forwardToStateGetPart(call:CallbackQuery):
 @bot.message_handler(state=admin_State.state_setwork_get_part)
 def setwork_section_state_get_part1(msg : Message):
     try:
-        part=str(msg.text)
+        duration=str(msg.text)
         ##Regular expression pattern to match the format 'HH:MM:01/HH:MM:00' and min=[00,15,45]
         pattern =r'^([01]\d|2[0-3]):(00|15|30|45)/([01]\d|2[0-3]):(00|15|30|45)$'
-        match = re.match(pattern, part)
+        match = re.match(pattern, duration)
         if not match:
             bot.send_message(chat_id=msg.chat.id, text=text_set_work_time_get_part)
             return
-        start_time_without_seconds=str(part.split('/')[0])
+        start_time_without_seconds=str(duration.split('/')[0])
         start_time=start_time_without_seconds+f':01'
-        end_time_without_seconds=str(part.split('/')[1])
+        end_time_without_seconds=str(duration.split('/')[1])
         end_time=end_time_without_seconds + f':00'
         time_format = "%H:%M:%S"
         check_start_time = datetime.strptime(start_time, time_format).time()
@@ -240,6 +240,7 @@ def reserve_time(msg : Message):
 #########################################  get name to change value                   
 @bot.callback_query_handler(func= lambda m:m.data.startswith("weeklysetting:"))
 def forwardToStateUpdatePart(call:CallbackQuery):
+    bot.delete_state(user_id=call.message.id,chat_id=call.message.chat.id) 
     name = str(call.data.split(':')[1])
     data= db_WeeklySetting_Get_Value(name=name)
     value=data[2]
