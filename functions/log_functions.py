@@ -5,11 +5,11 @@ import os
 def get_latest_log_file():
     log_path = "./logs/"
     log_files = glob.glob(f"{log_path}*.log")
-    if not log_files:
-        return None
     #sort file with date and time 
     log_files.sort(key=os.path.getmtime)
     
+    if len(log_files) <2:
+        return log_files[-1]
     #last file
     return log_files[-2]
 

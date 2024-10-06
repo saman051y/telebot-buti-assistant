@@ -52,7 +52,7 @@ def db_Users_Find_User_By_Id(user_id):
 #######################################################################################
 def db_Users_Validation_User_By_Id(user_id):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
-    try:
+    try:      
         sql=f"""SELECT user_id
                 FROM users
                 WHERE user_id = {user_id};"""
