@@ -48,6 +48,6 @@ text_set_work_insert_part1='افزودن پارت اول'
 text_set_work_insert_part2='افزودن پارت دوم'
 text_set_work_delete_part1='پارت اول با موفقیت حذف شد'
 text_set_work_delete_part2='پارت دوم با موفقیت حذف شد'
-text_error_call_to_support=''
+text_error_call_to_support='مشکلی رخ داده است لطفا با بخش فنی تماس بگیرید'
 
 text_weekly_time=' با انتخاب هر آیتم میتوانید آن روز را فعال یا غیر فعال کنید و با انتخاب ساعت شروع و پایان آن را ویرایش کنید'
