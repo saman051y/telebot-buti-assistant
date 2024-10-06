@@ -39,6 +39,44 @@ def db_Setwork_Insert_New_date(date: str, part1_start_time: str, part1_end_time:
     except Error as e :
         logging.error(f"Error in db_Setwork_Insert_New_date : {e}") 
         return False
+
+######################################################################################################
+def db_Setwork_Creat_Date_Without_part(date: str, part1_start_time: str, part1_end_time: str, part2_start_time: str, part2_end_time: str):
+    """(date, part1_start_time, part1_end_time, part2_start_time, part2_end_time)"""
+    try:
+        date_exist=db_Setwork_exist_date(date=date)
+        if not date_exist:
+            
+            sql=f"""INSERT INTO setwork (date, part1_start_time, part1_end_time, part2_start_time, part2_end_time)
+                    VALUES ('{date}','{part1_start_time}','{part1_end_time}','{part2_start_time}','{part2_end_time}');"""
+            
+            if part2_start_time  == 'Null' :
+                sql=f"""INSERT INTO setwork (date, part1_start_time, part1_end_time)
+                    VALUES ('{date}','{part1_start_time}','{part1_end_time}');"""
+
+            if part1_start_time == 'Null' :
+                sql=f"""INSERT INTO setwork (date, part2_start_time, part2_end_time)
+                    VALUES ('{date}','{part2_start_time}','{part2_end_time}');"""
+                
+            if part2_start_time == 'Null' and part1_start_time == 'Null' :
+                sql=f"""INSERT INTO setwork (date)
+                    VALUES ('{date}');"""
+                
+            with mysql.connector.connect(**DB_CONFIG) as connection:
+                if connection.is_connected():
+                    with connection.cursor()  as cursor:
+                         cursor.execute(sql)
+                         connection.commit()# when something is created or updated or inserted;
+                         cursor.close()
+                         connection.close()
+                         return True
+                else:
+                    logging.error("Error in db_Setwork_Insert_New_date")
+        else:
+            return False
+    except Error as e :
+        logging.error(f"Error in db_Setwork_Insert_New_date : {e}") 
+        return False
 #######################################################################################! Get Section
 ###################################### get all set work date al time
 def db_Setwork_Get_ALL_Days():

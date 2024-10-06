@@ -11,9 +11,27 @@ from messages.messages_function import *
 ##############################################################################
 #part1=convertDateToDayAsPersiancalendar(date='2024-10-03')
 date='2024-10-04'
-result = db_Setwork_Get_Part1_or_Part2_of_Day(date , 2)
-print((result[0]))
+result = (db_WeeklySetting_Get_Parts())
+print(result)
+print(result[0][0])
 
+print(result)
+
+# parts_defult = db_WeeklySetting_Get_Parts
+#     part1_default = str(parts_defult[0])
+#     part2_default = str(parts_defult[1])
+#     all_part=[]
+#     parts=str(db_WeeklySetting_Get_Parts)
+#     for i in range [:2]:
+        
+#         if parts[i] =='Null':
+#             part_start_time = 'Null'
+#             part_end_time = 'Null'
+#         else :
+#             part_start_time= parts[i][1].split('/')[0]
+#             part_end_time = parts[i][1].split('/')[1]
+#         all_part += [part_start_time ,part_end_time ]
+#     db_Setwork_Insert_New_date(date= date , part1_start_time=all_part[0] , part1_end_time=all_part[1] , part2_start_time=all_part[2] , part2_end_time=[3])
 
 
 

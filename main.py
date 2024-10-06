@@ -50,7 +50,7 @@ def reserve_time(msg : Message):
         return False    
     bot.send_message(chat_id=msg.from_user.id,text=text_cooming_soon)
     #TODO insert empty_time section for admin  
-############################################################################################ markup set work time
+############################################################################################ markup setwork time
 
 #TODo move compare function for all parts
 #TODO check part1< part2  and part2>part1
@@ -70,10 +70,15 @@ def reserve_time(msg : Message):
 def convertUserID(call:CallbackQuery):
     date=call.data.split(':')[1]
     markup = InlineKeyboardMarkup()
-    markup= makrup_generate_parts_list_of_set_work(date=date)
+    markup = makrup_generate_parts_list_of_set_work(date=date)
     text=convertDateToPersiancalendar(date=str(date))
+    #check activation of day if day be disable , admin can change day status
+    date_as_day=convertDateToDayAsGorgiancalendar(date=date)
+    check_is_active_day=db_WeeklySetting_Get_Value(name=date_as_day)
+    print(f'{check_is_active_day}')
+    if check_is_active_day[2] =='0':
+        text =f'{text} \n {text_erro_disable_day}'
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text, reply_markup=markup)
-
 #########################################   call get part and time to insert new date
 @bot.callback_query_handler(func= lambda m:m.data.startswith("SetWorkInsertPart:"))
 def forwardToStateGetPart(call:CallbackQuery):

@@ -92,33 +92,47 @@ def makrup_generate_set_work_list_of_days() :
     return markup
 ########################################## generate markup for parts list of set work  
 def makrup_generate_parts_list_of_set_work(date):
+    
     markup = InlineKeyboardMarkup()
-    buttons_part = []
     part_text2=''
-    for i in range(1,3):
-        part=db_Setwork_Get_Part1_or_Part2_of_Day(date=date ,part=i)
-        part_text=['' , text_set_work_insert_part1 , text_set_work_insert_part2 ]
-
-        if part in ['False',False]:
-                
-                button_part = InlineKeyboardButton(text=part_text[i], callback_data=f'SetWorkInsertPart:{i}:{date}')
-                buttons_part += [button_part] 
-        else:
-            if part[0] in ['None',None]:
-                button_part = InlineKeyboardButton(text=part_text[i], callback_data=f'SetWorkUpdatePart:{i}:{date}')
-                buttons_part += [button_part]
-
-            if part[0] not in ['None',None]:
+    all_part = []
+    part=db_Setwork_Get_Part1_or_Part2_of_Day(date=date ,part=1)
+    if part in ['False',False]:
+        for i in range(2):
+            default_parts=db_WeeklySetting_Get_Parts()
+            if default_parts[i][1] in ['Null' , None , 'None']:
+                part_start_time = 'Null'
+                part_end_time = 'Null'
+            else:   
+                #if default_parts[i][1] not in ['Null' , None , 'None']:
+                part = str(default_parts[i][1])
+                default_parts_str=str(default_parts[i][1])
+                part_start_time= default_parts_str.split('/')[0]
+                part_end_time= default_parts_str.split('/')[1]
+            all_part += [(part_start_time)]
+            all_part += [(part_end_time)]
+        result_update = db_Setwork_Creat_Date_Without_part(date=date , part1_start_time=all_part[0] , part1_end_time=all_part[1] , part2_start_time=all_part[2] , part2_end_time=all_part[3])
+        part=db_Setwork_Get_Part1_or_Part2_of_Day(date=date ,part=i+1)
+    if part not in ['False',False]:
+        for i in range(1,3):
+            part=db_Setwork_Get_Part1_or_Part2_of_Day(date=date ,part=i)  
+            buttons_part=[]  
+            part_text2=''
+            
+            if part[0] in ['Null',None]:
+                part_text2 = 'افزودن پارت'
+                button_part = InlineKeyboardButton(text=part_text2, callback_data=f'SetWorkUpdatePart:{i}:{date}')
+                markup.add(button_part)
+            if part[0] not in ['Null',None]:
                 part_start_time = str(part[0])
                 part_end_time = str(part[1])
                 text_part_start_time=part_start_time.split(':')[0]+ f':'+ part_start_time.split(':')[1]
                 text_part_end_time = part_end_time.split(':')[0]+ f':'+ part_end_time.split(':')[1]
                 part_text2=text_part_start_time + f' الی '+ text_part_end_time
-                button_part_deletet = InlineKeyboardButton(text=f'حذف', callback_data=f'SetWorkDeletePart:{i}:{date}')
-                buttons_part += [button_part_deletet] 
+                button_part_delete = InlineKeyboardButton(text=f'حذف', callback_data=f'SetWorkDeletePart:{i}:{date}')
+                buttons_part += [button_part_delete] 
                 button_part = InlineKeyboardButton(text=part_text2, callback_data=f'SetWorkUpdatePart:{i}:{date}')
                 buttons_part += [button_part] 
-        markup.add(*buttons_part)
-        buttons_part=[]
-    return markup
+            markup.add(*buttons_part)
+        return markup
 ##########################################
