@@ -11,11 +11,8 @@ from messages.messages_function import *
 ##############################################################################
 #part1=convertDateToDayAsPersiancalendar(date='2024-10-03')
 date='2024-10-04'
-result = (db_WeeklySetting_Get_Parts())
-print(result)
-print(result[0][0])
-
-print(result)
+if 8 in [3,2,5,6,1]:
+    print("result")
 
 # parts_defult = db_WeeklySetting_Get_Parts
 #     part1_default = str(parts_defult[0])

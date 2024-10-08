@@ -8,7 +8,7 @@ def text_cleaner_info(data):
     user_id = data[0]
     phone_number = data[1]
     username = data[2]
-    join_date = convertDateToPersiancalendar(str(data[3]))
+    join_date = convertDateToPersianCalendar(str(data[3]))
     name = data[4]
     last_name = data[5]
     export_text = (f"شناسه عددی       {user_id} \nشناسه کاربری      {username} \nنام                     {name}\n"
@@ -20,10 +20,12 @@ def validation_admin(user_id):
         return True    
     return False
 #######################################################################
-def createLableServicesToShowOnButton(user_id):
+def createLabelServicesToShowOnButton(user_id):
     data = db_Service_Get_Service_With_Id(user_id)
     name=data[1]
-    time_slot=convert_time_slot_to_time(data[2])
+
+    time=f"{data[2]}"
+    time=time[:5]
     price=data[3]
     is_active=data[4]
     if is_active == 1:
@@ -31,7 +33,7 @@ def createLableServicesToShowOnButton(user_id):
     else : 
         is_active_text = 'غیر فعال'
 
-    export_text = (f" {name} : {time_slot} : {price} : {is_active_text}")
+    export_text = (f" {name} - {time} - {price} - {is_active_text}")
     return export_text
 #######################################################################
 def change_Username_To_URL(username,phone_number) :
@@ -88,4 +90,17 @@ def ConvertVariableInWeeklySettingToPersian(data:str):
         formatted_end_time = end_time[:5]
         result = f'{formatted_start_time} الی {formatted_end_time}'
     return result
+#######################################################################
+def text_make_reservation_info(price,time,services):
+    names=""
+    for service in services:
+        if (service[5] == 0 ):
+            continue
+        names=f"{names} - {service[1]}"
+    text=f"""
+هزینه کل خدمات انتخاب شده : {price}
+کل تایم رزرو شده : {time}
+خدمات انتخاب شده : {names}
+"""
+    return text
 #######################################################################

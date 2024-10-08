@@ -48,12 +48,12 @@ def makrup_generate_service_list(sorted_serviceData):
     markup = InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton(text=mark_text_admin_service_insert ,callback_data=mark_text_admin_service_insert))
     for item in sorted_serviceData :
-        text=createLableServicesToShowOnButton(item[0])
+        text=createLabelServicesToShowOnButton(item[0])
         button = InlineKeyboardButton(text=text ,callback_data=f'showServiceList_{item[0]}')
         markup.add(button)
     return markup
 ########################################## generate markup for weekly tiem
-def makrup_generate_weely_time_list():
+def makrup_generate_weekly_time_list():
     bot_setting=db_WeeklySetting_Get_All()
     markup = InlineKeyboardMarkup()
     buttons = []
@@ -86,7 +86,7 @@ def makrup_generate_set_work_list_of_days() :
     today = datetime.now().date()
     for i in range(0,6):
         date = today + timedelta(days=i)
-        text=convertDateToPersiancalendar(date=str(date))
+        text=convertDateToPersianCalendar(date=str(date))
         button = InlineKeyboardButton(text=f'{text}' ,callback_data=f'SetWorkTime:{date}')
         markup.add(button)
     return markup
@@ -96,7 +96,7 @@ def makrup_generate_parts_list_of_set_work(date):
     markup = InlineKeyboardMarkup()
     part_text2=''
     all_part = []
-    part=db_Setwork_Get_Part1_or_Part2_of_Day(date=date ,part=1)
+    part=db_SetWork_Get_Part1_or_Part2_of_Day(date=date ,part=1)
     if part in ['False',False]:
         for i in range(2):
             default_parts=db_WeeklySetting_Get_Parts()
@@ -111,11 +111,11 @@ def makrup_generate_parts_list_of_set_work(date):
                 part_end_time= default_parts_str.split('/')[1]
             all_part += [(part_start_time)]
             all_part += [(part_end_time)]
-        result_update = db_Setwork_Creat_Date_Without_part(date=date , part1_start_time=all_part[0] , part1_end_time=all_part[1] , part2_start_time=all_part[2] , part2_end_time=all_part[3])
-        part=db_Setwork_Get_Part1_or_Part2_of_Day(date=date ,part=i+1)
+        result_update = db_SetWork_Create_Date_Without_part(date=date , part1_start_time=all_part[0] , part1_end_time=all_part[1] , part2_start_time=all_part[2] , part2_end_time=all_part[3])
+        part=db_SetWork_Get_Part1_or_Part2_of_Day(date=date ,part=i+1)
     if part not in ['False',False]:
         for i in range(1,3):
-            part=db_Setwork_Get_Part1_or_Part2_of_Day(date=date ,part=i)  
+            part=db_SetWork_Get_Part1_or_Part2_of_Day(date=date ,part=i)  
             buttons_part=[]  
             part_text2=''
             
@@ -136,3 +136,20 @@ def makrup_generate_parts_list_of_set_work(date):
             markup.add(*buttons_part)
         return markup
 ##########################################
+def markup_generate_services_for_reserve(services):
+    """call back data is select_service_{id}
+    AND for reservation selection end call back is make_reservation """
+    markup=InlineKeyboardMarkup()
+    if services is None or len(services)==0 :
+        return markup.add(InlineKeyboardButton(text="هیچ سرویسی جهت رزرو موجود نیست",callback_data="!!!!!!!!!"))
+    for service in services:
+        # print(service)
+        if not service[4]:
+            continue 
+        id=service[0]
+        name = service[1]
+        price = service[3]
+        isEnable="انتخاب شده" if service[5] ==1 else "انتخاب نشده"
+        markup.add(InlineKeyboardButton(text=f"{name}:{price}:{isEnable}",callback_data=f"select_service_{id}"))
+    markup.add(InlineKeyboardButton(text="اتمام انتخاب",callback_data="make_reservation"))
+    return markup

@@ -6,10 +6,10 @@ from mysql.connector import Error
 from auth.auth import DB_CONFIG
     # """Services(id,name,time_slots,price,is_active)"""
 #todo: insert new timing for today
-def db_Service_Insert_Service(name :str,time_slots:int,price:int,is_active:bool):
+def db_Service_Insert_Service(name :str,time_slots,price:int,is_active:bool):
     try:
-        sql =f"""INSERT INTO services (name,time_slots,price,is_active) 
-        VALUES ('{name}',{time_slots},{price},{is_active});"""
+        sql =f"""INSERT INTO services (name,time,price,is_active) 
+        VALUES ('{name}','{time_slots}',{price},{is_active});"""
         with mysql.connector.connect(**DB_CONFIG) as connection:
             if connection.is_connected():
                 with connection.cursor()  as cursor:

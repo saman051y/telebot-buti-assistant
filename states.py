@@ -11,6 +11,7 @@ class user_State(StatesGroup):
     state_info_update_name = State()
     state_info_update_last_name = State()
     state_info_update_phone_number = State()
+    state_selecting_service=State()
 #######################################################################
 class admin_State(StatesGroup):
 
@@ -28,8 +29,8 @@ class admin_State(StatesGroup):
     message_to_all=State()
 
     ########## setwork state
-    state_setwork_get_part=State()
-    state_setwork_update_part=State()
+    state_setWork_get_part=State()
+    state_setWork_update_part=State()
     
     ########## weekly time
     state_weekly_update_time=State()

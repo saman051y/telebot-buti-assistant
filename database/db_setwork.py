@@ -8,10 +8,10 @@ from database.db_weeklysetting import *
 """(date,part1_start_time,part1_end_time,part2_start_time,part2_end_time)"""
 ######################################################################################################
 ########################################################################################! Insert Sectin
-def db_Setwork_Insert_New_date(date: str, part1_start_time: str, part1_end_time: str, part2_start_time: str, part2_end_time: str):
+def db_SetWork_Insert_New_date(date: str, part1_start_time: str, part1_end_time: str, part2_start_time: str, part2_end_time: str):
     """(date, part1_start_time, part1_end_time, part2_start_time, part2_end_time)"""
     try:
-        date_exist=db_Setwork_exist_date(date=date)
+        date_exist=db_SetWork_exist_date(date=date)
         if not date_exist:
 
             sql=f"""INSERT INTO setwork (date, part1_start_time, part1_end_time, part2_start_time, part2_end_time)
@@ -41,10 +41,10 @@ def db_Setwork_Insert_New_date(date: str, part1_start_time: str, part1_end_time:
         return False
 
 ######################################################################################################
-def db_Setwork_Creat_Date_Without_part(date: str, part1_start_time: str, part1_end_time: str, part2_start_time: str, part2_end_time: str):
+def db_SetWork_Create_Date_Without_part(date: str, part1_start_time: str, part1_end_time: str, part2_start_time: str, part2_end_time: str):
     """(date, part1_start_time, part1_end_time, part2_start_time, part2_end_time)"""
     try:
-        date_exist=db_Setwork_exist_date(date=date)
+        date_exist=db_SetWork_exist_date(date=date)
         if not date_exist:
             
             sql=f"""INSERT INTO setwork (date, part1_start_time, part1_end_time, part2_start_time, part2_end_time)
@@ -79,19 +79,19 @@ def db_Setwork_Creat_Date_Without_part(date: str, part1_start_time: str, part1_e
         return False
 #######################################################################################! Get Section
 ###################################### get all set work date al time
-def db_Setwork_Get_ALL_Days():
+def db_SetWork_Get_ALL_Days():
     try:
         sql = f"""SELECT * FROM setwork;"""
         with mysql.connector.connect(**DB_CONFIG) as connection:
             if connection.is_connected():
                 with connection.cursor()  as cursor:
                      cursor.execute(sql)
-                     settime=cursor.fetchall()
+                     setTime=cursor.fetchall()
                      cursor.close()
                      connection.close()
-                     if settime is None:
+                     if setTime is None:
                         return None
-                     return settime
+                     return setTime
             else:
                 logging.error("connection to database is not working")
                 return False
@@ -101,7 +101,7 @@ def db_Setwork_Get_ALL_Days():
 def db_Setwork_Get_One_Day(date:str):
     """request a day and get all parts of a day"""
     try:
-        date_exist=db_Setwork_exist_date(date=date)
+        date_exist=db_SetWork_exist_date(date=date)
         if date_exist:   
             sql=f"""SELECT *
                     FROM setwork
@@ -122,10 +122,10 @@ def db_Setwork_Get_One_Day(date:str):
         logging.error(f"Error in db_Setwrk_Get_Day : {e}") 
         return False
 ######################################  get one part of a day
-def db_Setwork_Get_Part1_or_Part2_of_Day(date:str, part:int):
+def db_SetWork_Get_Part1_or_Part2_of_Day(date:str, part:int):
     """if (2024-04-05 , 2): you'll get part 2 of 2024-04-05"""
     try:
-        date_exist=db_Setwork_exist_date(date=date)
+        date_exist=db_SetWork_exist_date(date=date)
         if date_exist:   
             sql=f"""SELECT part{part}_start_time , part{part}_end_time 
                     FROM setwork
@@ -146,7 +146,7 @@ def db_Setwork_Get_Part1_or_Part2_of_Day(date:str, part:int):
         logging.error(f"Error in db_Setwrk_Get_Day : {e}") 
         return False
 ######################################  is day exist or nor ?
-def db_Setwork_exist_date(date:str):
+def db_SetWork_exist_date(date:str):
     """request a day to know if exist"""
     try:
             sql=f"""SELECT date
@@ -174,9 +174,9 @@ def db_Setwork_exist_date(date:str):
 # generate day with checking is exist day ? or is active day ? after all insert day bu defaul bot setting value 
 def db_Setwork_Generate_day(date:str):
     try:
-       date_exist=db_Setwork_exist_date(date=date)
+       date_exist=db_SetWork_exist_date(date=date)
        if date_exist is False:
-            day_name=convertDateToDayAsGorgiancalendar(date)
+            day_name=convertDateToDayAsGorgianCalendar(date)
             day_info=db_WeeklySetting_Get_Value(day_name)
             is_day_active= day_info[2]
             if is_day_active == '1':
@@ -185,7 +185,7 @@ def db_Setwork_Generate_day(date:str):
                 part1_end_time=list_parts[1][1]
                 part2_start_time=list_parts[2][1]
                 part2_end_time=list_parts[3][1]
-                db_Setwork_Insert_New_date(date=date , part1_start_time=part1_start_time, part1_end_time=part1_end_time, part2_start_time=part2_start_time, part2_end_time=part2_end_time)
+                db_SetWork_Insert_New_date(date=date , part1_start_time=part1_start_time, part1_end_time=part1_end_time, part2_start_time=part2_start_time, part2_end_time=part2_end_time)
                 return True
             if is_day_active == '0':
                 return False
@@ -200,7 +200,7 @@ def db_Setwork_Generate_day(date:str):
 def db_Setwork_Update_All_Part_Of_Day(date: str, part1_start_time: str, part1_end_time: str, part2_start_time: str, part2_end_time: str):
     """update a day with all part"""
     try:
-        date_exist=db_Setwork_exist_date(date)
+        date_exist=db_SetWork_exist_date(date)
         if date_exist:  
             sql=f"""UPDATE setwork
                     SET part1_start_time = '{part1_start_time}', 
@@ -224,10 +224,10 @@ def db_Setwork_Update_All_Part_Of_Day(date: str, part1_start_time: str, part1_en
         logging.error(f"Error in db_Setwork_Update_All_Part_Of_Day : {e}") 
         return False
 ###################################### update just one part of a day    
-def db_Setwork_Update_One_Part_Of_Day(date: str, part: int, start_time: str, end_time: str):
+def db_SetWork_Update_One_Part_Of_Day(date: str, part: int, start_time: str, end_time: str):
     """get date and number of part to update also get start_time  end_time to update one part of date """
     try:
-        date_exist=db_Setwork_exist_date(date)
+        date_exist=db_SetWork_exist_date(date)
         if date_exist:  
             sql=f"""UPDATE setwork
                     SET part{part}_start_time = '{start_time}', 
@@ -253,7 +253,7 @@ def db_Setwork_Update_One_Part_Of_Day(date: str, part: int, start_time: str, end
 def db_Setwork_Delete_date(date: str):
     """delete a day with parts"""
     try:
-        date_exist=db_Setwork_exist_date(date=date)
+        date_exist=db_SetWork_exist_date(date=date)
         if date_exist:
             sql=f"""DELETE FROM setwork 
                     WHERE date = '{date}';"""
@@ -273,10 +273,10 @@ def db_Setwork_Delete_date(date: str):
         logging.error(f"Error in db_Setwork_Delete_date : {e}") 
         return False
 ###################################### set free one part a day  
-def db_Setwork_Delete_One_Part(date:str, part:int):
+def db_SetWork_Delete_One_Part(date:str, part:int):
     """delete a day with parts"""
     try:
-        date_exist=db_Setwork_exist_date(date=date)
+        date_exist=db_SetWork_exist_date(date=date)
         if date_exist:
             sql=f"""UPDATE setwork
                         SET part{part}_start_time = NULL, 

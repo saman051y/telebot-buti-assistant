@@ -184,10 +184,10 @@ def get_current_time():
 def is_valid_time_format(time_str):
     try:
         # بررسی فرمت ساعت
-        hours, minutes = map(int, time_str.split(":"))
+        hours, minutes ,sec= map(int, time_str.split(":"))
         
         # بررسی محدوده ساعت و دقیقه
-        if 0 <= hours <= 23 and 0 <= minutes <= 59:
+        if 0 <= hours <= 23 and 0 <= minutes <= 59 and  0<=sec <=59: 
             return True
         else:
             return False
@@ -242,7 +242,7 @@ def convertDateToMonthAsPersiancalendar(date:str):
     persian_month_str=months_of_year_name[persian_month_int - 1]
     return persian_month_str
 ########################################################## generate persian format date like 1403 مهر 08 شنبه
-def convertDateToPersiancalendar(date:str):
+def convertDateToPersianCalendar(date:str):
     """input is Gorgian date like'224-09-29' and output is like '1403 مهر 08 شنبه' """
     jalali_date = gregorian_to_jalali(date)
     jalali_Year = jalali_date.split('-')[0]
@@ -252,7 +252,7 @@ def convertDateToPersiancalendar(date:str):
     text = f'{jalali_day_name} {jalali_day_number} {jalali_month} {jalali_Year}'
     return text 
 ##########################################################
-def convertDateToDayAsGorgiancalendar(date:str):
+def convertDateToDayAsGorgianCalendar(date:str):
     """input is date like '2024-05-04' and output is like 'saturday'"""
     days_of_week_name = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday','sunday']
     gregorian_date = datetime.strptime(date, '%Y-%m-%d')

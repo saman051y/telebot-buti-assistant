@@ -124,7 +124,7 @@ def createServicesTable():# todo work on this
         sql=f""" CREATE TABLE IF NOT EXISTS services  (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL ,
-        time_slots INT NOT NULL ,
+        time TIME NOT NULL ,
         price INT NOT NULL DEFAULT 0,
         is_active BOOL NOT NULL DEFAULT TRUE
     );"""
