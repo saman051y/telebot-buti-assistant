@@ -37,3 +37,22 @@ text_users_list='لیست مخاطبین'
 msg_restart='ربات مجددا راه اندازی شد'
 text_message_to_all_users="پیامی برای ارسال به همه برای من بنویسید"
 text_sent_message_to_all_users="پیام شما ارسال شد"
+
+text_set_work_time_get_date = 'تاریخ خود را مشخص کنید'
+text_set_work_time_get_part ='به موارد زیر دقت کنید\nفرمت را رعایت کنید HH:MM/HH:MM \nساعت سمت چپ ساعت ورود و ساعت  سمت راست پایان میباشد\nدقیقه ها باید مضربی از 15 باشند\nساعت ها را 24 ساعته وارد کنید'
+text_set_work_time_get_done='اطلاعات شما درج شد'
+text_set_work_error_input_compare_parts='ساعت دوم از ساعت اول عقب تر است'
+text_set_work_error_input_compare_part2_period='بازه پارت دوم باید بعد از بازه پارت اول باشد'
+text_set_work_error_input_compare_part1_period='بازه پارت اول باید عقب تر از بازه پارت دوم باشد'
+text_set_work_insert_part1='افزودن پارت اول'
+text_set_work_insert_part2='افزودن پارت دوم'
+text_set_work_delete_part1='پارت اول با موفقیت حذف شد'
+text_set_work_delete_part2='پارت دوم با موفقیت حذف شد'
+text_error_call_to_support='مشکلی رخ داده است لطفا با بخش فنی تماس بگیرید'
+
+text_weekly_time=' با انتخاب هر آیتم میتوانید آن روز را فعال یا غیر فعال کنید و با انتخاب ساعت شروع و پایان آن را ویرایش کنید'
+text_error_disable_day='این روز غیر فعال است ولی همچنان برای  شما قابل ویرایش است'
+
+
+text_no_service_available="در حال حاضر امکان رزرو سرویس وجود ندارد"
+text_reservation_init="خدماتی که نیاز دارید از لیست زیر به حالت فعال در بیاورید"

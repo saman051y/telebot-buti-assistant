@@ -6,6 +6,7 @@ def convert_time_to_slot(time:str):
     """get a time like '01:30' return  6 (1 slot = 15 min)"""
     hour, min = map(int, time.split(":"))
     total_minutes=(hour*60) + min
+    if total_minutes ==0 :return 0
     blocks = math.ceil(total_minutes / 15)
     return blocks
 #########################################################
@@ -38,7 +39,7 @@ def gregorian_to_jalali(gregorian_date_str):
     jalali_date = persian.from_gregorian(year, month, day)
     
     # Format Jalali date into 'YYYY-MM-DD' string
-    jalali_date_str = f"{jalali_date[2]}-{jalali_date[1]:02d}-{jalali_date[0]:02d}"
+    jalali_date_str = f"{jalali_date[0]}-{jalali_date[1]:02d}-{jalali_date[2]:02d}"
     
     return jalali_date_str
 #########################################################
@@ -183,13 +184,78 @@ def get_current_time():
 def is_valid_time_format(time_str):
     try:
         # بررسی فرمت ساعت
-        hours, minutes = map(int, time_str.split(":"))
+        hours, minutes ,sec= map(int, time_str.split(":"))
         
         # بررسی محدوده ساعت و دقیقه
-        if 0 <= hours <= 23 and 0 <= minutes <= 59:
+        if 0 <= hours <= 23 and 0 <= minutes <= 59 and  0<=sec <=59: 
             return True
         else:
             return False
     except ValueError:
         # اگر نتواند رشته را به اعداد تبدیل کند، یعنی فرمت اشتباه است
         return False
+#########################################################
+def time_deference(time_a,time_b):
+    time_format = "%H"
+    time_a = int(time_a.split(":")[0])
+    time_b= int(time_b.split(":")[0])
+    return time_b-time_a
+
+
+######################################################### change timeDelta to Normal format
+def convertTimeDeltaToTime(timedelta):
+    """input like (1500) as totol seconds and it return in format HH:MM:SS as string"""
+    total_seconds = int(timedelta)
+    if total_seconds>3600 :
+        hours, remainder = divmod(total_seconds, 3600)
+    else:
+        hours=00
+        remainder  = total_seconds
+    minutes, seconds = divmod(remainder, 60)
+
+    # Format the result as HH:MM:SS
+    time_string = f'{hours:02}:{minutes:02}:{seconds:02}'
+    return time_string
+########################################################## get name of days as persian calendar
+
+def convertDateToDayAsPersiancalendar(date:str):
+    """input date string in Gorgian 'YYYY-MM-DD' format and return the day in Persian."""
+
+    days_of_week_name = ['دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه', 'شنبه','یکشنبه']
+    # Convert the string to a Gregorian date (assuming 'YYYY-MM-DD' format)
+    gregorian_date = datetime.strptime(date, '%Y-%m-%d')
+    # Get the weekday number (Monday is 0 and Sunday is 6)
+    weekday_num = gregorian_date.weekday()
+    # Map the weekday number to Persian day name
+    persian_day_name = days_of_week_name[weekday_num]
+    return persian_day_name
+########################################################## get name of Month as persian calendar
+# Persian month names mapping
+def convertDateToMonthAsPersiancalendar(date:str):
+    """Get a date string in Gorgian 'YYYY-MM-DD' format and return the day in Persian."""
+    months_of_year_name = [
+    'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
+    'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
+]
+    persian_date=gregorian_to_jalali(date)
+    persian_month_int=int(persian_date.split('-')[1])
+    persian_month_str=months_of_year_name[persian_month_int - 1]
+    return persian_month_str
+########################################################## generate persian format date like 1403 مهر 08 شنبه
+def convertDateToPersianCalendar(date:str):
+    """input is Gorgian date like'224-09-29' and output is like '1403 مهر 08 شنبه' """
+    jalali_date = gregorian_to_jalali(date)
+    jalali_Year = jalali_date.split('-')[0]
+    jalali_month = convertDateToMonthAsPersiancalendar(date)
+    jalali_day_name = convertDateToDayAsPersiancalendar(date)
+    jalali_day_number= jalali_date.split('-')[2]
+    text = f'{jalali_day_name} {jalali_day_number} {jalali_month} {jalali_Year}'
+    return text 
+##########################################################
+def convertDateToDayAsGorgianCalendar(date:str):
+    """input is date like '2024-05-04' and output is like 'saturday'"""
+    days_of_week_name = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday','sunday']
+    gregorian_date = datetime.strptime(date, '%Y-%m-%d')
+    weekday_num = gregorian_date.weekday()
+    Gorgain_day_name = days_of_week_name[weekday_num]
+    return Gorgain_day_name
