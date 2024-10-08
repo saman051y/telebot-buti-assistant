@@ -63,7 +63,7 @@ def reserve_time(msg : Message):
         bot.send_message(chat_id=msg.chat.id,text=text_user_is_not_admin)
         return False
     markup = InlineKeyboardMarkup()
-    markup=makrup_generate_set_work_list_of_days()
+    markup=makrup_generate_list_of_days()
     bot.send_message(chat_id=msg.chat.id,text=text_set_work_time_get_date, reply_markup=markup)
 ##########################################  call date from admin to set work 
 @bot.callback_query_handler(func= lambda m:m.data.startswith("SetWorkTime:"))
@@ -129,7 +129,7 @@ def setWork_section_state_get_part1(msg : Message):
             persian_date=convertDateToPersianCalendar(date1)
             text = f'{persian_date}\n{text_part} برای {start_time_without_seconds} الی {end_time_without_seconds} با موفیقت درج شد \n'
             markup = InlineKeyboardMarkup()
-            markup= makrup_generate_set_work_list_of_days()
+            markup= makrup_generate_list_of_days()
             bot.send_message(chat_id=msg.chat.id, text=text , reply_markup=markup)
         bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)  
     except ValueError:
@@ -212,7 +212,7 @@ def setWork_section_state_update_part1(msg : Message):
                 text_part= f'پارت دوم'
             text = f'{persian_date}\n{text_part}\n{start_time_without_seconds} الی {end_time_without_seconds}\n با موفیقت درج شد \n'
             markup = InlineKeyboardMarkup()
-            markup= makrup_generate_set_work_list_of_days()
+            markup= makrup_generate_list_of_days()
             bot.send_message(chat_id=msg.chat.id, text=text , reply_markup=markup)
         bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)  
     #except ValueError:
@@ -226,7 +226,7 @@ def forwardToStateUpdatePart(call:CallbackQuery):
     part=call.data.split(':')[1]
     date=call.data.split(':')[2]
     db_SetWork_Delete_One_Part(part=part , date=date)
-    markup=makrup_generate_set_work_list_of_days()
+    markup=makrup_generate_list_of_days()
     persian_date=convertDateToPersianCalendar(date=date)
     text_delete = text_set_work_delete_part1
     if part == '2':
@@ -729,7 +729,7 @@ def callback_query(call:CallbackQuery):
     text=text_make_reservation_info(price=total_price,time=total_time,services=services)
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text,)
     #todo: # set reservation
-    
+    markup=makrup_generate_list_of_days(callback_data="select_day_reserve",split="_")
 
 
 #?######################################################################

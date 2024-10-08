@@ -81,13 +81,14 @@ def makrup_generate_weekly_time_list():
 
 
 ########################################## generate markup setwork list until 7 days
-def makrup_generate_set_work_list_of_days() :
+def makrup_generate_list_of_days(callback_data:str="SetWorkTime",split:str="_") :
+    """call back data = {callback_data}:{date}"""
     markup = InlineKeyboardMarkup()
     today = datetime.now().date()
     for i in range(0,6):
         date = today + timedelta(days=i)
         text=convertDateToPersianCalendar(date=str(date))
-        button = InlineKeyboardButton(text=f'{text}' ,callback_data=f'SetWorkTime:{date}')
+        button = InlineKeyboardButton(text=f'{text}' ,callback_data=f'{callback_data}{split}{date}')
         markup.add(button)
     return markup
 ########################################## generate markup for parts list of set work  
