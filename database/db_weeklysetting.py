@@ -6,7 +6,7 @@ from auth.auth import DB_CONFIG
 """input: name:varchar(20), value:varchar(20) """
 ######################################################################################################
 def db_WeeklySetting_Update(name:str, value:str):
-    """botsetting(name:varchar(20), value:varchar(20)  and it will be updated"""
+    """weekly setting(name:varchar(20), value:varchar(20)  and it will be updated"""
     try:
         sql=f"""UPDATE weekly_setting
                 SET value = '{value}'

@@ -6,6 +6,7 @@ from mysql.connector import Error
 
 from auth.auth import DB_CONFIG
 ##################################################
+##################################################! insert section
 def db_Reserve_insert_Reserve(user_id:int ,date:str,start_time:str,end_time:str,payment:int):
     """return reserve_id"""
     try:
@@ -27,6 +28,7 @@ def db_Reserve_insert_Reserve(user_id:int ,date:str,start_time:str,end_time:str,
         logging.error(f"insertReserve : {e}")
         return False
 ##################################################
+##################################################! get section
 def db_Reserve_Get_Reserve_With_Id(reserve_id :int):
     valid_id=db_Reserve_Reserve_Valid_Id(reserve_id=reserve_id)
     if not valid_id:
@@ -48,6 +50,77 @@ def db_Reserve_Get_Reserve_With_Id(reserve_id :int):
     except Error as e:
         logging.error(f"getReserveWithId : {e}")
 ##################################################
+def db_Reserve_Get_Reserve_Of_Date(date:str):
+    try:
+        sql = f"""SELECT * FROM reserve 
+                  WHERE date = '{date}';"""
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor()  as cursor:
+                     cursor.execute(sql)
+                     reserves=cursor.fetchall()
+                     cursor.close()
+                     connection.close()
+                     return reserves
+            else:
+                logging.error("connection to database is not working")
+                return False
+    except Error as e:
+        logging.error(f"getReserveOfDate : {e}")
+##################################################     
+def db_Reserve_Get_Date_And_parts_Not_Reserved(date:str , start_time:str , end_time:str):
+    """input is date for search from start_time to end_time to find first duration and output is list of"""
+    try:
+        start_time_with_00_seconds=start_time[:7] +f'0'
+        sql = f""" 
+                            WITH RECURSIVE time_slots AS (
+                -- Generate 15-min time slots starting from 9:00 AM (300 minutes = 20 slots)
+                SELECT '{start_time}' AS slot_start_time,
+                       ADDTIME('{start_time_with_00_seconds}', '00:15:00') AS slot_end_time
+                UNION ALL
+                SELECT ADDTIME(slot_start_time, '00:15:00') AS slot_start_time,
+                       ADDTIME(slot_end_time, '00:15:00') AS slot_end_time
+                FROM time_slots
+                WHERE slot_end_time < '{end_time}' -- Stop before 2:00 PM (to include 1:45 PM - 2:00 PM slot)
+            ),
+            numeric_time_slots AS (
+              SELECT 
+                ROW_NUMBER() OVER (ORDER BY slot_start_time) AS SlotNumber,
+                slot_start_time, slot_end_time
+              FROM time_slots  
+            ),
+            reserved_slots AS (
+                SELECT start_time, end_time
+                FROM reserve
+                WHERE date = '{date}'
+            )
+            -- Fetch time slots that are not reserved
+            SELECT slot_start_time, slot_end_time ,SlotNumber
+            FROM numeric_time_slots t
+            LEFT JOIN reserved_slots r
+                ON t.slot_start_time BETWEEN r.start_time AND r.end_time
+                OR t.slot_end_time BETWEEN r.start_time AND r.end_time
+                OR (r.start_time <= t.slot_start_time AND r.end_time >= t.slot_end_time)
+            WHERE r.start_time IS NULL;
+                """
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor()  as cursor:
+                    cursor.execute(sql)
+                    reserves=cursor.fetchall()
+                    cursor.close()
+                    connection.close()
+                    return reserves
+            else:
+                logging.error("connection to database is not working")
+                return False
+    except Error as e:
+        logging.error(f"getReserveOfDate : {e}")
+
+
+
+
+# ##################################################! update section   
 def db_Reserve_Update_Date_Of_Reserve(reserve_id:int,new_date:str):
     valid_id=db_Reserve_Reserve_Valid_Id(reserve_id=reserve_id)
     if not valid_id:
@@ -140,23 +213,7 @@ def db_Reserve_Update_Approved_Of_Reserve(reserve_id:int,approved:bool):
     except Error as e:
         logging.error(f"updateApprovedOfReserve : {e}")
 ##################################################
-def db_Reserve_Get_Reserve_Of_Date(date:str):
-    try:
-        sql = f"""SELECT * FROM reserve 
-                  WHERE date = '{date}';"""
-        with mysql.connector.connect(**DB_CONFIG) as connection:
-            if connection.is_connected():
-                with connection.cursor()  as cursor:
-                     cursor.execute(sql)
-                     reserves=cursor.fetchall()
-                     cursor.close()
-                     connection.close()
-                     return reserves
-            else:
-                logging.error("connection to database is not working")
-                return False
-    except Error as e:
-        logging.error(f"getReserveOfDate : {e}")
+##################################################! delete section
 ##################################################
 def db_Reserve_Delete_Reserve(reserve_id:int):
     valid_id=db_Reserve_Reserve_Valid_Id(reserve_id=reserve_id)
@@ -180,6 +237,7 @@ def db_Reserve_Delete_Reserve(reserve_id:int):
     except Error as e:
         logging.error(f"DeleteReserve : {e}")
 ##################################################
+##################################################! check section
 def db_Reserve_Reserve_Valid_Id(reserve_id:int):
     try:
         sql = f"""SELECT COUNT(*) 

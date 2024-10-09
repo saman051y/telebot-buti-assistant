@@ -3,7 +3,7 @@ import mysql.connector # type: ignore
 from mysql.connector import Error
 from auth.auth import DB_CONFIG
 #######################################################################################
-########################################################################################! Insert Sectin
+########################################################################################! Insert Section
 def db_Users_Insert_New_User(user_id : int,phone_number :str,username :str,join_date :str,name:str,last_name:str):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:
@@ -24,7 +24,7 @@ VALUES ({user_id}, '{phone_number}', '{username}' , '{join_date}' , '{name}' , '
         logging.error(f"Error in db_Users_Insert_New_User : {e}") 
         return False
 #######################################################################################
-########################################################################################! Find Sectin
+########################################################################################! Find Section
 def db_Users_Find_User_By_Id(user_id):
     """users(user_id,phone_number,username,join_date,name,last_name)"""
     try:

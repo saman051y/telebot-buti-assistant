@@ -39,7 +39,7 @@ def reserve_time(msg : Message):
     if not validation_admin(msg.from_user.id) : 
         bot.send_message(chat_id=msg.from_user.id,text=text_user_is_not_admin)
         return False    
-    bot.send_message(chat_id=msg.from_user.id,text=text_cooming_soon)
+    bot.send_message(chat_id=msg.from_user.id,text=text_coming_soon)
     #TODO insert reserve time section for admin
 ############################################################################################ markup empty time
 @bot.message_handler(func= lambda m:m.text == mark_text_admin_empty_time)
@@ -48,7 +48,7 @@ def reserve_time(msg : Message):
     if not validation_admin(msg.from_user.id) : 
         bot.send_message(chat_id=msg.from_user.id,text=text_user_is_not_admin)
         return False    
-    bot.send_message(chat_id=msg.from_user.id,text=text_cooming_soon)
+    bot.send_message(chat_id=msg.from_user.id,text=text_coming_soon)
     #TODO insert empty_time section for admin  
 ############################################################################################ markup setwork time
 
@@ -73,7 +73,7 @@ def convertUserID(call:CallbackQuery):
     markup = makrup_generate_parts_list_of_set_work(date=date)
     text=convertDateToPersianCalendar(date=str(date))
     #check activation of day if day be disable , admin can change day status
-    date_as_day=convertDateToDayAsGorgianCalendar(date=date)
+    date_as_day=convertDateToDayAsGregorianCalendar(date=date)
     check_is_active_day=db_WeeklySetting_Get_Value(name=date_as_day)
     print(f'{check_is_active_day}')
     if check_is_active_day[2] =='0':
@@ -121,10 +121,10 @@ def setWork_section_state_get_part1(msg : Message):
             date1=str(data['date1'])
             part=str(data['part'])
             if part =='1':
-                db_SetWork_Insert_New_date(date=date1,part1_start_time=start_time, part1_end_time=end_time , part2_start_time=None , part2_end_time=None)
+                db_SetWork_Create_date(date=date1,part1_start_time=start_time, part1_end_time=end_time , part2_start_time=None , part2_end_time=None)
                 text_part = 'پارت اول'
             if part =='2':
-                db_SetWork_Insert_New_date(date=date1,part1_start_time=None, part1_end_time=None , part2_start_time=start_time , part2_end_time=end_time)
+                db_SetWork_Create_date(date=date1,part1_start_time=None, part1_end_time=None , part2_start_time=start_time , part2_end_time=end_time)
                 text_part = 'پارت دوم'
             persian_date=convertDateToPersianCalendar(date1)
             text = f'{persian_date}\n{text_part} برای {start_time_without_seconds} الی {end_time_without_seconds} با موفیقت درج شد \n'
@@ -631,12 +631,12 @@ def get_message_to_send(msg : Message):
 #* /start
 @bot.message_handler(commands=['start'])
 def start(msg : Message):
-    bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id) 
+    #bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id) 
     user_id=msg.from_user.id
     user_is_valid=db_Users_Validation_User_By_Id(user_id=user_id)
-    if not user_is_valid:
-        user_is_created =db_Users_Insert_New_User(user_id=user_id,username=msg.from_user.username,join_date=datetime.now().date(),name='empty',last_name='empty',phone_number='0')
-        if not user_is_created:
+    if user_is_valid is False :
+        user_is_created =db_Users_Insert_New_User(user_id=msg.from_user.id,username=msg.from_user.username,join_date=datetime.now().date(),name='empty',last_name='empty',phone_number='0')
+        if user_is_created is False:
             text=text_user_not_created
             bot.send_message(chat_id=user_id,text=text,reply_markup=ReplyKeyboardRemove())
             return False
@@ -681,7 +681,7 @@ def callback_query(call:CallbackQuery):
         services=data['services_choosing']
         services_name=str(data["services_name"])
         counter=data['counter']
-    # change enable <=> disble
+    # change enable <=> disable
     for index, service in enumerate(services):
 
         if int(service[0]) == int(service_id):
@@ -694,7 +694,7 @@ def callback_query(call:CallbackQuery):
                 current_service_info=f"{services[index][1]}-{services[index][3]}-{services[index][2]}"
                 services_name=f"{services_name}\n {current_service_info}"
                 counter=counter+1
-            else:# if service wana be disable
+            else:# if service wanna be disable
                 services[index]=service[:5] + (0,) 
                 current_service_info=f"{services[index][1]}-{services[index][3]}-{services[index][2]}"
                 services_name = services_name.replace(current_service_info, "").strip()
@@ -729,7 +729,7 @@ def callback_query(call:CallbackQuery):
     text=text_make_reservation_info(price=total_price,time=total_time,services=services)
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text,)
     #todo: # set reservation
-    
+     
 
 
 #?######################################################################
@@ -744,7 +744,7 @@ def activation_user(msg : Message) :
 
 ### Enter name for first time after press 'reserve time'
 @bot.message_handler(state=user_State.state_info_enter_name)
-def reserve_section_enter_name_frist_time(msg : Message):
+def reserve_section_enter_name_first_time(msg : Message):
     db_Users_Update_Name_User(user_id=msg.from_user.id ,name=msg.text)
     bot.send_message(chat_id=msg.from_user.id,text=text_enter_last_name)
     bot.set_state(user_id=msg.chat.id,state=user_State.state_info_enter_last_name,chat_id=msg.chat.id)
@@ -762,7 +762,7 @@ def reserve_section_state_enter_lastname(msg : Message):
 def reserve_section_state_enter_phone_number(msg : Message):
     db_Users_Update_Phone_Number_User(user_id=msg.from_user.id ,phone_number=msg.text)
     bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)
-    bot.send_message(chat_id=msg.from_user.id,text=text_compelet_enter_info)
+    bot.send_message(chat_id=msg.from_user.id,text=text_complete_enter_info)
 
 
 ####################################################################### Account Info Section

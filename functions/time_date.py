@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 from convertdate import persian
 import math
+from database.db_setwork import *
+from database.db_weeklysetting import *
 #########################################################
 def convert_time_to_slot(time:str):
     """get a time like '01:30' return  6 (1 slot = 15 min)"""
@@ -204,7 +206,7 @@ def time_deference(time_a,time_b):
 
 ######################################################### change timeDelta to Normal format
 def convertTimeDeltaToTime(timedelta):
-    """input like (1500) as totol seconds and it return in format HH:MM:SS as string"""
+    """input like (1500) as total seconds and it return in format HH:MM:SS as string"""
     total_seconds = int(timedelta)
     if total_seconds>3600 :
         hours, remainder = divmod(total_seconds, 3600)
@@ -218,7 +220,7 @@ def convertTimeDeltaToTime(timedelta):
     return time_string
 ########################################################## get name of days as persian calendar
 
-def convertDateToDayAsPersiancalendar(date:str):
+def convertDateToDayAsPersianCalendar(date:str):
     """input date string in Gorgian 'YYYY-MM-DD' format and return the day in Persian."""
 
     days_of_week_name = ['دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه', 'شنبه','یکشنبه']
@@ -231,7 +233,7 @@ def convertDateToDayAsPersiancalendar(date:str):
     return persian_day_name
 ########################################################## get name of Month as persian calendar
 # Persian month names mapping
-def convertDateToMonthAsPersiancalendar(date:str):
+def convertDateToMonthAsPersianCalendar(date:str):
     """Get a date string in Gorgian 'YYYY-MM-DD' format and return the day in Persian."""
     months_of_year_name = [
     'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
@@ -243,19 +245,84 @@ def convertDateToMonthAsPersiancalendar(date:str):
     return persian_month_str
 ########################################################## generate persian format date like 1403 مهر 08 شنبه
 def convertDateToPersianCalendar(date:str):
-    """input is Gorgian date like'224-09-29' and output is like '1403 مهر 08 شنبه' """
+    """input is Gregorian date like'224-09-29' and output is like '1403 مهر 08 شنبه' """
     jalali_date = gregorian_to_jalali(date)
     jalali_Year = jalali_date.split('-')[0]
-    jalali_month = convertDateToMonthAsPersiancalendar(date)
-    jalali_day_name = convertDateToDayAsPersiancalendar(date)
+    jalali_month = convertDateToMonthAsPersianCalendar(date)
+    jalali_day_name = convertDateToDayAsPersianCalendar(date)
     jalali_day_number= jalali_date.split('-')[2]
     text = f'{jalali_day_name} {jalali_day_number} {jalali_month} {jalali_Year}'
     return text 
-##########################################################
-def convertDateToDayAsGorgianCalendar(date:str):
+########################################################## input is date and output is name day of week
+def convertDateToDayAsGregorianCalendar(date:str):
     """input is date like '2024-05-04' and output is like 'saturday'"""
     days_of_week_name = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday','sunday']
     gregorian_date = datetime.strptime(date, '%Y-%m-%d')
     weekday_num = gregorian_date.weekday()
-    Gorgain_day_name = days_of_week_name[weekday_num]
-    return Gorgain_day_name
+    Gregorian_day_name = days_of_week_name[weekday_num]
+    return Gregorian_day_name
+########################################################## generate 7 day from now by default as weekly setting 
+def GenerateNext7Day() :
+    today = datetime.now().date()
+    get_default_parts= db_WeeklySetting_Get_Parts()
+    default_parts =[]
+    for i in range(2) :
+        default_part= get_default_parts[i][1]
+        start_time = 'Null'
+        end_time = 'Null'
+        if default_part not in [None , 'None' , 'Null']:
+            start_time=str(default_part.split('/')[0])
+            end_time=str(default_part.split('/')[1])
+        default_parts += [start_time , end_time]
+    print(default_parts)
+    for i in range(0,6):
+        date = today + timedelta(days=i)
+        day_of_week=convertDateToDayAsGregorianCalendar(date=str(date))
+        day_status=db_WeeklySetting_Get_Value(day_of_week)
+        result=False
+        if day_status[2] == '1':
+            # exist_day = db_SetWork_exist_date(str(date))
+            # if not exist_day:
+            result = test_insert(date ,default_parts[0], default_parts[1], default_parts[2] , default_parts[3])
+        print(f'{i} : {result} ' )
+########################################################## calculate slot_number from start_time
+def Get_Nth_Time_Slot(start_time_str,slot_number):
+    """input is time like 08:30:00 and slot_number like 3 
+        and export is 3th 15Min then export si 09:00:00"""
+     # Parse the start time into a datetime object including seconds
+    time_format = "%H:%M:%S"
+    start_time = datetime.strptime(start_time_str, time_format)
+    
+    # Calculate the total minutes to add for the given slot number
+    total_minutes_to_add = 15 * (slot_number - 1)  # Subtract 1 because the first slot is at the start time
+    
+    # Add the minutes to the start time
+    new_time = start_time + timedelta(minutes=total_minutes_to_add)
+    
+    # Return the time in 'HH:MM:SS' format
+    return new_time.strftime(time_format)
+########################################################## input is duration and export is time_slot bu 15 Min
+def convert_duration_to_slot_number(time_str):
+    """input is duration and export is time_slot bu 15 Min like input 01:30:00 export 6"""
+    # Parse the time string into a datetime object
+    time_format = "%H:%M:%S"
+    time_obj = datetime.strptime(time_str, time_format)
+    
+    # Calculate total minutes since midnight
+    total_minutes = time_obj.hour * 60 + time_obj.minute
+    
+    # Calculate the slot number (each slot is 15 minutes)
+    slot_number = total_minutes // 15
+    
+    return slot_number
+##########################################################search for first time that empty as array
+def find_consecutive_sequence(array, sequence_length):
+    """input is array from empty time and get duration as time_slot number"""
+    # Iterate through the list to find the first group of `sequence_length` consecutive numbers
+    for i in range(len(array) - sequence_length + 1):
+        # Check if the next numbers in the sequence are consecutive
+        is_consecutive = all(array[i + j] == array[i] + j for j in range(sequence_length))
+        
+        if is_consecutive:
+            return array[i]  # Return the first number of the consecutive sequence
+##########################################################
