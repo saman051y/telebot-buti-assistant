@@ -48,14 +48,34 @@ def reserve_time(msg : Message):
     if not validation_admin(msg.from_user.id) : 
         bot.send_message(chat_id=msg.from_user.id,text=text_user_is_not_admin)
         return False    
-    bot.send_message(chat_id=msg.from_user.id,text=text_coming_soon)
-    #TODO insert empty_time section for admin  
-############################################################################################ markup setwork time
+    #every date when sent to markup will be delete ,so at first time i send a confusing value 
+    markup = makrup_generate_empty_time_of_day(delete_day='0')
+    text=text_get_empty_time
+    bot.send_message(chat_id=msg.from_user.id,text=text , reply_markup=markup)
 
-#TODo move compare function for all parts
-#TODO check part1< part2  and part2>part1
-
-
+##### handle show empty time
+@bot.callback_query_handler(func= lambda m:m.data.startswith("getEmptyTime:"))
+def convertUserID(call:CallbackQuery):
+    date=call.data.split(':')[1]
+    date_persian = convertDateToPersianCalendar(date=date)
+    list_empty_time=[]
+    text=f'{date_persian}\n{text_et_empty_time_is_false}'
+    list_empty_time=calculate_empty_time(date=date)
+    if list_empty_time not in [False,'False','[]'] : 
+        text=f'{date_persian}\n'
+        for i in range(len(list_empty_time)):
+            first_time =str(list_empty_time[i][0])
+            end_time =str(list_empty_time[i][1])
+            activation = str(list_empty_time[i][2])
+            first_time_without_seconds = first_time[:5]
+            end_time_without_seconds = end_time[:5]
+            text_activation = 'رزرو شده است'
+            if activation == '0':
+                text_activation = 'آزاد'
+            text += f'\n از {first_time_without_seconds} الی {end_time_without_seconds} {text_activation}'
+    markup = makrup_generate_empty_time_of_day(delete_day=str(date))
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text , reply_markup=markup)
+############################################################################################ markup set work time
 @bot.message_handler(func= lambda m:m.text == mark_text_admin_set_work_time)
 def reserve_time(msg : Message):
     bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)  
@@ -75,7 +95,6 @@ def convertUserID(call:CallbackQuery):
     #check activation of day if day be disable , admin can change day status
     date_as_day=convertDateToDayAsGregorianCalendar(date=date)
     check_is_active_day=db_WeeklySetting_Get_Value(name=date_as_day)
-    print(f'{check_is_active_day}')
     if check_is_active_day[2] =='0':
         text =f'{text} \n {text_error_disable_day}'
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text, reply_markup=markup)
@@ -423,7 +442,6 @@ def service_section_state_enter_price(msg : Message):
             service_time =(data['service_time'])
             service_price =int(data['service_price'])
             service_is_active_int =bool(data['service_is_active'])
-        # print(service_name,service_time,service_price,service_is_active_int)
         service_id =db_Service_Insert_Service(name=service_name ,time_slots=service_time , price=service_price , is_active=service_is_active_int )
         service_info= createLabelServicesToShowOnButton(int(service_id))
 
@@ -699,7 +717,6 @@ def callback_query(call:CallbackQuery):
                 current_service_info=f"{services[index][1]}-{services[index][3]}-{services[index][2]}"
                 services_name = services_name.replace(current_service_info, "").strip()
                 counter=counter-1
-                print(counter)
             break
     markup=markup_generate_services_for_reserve(services)
 

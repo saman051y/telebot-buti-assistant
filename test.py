@@ -7,8 +7,16 @@ from functions.time_date import *
 from messages.commands_msg import *
 from messages.markups_text import *
 from messages.messages_function import *
+from functions.time_date import *
 ##############################################################################
+# list =[]
+# for i in range(len(result)) : 
+#      list.append(result[i][2])
+# print(list)
+date = '2024-05-06'
+date_str = '2024-5-06'
+text = 'ok'
+if date != date_str :
+    text='not'
 
-markup_generate_parts_of_days_for_reservation_by_needed_time(1 , '01:15:00')
-
-'compelet auto generate days and calculate day with time to reseve for user by duration of needed services and part ' 
+print( text)

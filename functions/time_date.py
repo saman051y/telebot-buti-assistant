@@ -3,6 +3,8 @@ from convertdate import persian
 import math
 from database.db_setwork import *
 from database.db_weeklysetting import *
+from database.db_reserve import *
+from messages.commands_msg import *
 #########################################################
 def convert_time_to_slot(time:str):
     """get a time like '01:30' return  6 (1 slot = 15 min)"""
@@ -274,7 +276,6 @@ def GenerateNext7Day() :
             start_time=str(default_part.split('/')[0])
             end_time=str(default_part.split('/')[1])
         default_parts += [start_time , end_time]
-    print(default_parts)
     for i in range(0,6):
         date = today + timedelta(days=i)
         day_of_week=convertDateToDayAsGregorianCalendar(date=str(date))
@@ -283,24 +284,22 @@ def GenerateNext7Day() :
         if day_status[2] == '1':
             # exist_day = db_SetWork_exist_date(str(date))
             # if not exist_day:
-            result = test_insert(date ,default_parts[0], default_parts[1], default_parts[2] , default_parts[3])
-        print(f'{i} : {result} ' )
+            result = db_SetWork_Create_date(date ,default_parts[0], default_parts[1], default_parts[2] , default_parts[3])
 ########################################################## calculate slot_number from start_time
-def Get_Nth_Time_Slot(start_time_str,slot_number):
-    """input is time like 08:30:00 and slot_number like 3 
-        and export is 3th 15Min then export si 09:00:00"""
-     # Parse the start time into a datetime object including seconds
-    time_format = "%H:%M:%S"
-    start_time = datetime.strptime(start_time_str, time_format)
+def convert_slot_number_to_duration(start_time:str,slot_number:str):
+    """input is time like 08:30:00 and slot_number like 2 
+        and export is 2th 15Min then export is 09:00:00"""
     
-    # Calculate the total minutes to add for the given slot number
-    total_minutes_to_add = 15 * (slot_number - 1)  # Subtract 1 because the first slot is at the start time
+    time_obj = datetime.strptime(start_time , "%H:%M:%S")
     
-    # Add the minutes to the start time
-    new_time = start_time + timedelta(minutes=total_minutes_to_add)
+    # Calculate the total time to add based on the number of slots and slot duration
+    total_minutes = int(slot_number) * 15
     
-    # Return the time in 'HH:MM:SS' format
-    return new_time.strftime(time_format)
+    # Add the total minutes to the time object
+    new_time_obj = time_obj + timedelta(minutes=total_minutes)
+    
+    # Convert the updated time back to a string
+    return new_time_obj.strftime("%H:%M:%S")
 ########################################################## input is duration and export is time_slot bu 15 Min
 def convert_duration_to_slot_number(time_str):
     """input is duration and export is time_slot bu 15 Min like input 01:30:00 export 6"""
@@ -325,4 +324,63 @@ def find_consecutive_sequence(array, sequence_length):
         
         if is_consecutive:
             return array[i]  # Return the first number of the consecutive sequence
+########################################################## # user for calculate empty time
+def calculate_numbers_in_a_row(array):
+    """ find numbers in row like [1, 2, 3, 4, 14, 15, 16, 17, 18, 19, 20, 21, 22, 30] 
+        and export like [(1, 4), (14, 22), (30, 30)]
+        """
+    if not array:
+        return []
+    array.sort()  # Make sure the list is sorted
+    grouped = []
+    start = array[0]  # Start the first group
+    for i in range(1, len(array)):
+        # Check if the current number is not consecutive to the previous one
+        if array[i] != array[i - 1] + 1:
+            # Append the start and the previous element as a tuple
+            grouped.append((start, array[i - 1]))
+            start = array[i]  # Start a new group
+
+    # Append the last group
+    grouped.append((start, array[-1]))
+    return grouped
+
 ##########################################################
+def calculate_empty_time(date:str):
+    #3th item is flag by 0 or 1 that show this time is (0=NOT RESERVED or 1=RESERVED)
+    #this section is getting times that Not reserved
+    export_empty_list=[]
+    export_reserved_list=[]
+    merged_list =[]
+    for i in range(1,3):
+        duration_empty_time_as_slot_time=[]
+        duration_empty_time_as_time=[]
+        sorted_list_empty_time_as_array =[]
+        parts = db_SetWork_Get_Part1_or_Part2_of_Day(date=date ,part=i)
+        if parts in [False , None , 'False' , 'None']  :
+            return False
+        start_time = datetime.strptime(str(parts[0]),'%H:%M:%S').strftime('%H:%M:%S')
+        end_time = datetime.strptime(str(parts[1]),'%H:%M:%S').strftime('%H:%M:%S')
+        time_obj = datetime.strptime(start_time, "%H:%M:%S")
+        new_time_obj = time_obj + timedelta(minutes=15)
+        start_time_with_add_15Min = new_time_obj.strftime("%H:%M:%S")
+        start_time_with_add_15Min_and_seconds_00 = start_time_with_add_15Min[:7]+'0'
+        list_empty_time_as_array=db_Reserve_Get_Date_And_parts_Not_Reserved(date=date , start_time=start_time , end_time=end_time)
+        for i in range(len(list_empty_time_as_array)) : 
+            sorted_list_empty_time_as_array.append(list_empty_time_as_array[i][2])
+        duration_empty_time_as_slot_time=calculate_numbers_in_a_row(sorted_list_empty_time_as_array)
+        for y in range(len(duration_empty_time_as_slot_time)):
+            first_time=convert_slot_number_to_duration(start_time=start_time , slot_number=duration_empty_time_as_slot_time[y][0])
+            second_time=convert_slot_number_to_duration(start_time=start_time_with_add_15Min_and_seconds_00 , slot_number=duration_empty_time_as_slot_time[y][1])
+            duration_empty_time_as_time.append((first_time,second_time,'0'))
+        export_empty_list.extend(duration_empty_time_as_time)
+    #this section is getting times that reserved
+    reserved_list = db_Reserve_Get_Reserve_Of_Date(date=date)
+    for i in range(len(reserved_list)):
+        start_time = datetime.strptime(str(reserved_list[i][3]),'%H:%M:%S').strftime('%H:%M:%S')
+        end_time = datetime.strptime(str(reserved_list[i][4]),'%H:%M:%S').strftime('%H:%M:%S')
+        export_reserved_list.append((start_time , end_time , '1'))
+    merged_list.extend(export_empty_list)
+    merged_list.extend(export_reserved_list)
+    sorted_merged_list = sorted(merged_list, key=lambda x: x[0])
+    return sorted_merged_list

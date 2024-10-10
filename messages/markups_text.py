@@ -86,7 +86,7 @@ def makrup_generate_weekly_time_list():
 def makrup_generate_set_work_list_of_days() :
     markup = InlineKeyboardMarkup()
     today = datetime.now().date()
-    for i in range(0,6):
+    for i in range(7):
         date = today + timedelta(days=i)
         text=convertDateToPersianCalendar(date=str(date))
         button = InlineKeyboardButton(text=f'{text}' ,callback_data=f'SetWorkTime:{date}')
@@ -145,7 +145,6 @@ def markup_generate_services_for_reserve(services):
     if services is None or len(services)==0 :
         return markup.add(InlineKeyboardButton(text="هیچ سرویسی جهت رزرو موجود نیست",callback_data="!!!!!!!!!"))
     for service in services:
-        # print(service)
         if not service[4]:
             continue 
         id=service[0]
@@ -158,18 +157,17 @@ def markup_generate_services_for_reserve(services):
 ########################################## show parts of days by needed time for reserve 
 def markup_generate_parts_of_days_for_reservation_by_needed_time(part:int , duration:str):
     """ input is part like 1 or 2 also duration like 01:00:00 and output is [(day , hour)] that user
-         could reservefor next 7 day in one array"""
+         could reserve for next 7 day in one array"""
     days_list=[]
     days_list_can_reserve=[]
     array_all_time_slot_for_each_day=[]
     list_time_that_could_be_reserve =[]
-    #convert duration to 15Min timeslots (like 01:00:00 is 4)
+    #convert duration to 15Min time slots (like 01:00:00 is 4)
     duration_as_time_slot = convert_duration_to_slot_number(duration)
     #generate all day bu default value from weekly setting
-    #TODO uncomment line 167
-    #GenerateNext7Day()
+    GenerateNext7Day()
     #get all day that user could reserve 
-    for i in range(0,6):
+    for i in range(7):
         today = datetime.now().date()
         date = today + timedelta(days=i)
         parts_of_Day = db_SetWork_Get_Part1_or_Part2_of_Day(date=date , part=part)
@@ -187,8 +185,20 @@ def markup_generate_parts_of_days_for_reservation_by_needed_time(part:int , dura
         #get first time that able to be reserved as time slot
         reserved_time_as_time_slot=find_consecutive_sequence(array_all_time_slot_for_each_day ,duration_as_time_slot)
         #convert time slot to time like time slot 2 of 8:00:00 is 08:30:00 (2th 15 Min of 08:00)
-        time_could_be_reserve = Get_Nth_Time_Slot(start_time , reserved_time_as_time_slot )
+        time_could_be_reserve = convert_slot_number_to_duration(start_time , reserved_time_as_time_slot )
         days_list_can_reserve.append((date , time_could_be_reserve))
     if days_list_can_reserve == [] :
         return False 
     return(days_list_can_reserve)
+
+##########################################
+def makrup_generate_empty_time_of_day(delete_day:str) :
+    markup = InlineKeyboardMarkup()
+    today = datetime.now().date()
+    for i in range(7):
+        date = today + timedelta(days=i)
+        if delete_day != str(date) :
+            text=convertDateToPersianCalendar(date=str(date))
+            button = InlineKeyboardButton(text=f'{text}' ,callback_data=f'getEmptyTime:{date}')
+            markup.add(button)
+    return markup

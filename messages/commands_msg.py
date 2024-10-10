@@ -56,3 +56,6 @@ text_error_disable_day='این روز غیر فعال است ولی همچنان
 
 text_no_service_available="در حال حاضر امکان رزرو سرویس وجود ندارد"
 text_reservation_init="خدماتی که نیاز دارید از لیست زیر به حالت فعال در بیاورید"
+
+text_get_empty_time='تایم های خالی '
+text_et_empty_time_is_false='این روز تولید نشده است '

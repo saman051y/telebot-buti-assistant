@@ -1,9 +1,8 @@
  #       """reserve(id,user_id,date,start_time,end_time,approved,payment)"""
-
+from datetime import datetime, timedelta
 import logging
 import mysql.connector # type: ignore
 from mysql.connector import Error
-
 from auth.auth import DB_CONFIG
 ##################################################
 ##################################################! insert section
@@ -71,37 +70,40 @@ def db_Reserve_Get_Reserve_Of_Date(date:str):
 def db_Reserve_Get_Date_And_parts_Not_Reserved(date:str , start_time:str , end_time:str):
     """input is date for search from start_time to end_time to find first duration and output is list of"""
     try:
+        #Subtract 1Min from end_time for db
+        
+
         start_time_with_00_seconds=start_time[:7] +f'0'
         sql = f""" 
-                            WITH RECURSIVE time_slots AS (
-                -- Generate 15-min time slots starting from 9:00 AM (300 minutes = 20 slots)
-                SELECT '{start_time}' AS slot_start_time,
-                       ADDTIME('{start_time_with_00_seconds}', '00:15:00') AS slot_end_time
-                UNION ALL
-                SELECT ADDTIME(slot_start_time, '00:15:00') AS slot_start_time,
-                       ADDTIME(slot_end_time, '00:15:00') AS slot_end_time
-                FROM time_slots
-                WHERE slot_end_time < '{end_time}' -- Stop before 2:00 PM (to include 1:45 PM - 2:00 PM slot)
-            ),
-            numeric_time_slots AS (
-              SELECT 
-                ROW_NUMBER() OVER (ORDER BY slot_start_time) AS SlotNumber,
-                slot_start_time, slot_end_time
-              FROM time_slots  
-            ),
-            reserved_slots AS (
-                SELECT start_time, end_time
-                FROM reserve
-                WHERE date = '{date}'
-            )
-            -- Fetch time slots that are not reserved
-            SELECT slot_start_time, slot_end_time ,SlotNumber
-            FROM numeric_time_slots t
-            LEFT JOIN reserved_slots r
-                ON t.slot_start_time BETWEEN r.start_time AND r.end_time
-                OR t.slot_end_time BETWEEN r.start_time AND r.end_time
-                OR (r.start_time <= t.slot_start_time AND r.end_time >= t.slot_end_time)
-            WHERE r.start_time IS NULL;
+                WITH RECURSIVE time_slots AS (
+                    -- Generate 15-min time slots starting from 9:00 AM (300 minutes = 20 slots)
+                    SELECT '{start_time}' AS slot_start_time,
+                           ADDTIME('{start_time_with_00_seconds}', '00:15:00') AS slot_end_time
+                    UNION ALL
+                    SELECT ADDTIME(slot_start_time, '00:15:00') AS slot_start_time,
+                           ADDTIME(slot_end_time, '00:15:00') AS slot_end_time
+                    FROM time_slots
+                    WHERE slot_end_time < '{end_time}' -- Stop before 2:00 PM (to include 1:45 PM - 2:00 PM slot)
+                ),
+                numeric_time_slots AS (
+                  SELECT 
+                    ROW_NUMBER() OVER (ORDER BY slot_start_time) AS SlotNumber,
+                    slot_start_time, slot_end_time
+                  FROM time_slots  
+                ),
+                reserved_slots AS (
+                    SELECT start_time, end_time
+                    FROM reserve
+                    WHERE date = '{date}'
+                )
+                -- Fetch time slots that are not reserved
+                SELECT slot_start_time, slot_end_time ,SlotNumber-1
+                FROM numeric_time_slots t
+                LEFT JOIN reserved_slots r
+                    ON t.slot_start_time BETWEEN r.start_time AND r.end_time
+                    OR t.slot_end_time BETWEEN r.start_time AND r.end_time
+                    OR (r.start_time <= t.slot_start_time AND r.end_time >= t.slot_end_time)
+                WHERE r.start_time IS NULL;
                 """
         with mysql.connector.connect(**DB_CONFIG) as connection:
             if connection.is_connected():

@@ -2,13 +2,12 @@ import logging
 import mysql.connector # type: ignore
 from mysql.connector import Error
 from auth.auth import DB_CONFIG
-from functions.time_date import *
 from database.db_weeklysetting import *
 ######################################################################################################
 """(date,part1_start_time,part1_end_time,part2_start_time,part2_end_time)"""
 ######################################################################################################
 ########################################################################################! Insert Section
-def test_insert(date: str, part1_start_time: str, part1_end_time: str, part2_start_time: str, part2_end_time: str):
+def db_SetWork_Create_date(date: str, part1_start_time: str, part1_end_time: str, part2_start_time: str, part2_end_time: str):
     """(date, part1_start_time, part1_end_time, part2_start_time, part2_end_time)"""
     try:
         date_exist=db_SetWork_exist_date(date=date)
