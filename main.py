@@ -9,7 +9,7 @@ from database.db_weeklysetting import *
 from database.db_create_table import *
 from database.db_setwork import *
 from database.db_users import *
-from functions.custom_funxtions import  extract_reserveId_and_userId, get_free_time_for_next_7day
+from functions.custom_functions import  extract_reserveId_and_userId, get_free_time_for_next_7day
 from functions.log_functions import *
 from functions.time_date import *
 from messages.commands_msg import *
@@ -19,7 +19,9 @@ from states import *
 from database.db_service import *
 from functions.time_date import *
 import re
+##########################################################
 bot =TeleBot(token = BOT_TOKEN, parse_mode="HTML")
+bot_is_enable=True
 ##########################################################################################!  Admin Panel  
 @bot.message_handler(commands=['admin'])
 def start(msg : Message):
@@ -32,12 +34,14 @@ def start(msg : Message):
     markup.add(mark_text_admin_set_work_time , mark_text_admin_weekly_time)
     markup.add(mark_text_admin_set_service,mark_text_admin_bot_setting)
     markup.add(mark_text_admin_users_list , mark_text_admin_find_user)
-    markup.add(mark_text_admin_bot_info , mark_text_admin_send_message_to_all)
+    markup.add(mark_text_admin_send_message_to_all)
     bot.send_message(chat_id=msg.from_user.id,text=text_user_is_admin, reply_markup=markup)
 ############################################################################################ markup bot_setting
 @bot.message_handler(func= lambda m:m.text == mark_text_admin_bot_setting)
 def reserve_time(msg : Message):
-    mark_text_admin_bot_setting
+    text=text_bot_setting
+    markup
+    bot.send_message(chat_id=msg.from_user.id,text=text)
 ############################################################################################ markup reserve time
 @bot.message_handler(func= lambda m:m.text == mark_text_admin_reserved_time)
 def reserve_time(msg : Message):
@@ -700,6 +704,9 @@ def start(msg : Message):
 #* mark_text_reserved_time handler
 @bot.message_handler(func= lambda m:m.text == mark_text_reserved_time)
 def reserve_time(msg : Message):
+
+    if  not bot_is_enable: bot_is_disable(user_id=msg.from_user.id)
+
     user_id=msg.from_user.id
     reserves= get_reserves_for_user(user_id=user_id,days=7)
     markup=InlineKeyboardMarkup()
@@ -720,6 +727,8 @@ def reserve_time(msg : Message):
 @bot.message_handler(func= lambda m:m.text == mark_text_reserve_time)
 def reserve_time(msg : Message):
     bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id) 
+
+    if  not bot_is_enable: bot_is_disable(user_id=msg.from_user.id) #todo : do this for all user section
     counter=0
     db_Users_Update_Username_User(user_id=msg.from_user.id , username=msg.from_user.username)#update Username while every reservation
     name = db_Users_Get_Name_User(msg.from_user.id)
@@ -928,7 +937,8 @@ def reserve_section_enter_name_first_time(msg : Message):
     bot.send_message(msg.chat.id,text=text)
 
     #msg to admin (the main one )
-    forwarded_msg=bot.forward_message(chat_id=MAIN_ADMIN_USER_ID[0],from_chat_id=msg.chat.id,message_id=msg.message_id)
+    main_admin=int(db_bot_setting_get_value_by_name(name="main_admin"))
+    forwarded_msg=bot.forward_message(chat_id=main_admin,from_chat_id=msg.chat.id,message_id=msg.message_id)
     text=make_reservation_info_text_for_user(date=date,time=time,price=total_price,duration=total_time,services=services, )
     user_id =msg.from_user.id
     text=f"{text} \n reserve_id={reserve_id} \n user_id={user_id}" #! do not change it
@@ -1138,6 +1148,9 @@ def startMessageToAdmin(enable=True,disable_notification=True):
             logging.info("ther is no log file to show")
             bot.send_message(chat_id=admin,text=f"{text}\n ⛔️فایل log وجود ندارد⛔️",disable_notification=disable_notification)
 
+######################################################################## bot is disable
+def bot_is_disable(user_id):
+    bot.send_message(chat_id=user_id,text=text_bot_is_disable)
 ########################################################################! END :)
 if __name__ == "__main__":
     #log init
@@ -1150,7 +1163,8 @@ if __name__ == "__main__":
     
     #db setting
     createTables()
-
+    insert_basic_setting()
+    bot_is_enable = True if db_bot_setting_get_value_by_name(name="bot_is_enable") == "1" else False
     #basic functions 
     startMessageToAdmin()
     #bot setting

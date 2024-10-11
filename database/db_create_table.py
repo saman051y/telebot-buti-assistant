@@ -3,6 +3,7 @@ import mysql.connector # type: ignore
 from mysql.connector import Error
 
 from auth.auth import DB_CONFIG
+from database.db_bot_setting import *
 #######################################################################################
 def createTables():
     try:
@@ -31,6 +32,19 @@ def createTables():
         return True
     except Error as e:
         logging.error(f"createTables: {e}")
+#######################################################################################
+def insert_basic_setting():
+    result=db_bot_setting_get_all()
+    if result is not None:
+        return False
+    db_bot_setting_insert(name="cart",value="6219861934279083")
+    db_bot_setting_insert(name="cart_name",value="سامان یعقوبی")
+    db_bot_setting_insert(name="cart_bank",value="blue")
+    db_bot_setting_insert(name="bot_is_enable",value="1")
+    db_bot_setting_insert(name="main_admin",value="1054820423")
+    
+
+
 #######################################################################################
 def createUserTable():
     """users(user_id,phone_number,username,join_date,name,last_name)"""
@@ -171,8 +185,8 @@ def createBot_setting():
     try:
         sql=f"""CREATE TABLE IF NOT EXISTS bot_setting (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(20) UNIQUE NOT NULL,
-                value VARCHAR(17) NOT NULL
+                name VARCHAR(255) UNIQUE NOT NULL,
+                value VARCHAR(255) 
                 );"""
         with mysql.connector.connect(**DB_CONFIG) as connection:
             if connection.is_connected():
