@@ -25,14 +25,15 @@ def get_free_time_for_next_7day(part:int , duration:str):
          could reserve for next 7 day in one array"""
     days_list=[]
     days_list_can_reserve=[]
-    array_all_time_slot_for_each_day=[]
-    list_time_that_could_be_reserve =[]
+
     #convert duration to 15Min time slots (like 01:00:00 is 4)
     duration_as_time_slot = convert_duration_to_slot_number(duration)
     #generate all day bu default value from weekly setting
     GenerateNext7Day()
     #get all day that user could reserve 
     for i in range(7):
+        array_all_time_slot_for_each_day=[]
+        list_time_that_could_be_reserve =[]
         today = datetime.now().date()
         date = today + timedelta(days=i)
         parts_of_Day = db_SetWork_Get_Part1_or_Part2_of_Day(date=date , part=part)

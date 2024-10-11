@@ -244,6 +244,49 @@ def db_Reserve_Delete_Reserve(reserve_id:int):
     except Error as e:
         logging.error(f"DeleteReserve : {e}")
 ##################################################
+def get_reserves_for_user(user_id, days):
+    try:
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor(dictionary=True) as cursor:
+                    today = datetime.now().date()
+                    end_date = today + timedelta(days=days)
+                    
+                    sql_query = f"""
+                    SELECT * FROM reserve 
+                    WHERE user_id = {user_id} 
+                    AND date >= '{today}' 
+                    AND date <= '{end_date}';
+                    """
+                    
+                    cursor.execute(sql_query)
+                    results = cursor.fetchall()
+                    return results
+    except mysql.connector.Error as e:
+        logging.error(f"Error fetching reserves for user: {e}")
+        return None
+##################################################
+def get_reserves_for_admin(days):
+    try:
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor(dictionary=True) as cursor:
+                    today = datetime.now().date()
+                    end_date = today + timedelta(days=days)
+                    
+                    sql_query = f"""
+                    SELECT * FROM reserve 
+                    WHERE date >= '{today}' 
+                    AND date <= '{end_date}';
+                    """
+                    
+                    cursor.execute(sql_query)
+                    results = cursor.fetchall()
+                    return results
+    except mysql.connector.Error as e:
+        logging.error(f"Error fetching reserves for user: {e}")
+        return None
+##################################################
 ##################################################! check section
 def db_Reserve_Reserve_Valid_Id(reserve_id:int):
     try:

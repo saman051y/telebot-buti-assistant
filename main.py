@@ -9,7 +9,7 @@ from database.db_weeklysetting import *
 from database.db_create_table import *
 from database.db_setwork import *
 from database.db_users import *
-from functions.custom_funxtions import  extract_reserveId_and_userId, get_free_time_for_next_7day
+from functions.custom_functions import  extract_reserveId_and_userId, get_free_time_for_next_7day
 from functions.log_functions import *
 from functions.time_date import *
 from messages.commands_msg import *
@@ -19,7 +19,9 @@ from states import *
 from database.db_service import *
 from functions.time_date import *
 import re
+##########################################################
 bot =TeleBot(token = BOT_TOKEN, parse_mode="HTML")
+bot_is_enable=True
 ##########################################################################################!  Admin Panel  
 @bot.message_handler(commands=['admin'])
 def start(msg : Message):
@@ -30,19 +32,51 @@ def start(msg : Message):
     markup=ReplyKeyboardMarkup(resize_keyboard=True)
     markup.add(mark_text_admin_reserved_time , mark_text_admin_empty_time)
     markup.add(mark_text_admin_set_work_time , mark_text_admin_weekly_time)
-    markup.add(mark_text_admin_set_service)
+    markup.add(mark_text_admin_set_service,mark_text_admin_bot_setting)
     markup.add(mark_text_admin_users_list , mark_text_admin_find_user)
-    markup.add(mark_text_admin_bot_info , mark_text_admin_send_message_to_all)
+    markup.add(mark_text_admin_send_message_to_all)
     bot.send_message(chat_id=msg.from_user.id,text=text_user_is_admin, reply_markup=markup)
+############################################################################################ markup bot_setting
+@bot.message_handler(func= lambda m:m.text == mark_text_admin_bot_setting)
+def reserve_time(msg : Message):
+    text=text_bot_setting
+    markup
+    bot.send_message(chat_id=msg.from_user.id,text=text)
 ############################################################################################ markup reserve time
 @bot.message_handler(func= lambda m:m.text == mark_text_admin_reserved_time)
 def reserve_time(msg : Message):
     bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)  
     if not validation_admin(msg.from_user.id) : 
         bot.send_message(chat_id=msg.from_user.id,text=text_user_is_not_admin)
-        return False    
-    bot.send_message(chat_id=msg.from_user.id,text=text_coming_soon)
-    #TODO insert reserve time section for admin
+        return False 
+    reserves=get_reserves_for_admin(days=10)
+    markup=InlineKeyboardMarkup()
+    if len(reserves) <1 :
+        markup.add(InlineKeyboardButton(text=text_no_reserve_for_user,callback_data="!!!!!!"))
+    else:
+        for reserve in reserves:
+            reserve_id=(f"{reserve['id']}")
+            user_id=(f"{reserve['user_id']}")
+            date=gregorian_to_jalali(f"{reserve['date']}")
+            start_time=convert_to_standard_time(f"{reserve['start_time']}")[:5]
+            end_time=convert_to_standard_time(f"{reserve['end_time']}")[:5]
+            payment=(reserve['payment'])
+            weekday=get_weekday(f"{reserve['date']}")
+            text=f"{date} : {start_time}->{end_time} : {payment} HT : {weekday} "
+            btn=InlineKeyboardButton(text=text,callback_data=f"show_reserve_info_{reserve_id}_{user_id}")
+            markup.add(btn)
+    bot.send_message(chat_id=msg.from_user.id,text=text_reserve_list_msg,reply_markup=markup)
+
+@bot.callback_query_handler(func= lambda m:m.data.startswith("show_reserve_info"))
+def convertUserID(call:CallbackQuery):
+    reserve_id=call.data.split('_')[3]
+    users_id=call.data.split('_')[4]
+
+    text=make_reservation_info_text_for_admin(reserve_id=reserve_id,user_id=users_id)
+
+    markup=InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton(text="پیام دادن به کاربر",url=f"tg://user?id={users_id}"))
+    bot.send_message(chat_id=call.message.chat.id,text=text,reply_markup=markup)
 ############################################################################################ markup empty time
 @bot.message_handler(func= lambda m:m.text == mark_text_admin_empty_time)
 def reserve_time(msg : Message):
@@ -666,11 +700,35 @@ def start(msg : Message):
     markup.add(mark_text_account_info ,mark_text_support)
     text=text_start_msg
     bot.send_message(chat_id=user_id,text=text,reply_markup=markup)
+#######################################################################  ser all reserve 
+#* mark_text_reserved_time handler
+@bot.message_handler(func= lambda m:m.text == mark_text_reserved_time)
+def reserve_time(msg : Message):
+
+    if  not bot_is_enable: bot_is_disable(user_id=msg.from_user.id)
+
+    user_id=msg.from_user.id
+    reserves= get_reserves_for_user(user_id=user_id,days=7)
+    markup=InlineKeyboardMarkup()
+    if len(reserves) <1 :
+        markup.add(InlineKeyboardButton(text=text_no_reserve_for_user,callback_data="!@!!!"))
+    else:
+        for reserve in reserves:
+            date=gregorian_to_jalali(f"{reserve['date']}")
+            start_time=convert_to_standard_time(f"{reserve['start_time']}")[:5]
+            payment=(reserve['payment'])
+            weekday=get_weekday(f"{reserve['date']}")
+            btn=InlineKeyboardButton(text=f"{weekday} : {date}: {start_time} : {payment} HT",callback_data="!!!!!!!!!!!")
+            markup.add(btn)
+
+    bot.send_message(chat_id=user_id,text=text_reserve_list_msg,reply_markup=markup)
 ####################################################################### Insert Reserve Time Section
 #* mark_text_reserve_time handler
 @bot.message_handler(func= lambda m:m.text == mark_text_reserve_time)
 def reserve_time(msg : Message):
     bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id) 
+
+    if  not bot_is_enable: bot_is_disable(user_id=msg.from_user.id) #todo : do this for all user section
     counter=0
     db_Users_Update_Username_User(user_id=msg.from_user.id , username=msg.from_user.username)#update Username while every reservation
     name = db_Users_Get_Name_User(msg.from_user.id)
@@ -779,7 +837,8 @@ def callback_query(call:CallbackQuery):
             date=day[0]
             date_per=gregorian_to_jalali(date)
             time=day[1]
-            btn=InlineKeyboardButton(text=f"{date_per} : {time[:5]}",callback_data=f"reserve_date_{date}_{time}")
+            weekDay=get_weekday(f"{date}")
+            btn=InlineKeyboardButton(text=f"{weekDay} : {date_per} : {time[:5]}",callback_data=f"reserve_date_{date}_{time}")
             markup.add(btn)
     text=call.message.text
     with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
@@ -800,7 +859,7 @@ def callback_query(call:CallbackQuery):
         total_time=data['total_time']
         total_price=data['total_price']
 
-    text=make_reservation_info_text(date=date,time=time,price=total_price,duration=total_time,services=services, )
+    text=make_reservation_info_text_for_user(date=date,time=time,price=total_price,duration=total_time,services=services, )
     
     markup=InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton(text="ارسال رسید", callback_data="pic_receipt"))
@@ -865,7 +924,6 @@ def reserve_section_enter_name_first_time(msg : Message):
 
     #todo: make reserve in db
     user_id=msg.from_user.id
-    print("test")
     result,reserve_id=make_reserve_transaction(user_id=user_id,services=services,duration=total_time,price=total_price,date=date,start_time=time)
 
     if not result:
@@ -879,8 +937,9 @@ def reserve_section_enter_name_first_time(msg : Message):
     bot.send_message(msg.chat.id,text=text)
 
     #msg to admin (the main one )
-    forwarded_msg=bot.forward_message(chat_id=MAIN_ADMIN_USER_ID[0],from_chat_id=msg.chat.id,message_id=msg.message_id)
-    text=make_reservation_info_text(date=date,time=time,price=total_price,duration=total_time,services=services, )
+    main_admin=int(db_bot_setting_get_value_by_name(name="main_admin"))
+    forwarded_msg=bot.forward_message(chat_id=main_admin,from_chat_id=msg.chat.id,message_id=msg.message_id)
+    text=make_reservation_info_text_for_user(date=date,time=time,price=total_price,duration=total_time,services=services, )
     user_id =msg.from_user.id
     text=f"{text} \n reserve_id={reserve_id} \n user_id={user_id}" #! do not change it
     bot.send_message(chat_id=MAIN_ADMIN_USER_ID[0],text=text,reply_to_message_id=forwarded_msg.message_id,disable_notification=True,reply_markup=markup)
@@ -947,7 +1006,6 @@ def deny_msg(call : CallbackQuery):
 
     text=text_deny_reason
     bot.send_message(chat_id=call.message.chat.id,text=text)
-    print("test")
     bot.set_state(user_id=call.message.chat.id,state=admin_State.send_deny_reason,chat_id=call.message.chat.id)
 
     with bot.retrieve_data(call.message.chat.id, call.message.chat.id) as data:
@@ -1090,6 +1148,9 @@ def startMessageToAdmin(enable=True,disable_notification=True):
             logging.info("ther is no log file to show")
             bot.send_message(chat_id=admin,text=f"{text}\n ⛔️فایل log وجود ندارد⛔️",disable_notification=disable_notification)
 
+######################################################################## bot is disable
+def bot_is_disable(user_id):
+    bot.send_message(chat_id=user_id,text=text_bot_is_disable)
 ########################################################################! END :)
 if __name__ == "__main__":
     #log init
@@ -1102,7 +1163,8 @@ if __name__ == "__main__":
     
     #db setting
     createTables()
-
+    insert_basic_setting()
+    bot_is_enable = True if db_bot_setting_get_value_by_name(name="bot_is_enable") == "1" else False
     #basic functions 
     startMessageToAdmin()
     #bot setting

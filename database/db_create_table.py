@@ -3,6 +3,7 @@ import mysql.connector # type: ignore
 from mysql.connector import Error
 
 from auth.auth import DB_CONFIG
+from database.db_bot_setting import *
 #######################################################################################
 def createTables():
     try:
@@ -24,10 +25,26 @@ def createTables():
         created=createWeeklySetting()
         if not created:
             return False
+        created=createBot_setting()
+        if not created:
+            return False
         logging.info("data base is working")
         return True
     except Error as e:
         logging.error(f"createTables: {e}")
+#######################################################################################
+def insert_basic_setting():
+    result=db_bot_setting_get_all()
+    if result is not None:
+        return False
+    db_bot_setting_insert(name="cart",value="6219861934279083")
+    db_bot_setting_insert(name="cart_name",value="سامان یعقوبی")
+    db_bot_setting_insert(name="cart_bank",value="blue")
+    db_bot_setting_insert(name="bot_is_enable",value="1")
+    db_bot_setting_insert(name="main_admin",value="1054820423")
+    
+
+
 #######################################################################################
 def createUserTable():
     """users(user_id,phone_number,username,join_date,name,last_name)"""
@@ -163,8 +180,32 @@ def createReserveServicesTable():
         logging.error(f"in createReserveTable : {e}") 
         return False
 #######################################################################################
+def createBot_setting():
+    """  bot_setting(name:varchar(20), value:varchar(20),)   """
+    try:
+        sql=f"""CREATE TABLE IF NOT EXISTS bot_setting (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) UNIQUE NOT NULL,
+                value VARCHAR(255) 
+                );"""
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor()  as cursor:
+                     cursor.execute(sql)
+                     connection.commit()# when something is created or updated or inserted;
+                     cursor.close()
+                     connection.close()
+                     DefualtValueWeeklySetting()
+                     return True
+                
+            else:
+                logging.error("connection to database is not working")
+    except Error as e :
+        logging.error(f"in createBotSetting : {e}") 
+        return False
+#######################################################################################
 def createWeeklySetting():
-    """  createBotSetting(name:varchar(20), value:varchar(20),)   """
+    """  weekly_setting(name:varchar(20), value:varchar(20),)   """
     try:
         sql=f"""CREATE TABLE IF NOT EXISTS weekly_setting (
                 id INT AUTO_INCREMENT PRIMARY KEY,

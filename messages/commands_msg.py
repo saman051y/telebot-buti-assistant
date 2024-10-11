@@ -72,3 +72,8 @@ reserve_is_denied="رزرو شما رد شد"
 
 text_problem_with_approve_or_deny="مشکلیپیش امد لطفا دوباره تلاش کنید"
 text_deny_reason="علت رد تراکنش را بنویسید"
+text_no_reserve_for_user="هیچ رزروی برای نمایش نیست"
+text_reserve_list_msg="لیست رزرو های شما در ۷ روز اینده"
+
+text_bot_is_disable="ربات غیر فعال است لطفا بعدا تلاش کنید"
+text_bot_setting="تنظیمات ربات"

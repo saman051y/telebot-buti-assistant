@@ -151,14 +151,14 @@ def cal_date(days):
     return (datetime.now() + timedelta(days=days)).strftime("%Y-%m-%d")
 
 #########################################################
-def cal_day(days):
-    """get a number and return it day like
-    1 => دوشنبه
-    0 => یکشنبه"""
-    tomorrow_date = datetime.now() + timedelta(days=days)
-    tomorrow_weekday = tomorrow_date.weekday()
-    tomorrow_persian = days_of_week_name[tomorrow_weekday]
-    return tomorrow_persian
+# def cal_day(days):
+#     """get a number and return it day like
+#     1 => دوشنبه
+#     0 => یکشنبه"""
+#     tomorrow_date = datetime.now() + timedelta(days=days)
+#     tomorrow_weekday = tomorrow_date.weekday()
+#     # tomorrow_persian = days_of_week_name[tomorrow_weekday]
+#     return tomorrow_persian
 
 #########################################################
 def get_current_time():
@@ -342,6 +342,18 @@ def convert_to_standard_time(time_string, input_format="%H:%M:%S"):
         return time_obj.strftime("%H:%M:%S")
     except ValueError:
         return "Invalid format"
+##########################################################
+def get_weekday(date_str):
+    # تاریخ را به فرمت "%Y-%m-%d" دریافت می‌کنیم و به نوع datetime تبدیل می‌کنیم
+    date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    # گرفتن شماره روز هفته (0 = دوشنبه, 6 = یکشنبه)
+    weekday_number = date.weekday()
+    
+    # لیستی از نام روزهای هفته به فارسی
+    weekdays_farsi = ['دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه', 'شنبه', 'یکشنبه']
+    
+    return weekdays_farsi[weekday_number]
+
 ##########################################################
 def calculate_empty_time(date:str):
     #3th item is flag by 0 or 1 that show this time is (0=NOT RESERVED or 1=RESERVED)
