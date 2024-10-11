@@ -4,10 +4,12 @@ from telebot import TeleBot , custom_filters , types,apihelper
 from telebot.storage import StateMemoryStorage
 from telebot.types import InlineKeyboardButton ,InlineKeyboardMarkup,ReplyKeyboardMarkup,KeyboardButton,Message,CallbackQuery,ReplyKeyboardRemove
 from auth.auth import *
+from database.db_functions import delete_reservation, make_reserve_transaction
 from database.db_weeklysetting import *
 from database.db_create_table import *
 from database.db_setwork import *
 from database.db_users import *
+from functions.custom_funxtions import  extract_reserveId_and_userId, get_free_time_for_next_7day
 from functions.log_functions import *
 from functions.time_date import *
 from messages.commands_msg import *
@@ -669,26 +671,30 @@ def start(msg : Message):
 @bot.message_handler(func= lambda m:m.text == mark_text_reserve_time)
 def reserve_time(msg : Message):
     bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id) 
+    counter=0
     db_Users_Update_Username_User(user_id=msg.from_user.id , username=msg.from_user.username)#update Username while every reservation
     name = db_Users_Get_Name_User(msg.from_user.id)
     if name == 'empty' : 
         activation_user(msg=msg)
-    else :
-        services=db_Service_Get_All_Services()
-        if services is None or len(services) ==0:
-            bot.send_message(chat_id=msg.from_user.id,text=text_no_service_available)
-            return False
-        services = [service + (0,) for service in services]
-        markup=markup_generate_services_for_reserve(services)
-        text=text_reservation_init
-        bot.send_message(chat_id=msg.chat.id,reply_markup=markup,text=text)
+        return
     
+    services=db_Service_Get_All_Services()
+    if services is None or len(services) ==0:
+        bot.send_message(chat_id=msg.from_user.id,text=text_no_service_available)
+        return False
+    services = [service + (0,) for service in services]
+    markup=markup_generate_services_for_reserve(services,total_selected=counter)
+
+    text=text_reservation_init
+    bot.send_message(chat_id=msg.chat.id,reply_markup=markup,text=text)
+
     bot.set_state(user_id=msg.chat.id,state=user_State.state_selecting_service,chat_id=msg.chat.id)
+
 
     with bot.retrieve_data(user_id=msg.chat.id , chat_id=msg.chat.id) as data:
         data['services_choosing']=services
         data['services_name']=''
-        data['counter']=0
+        data['counter']=counter
             
 
 ### select a service 
@@ -718,7 +724,7 @@ def callback_query(call:CallbackQuery):
                 services_name = services_name.replace(current_service_info, "").strip()
                 counter=counter-1
             break
-    markup=markup_generate_services_for_reserve(services)
+    markup=markup_generate_services_for_reserve(services,total_selected=counter)
 
 
     if counter<1 :
@@ -732,7 +738,7 @@ def callback_query(call:CallbackQuery):
         data['services_name']=services_name
         data['counter']=counter
     
-####end of selection
+####end of selection :select part 1 or 2
 @bot.callback_query_handler(func=lambda call: call.data == ("make_reservation"))
 def callback_query(call:CallbackQuery):
     with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
@@ -742,19 +748,230 @@ def callback_query(call:CallbackQuery):
     for service in services:
         if service[5]==1:
             total_time += service[2]  
-            total_price += service[3]  
-    text=text_make_reservation_info(price=total_price,time=total_time,services=services)
-    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text,)
-    #todo: # set reservation
-     
+            total_price += service[3] 
 
+    total_time=convert_to_standard_time(time_string=f"{total_time}") 
+    text=text_make_reservation_info(price=total_price,time=total_time,services=services)
+    markup=InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton(text=text_markup_part1,callback_data=f"finish_reserve_1"),InlineKeyboardButton(text=text_markup_part2,callback_data=f"finish_reserve_2"))
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text,reply_markup=markup)
+    with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
+        data['services_choosing']=services 
+        data['total_time']=total_time
+        data['total_price']=total_price
+
+####end of reservation : show day if evadable
+@bot.callback_query_handler(func=lambda call: call.data.startswith("finish_reserve"))
+def callback_query(call:CallbackQuery):
+    part=int(call.data.split("_")[2])
+    with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
+        services =data['services_choosing']
+        total_time=data['total_time']
+        total_price=data['total_price']
+
+    available_list=get_free_time_for_next_7day(part=part,duration=total_time)
+    bot.delete_state(user_id=call.message.from_user.id,chat_id=call.message.chat.id)
+    markup=InlineKeyboardMarkup()
+    if len(available_list) <1 :
+        markup.add(InlineKeyboardButton(text=text_no_time_for_reservations,callback_data="!!!!!!!!!!!"))
+    else:
+        for day in available_list:
+            date=day[0]
+            date_per=gregorian_to_jalali(date)
+            time=day[1]
+            btn=InlineKeyboardButton(text=f"{date_per} : {time[:5]}",callback_data=f"reserve_date_{date}_{time}")
+            markup.add(btn)
+    text=call.message.text
+    with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
+        data['services_choosing']=services 
+        data['total_time']=total_time
+        data['total_price']=total_price
+
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text,reply_markup=markup)
+
+
+##make reservation in db and send info to user : btn is send pic 
+@bot.callback_query_handler(func=lambda call: call.data.startswith("reserve_date_"))
+def callback_query(call:CallbackQuery):
+    date=(call.data.split("_")[2])
+    time=(call.data.split("_")[3])
+    with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
+        services =data['services_choosing']
+        total_time=data['total_time']
+        total_price=data['total_price']
+
+    text=make_reservation_info_text(date=date,time=time,price=total_price,duration=total_time,services=services, )
+    
+    markup=InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton(text="ارسال رسید", callback_data="pic_receipt"))
+    with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
+        data['services']=services 
+        data['total_time']=total_time
+        data['total_price']=total_price
+        data['date']=date
+        data['time']=time
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text,reply_markup=markup)
+
+### get pic_receipt msg
+@bot.callback_query_handler(func=lambda call: call.data == ("pic_receipt"))
+def callback_query(call:CallbackQuery):
+    with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
+        services =data['services']
+        total_time=data['total_time']
+        total_price=data['total_price']
+        date=data['date']
+        time=data['time']
+    bot.delete_state(user_id=call.message.from_user.id,chat_id=call.message.chat.id)
+
+    text=call.message.text
+    cart_info=text_cart_info()
+    text=f"{text}\n \n {cart_info}"
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text)
+    
+    text=text_send_receipt
+    bot.send_message(chat_id=call.message.chat.id,text=text)
+    bot.set_state(user_id=call.message.chat.id,state=user_State.get_rec,chat_id=call.message.chat.id)
+    
+    with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
+        data['services']=services 
+        data['total_time']=total_time
+        data['total_price']=total_price
+        data['date']=date
+        data['time']=time
+
+## pic_receipt is sended not as pic
+@bot.message_handler(state=user_State.get_rec, content_types=['text', 'video', 'document', 'audio', 'sticker', 'voice', 'location', 'contact'])
+def handle_non_photo(msg: Message):
+    # پیام خطا برای ارسال محتوای غیر از عکس
+    bot.send_message(msg.chat.id, "لطفاً فقط یک عکس از رسید خود ارسال کنید.")
+
+
+## pic_receipt is sended as pic
+@bot.message_handler(state=user_State.get_rec,content_types=['photo'])
+def reserve_section_enter_name_first_time(msg : Message):
+    with bot.retrieve_data(user_id=msg.chat.id , chat_id=msg.chat.id) as data:
+        services =data['services']
+        total_time=data['total_time']
+        total_price=data['total_price']
+        date=data['date']
+        time=data['time']
+    bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)
+    
+    markup=InlineKeyboardMarkup()
+    approve_btn=InlineKeyboardButton(text="تایید رزرو و تراکنش",callback_data="approve_btn")
+    deny_btn=InlineKeyboardButton(text="رد کردن رزرو و تراکنش",callback_data="deny_btn")
+    markup.add(approve_btn)
+    markup.add(deny_btn)
+
+    #todo: make reserve in db
+    user_id=msg.from_user.id
+    print("test")
+    result,reserve_id=make_reserve_transaction(user_id=user_id,services=services,duration=total_time,price=total_price,date=date,start_time=time)
+
+    if not result:
+        text=text_transaction_problem
+        bot.send_message(msg.chat.id,text=text)
+        return 
+    
+    
+    #msg to user
+    text=text_wait_for_approve
+    bot.send_message(msg.chat.id,text=text)
+
+    #msg to admin (the main one )
+    forwarded_msg=bot.forward_message(chat_id=MAIN_ADMIN_USER_ID[0],from_chat_id=msg.chat.id,message_id=msg.message_id)
+    text=make_reservation_info_text(date=date,time=time,price=total_price,duration=total_time,services=services, )
+    user_id =msg.from_user.id
+    text=f"{text} \n reserve_id={reserve_id} \n user_id={user_id}" #! do not change it
+    bot.send_message(chat_id=MAIN_ADMIN_USER_ID[0],text=text,reply_to_message_id=forwarded_msg.message_id,disable_notification=True,reply_markup=markup)
+    
+    bot.delete_state(user_id= msg.from_user.id,chat_id=msg.chat.id)
+
+
+### accept btn
+@bot.callback_query_handler(func=lambda call: call.data ==("approve_btn"))
+def callback_query(call:CallbackQuery):
+    markup=InlineKeyboardMarkup()
+    btn=InlineKeyboardButton(text="این تراکنش تایید شد",callback_data="!?!?!?!")
+    markup.add(btn)
+    info_text=call.message.text
+    # approve transaction
+    reserve_id,user_id=extract_reserveId_and_userId(info_text)
+    result=db_Reserve_Update_Approved_Of_Reserve(reserve_id=reserve_id,approved=True)
+
+    if not result:# to admin
+        text=text_problem_with_approve_or_deny
+        bot.send_message(call.message.chat.id,text=text)
+        return 
+
+    #send approve msg to user
+    bot.send_message(chat_id=user_id,text=reserve_is_approved)
+
+    #admin edit message
+    text=info_text
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.message_id,text=text,reply_markup=markup)
+
+
+## deny btn 
+@bot.callback_query_handler(func=lambda call: call.data ==("deny_btn"))
+def callback_query(call:CallbackQuery):
+    info_text=call.message.text
+    reserve_id,user_id=extract_reserveId_and_userId(info_text)
+    
+    markup=InlineKeyboardMarkup()
+    btn=InlineKeyboardButton(text="این تراکنش رد شد",callback_data="!?!?!?!")
+    btn2=InlineKeyboardButton(text="علت رد کردن تراکنش را بنویسید",callback_data=f"deny_message_to_{user_id}")
+    markup.add(btn)
+    markup.add(btn2)
+
+    # remove reserve from db 
+    result=delete_reservation(reserve_id)
+
+    if not result:
+        text=text_problem_with_approve_or_deny
+        bot.send_message(call.message.chat.id,text=text)
+        return 
+  
+    #send deny  msg to user
+    bot.send_message(chat_id=user_id,text=reserve_is_denied)
+
+    #admin edit message
+    text=info_text
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.message_id,text=text,reply_markup=markup)
+
+#deny msg reason
+@bot.callback_query_handler(func=lambda call: call.data.startswith("deny_message_to_"))
+def deny_msg(call : CallbackQuery):
+    user_id=int(call.data.split('_')[3])
+    msg=f"{call.message.text}"
+
+    text=text_deny_reason
+    bot.send_message(chat_id=call.message.chat.id,text=text)
+    print("test")
+    bot.set_state(user_id=call.message.chat.id,state=admin_State.send_deny_reason,chat_id=call.message.chat.id)
+
+    with bot.retrieve_data(call.message.chat.id, call.message.chat.id) as data:
+        data['user_id'] = user_id
+ 
+
+ #send deny reason to user
+@bot.message_handler(state=admin_State.send_deny_reason)
+def deny_reason(msg : Message):
+    with bot.retrieve_data(msg.chat.id, msg.chat.id) as data:
+        # user_id = int(data.get('user_id'))
+        user_id = int( data['user_id'])
+
+    deny_reason_msg=msg.text
+    bot.send_message(chat_id=user_id,text=f"علت رد شدن تراکنش شما : \n {deny_reason_msg}")
+    bot.send_message(chat_id=msg.from_user.id,text="پیام شما برای کاربر ارسال شد")
+    bot.delete_state(user_id= msg.from_user.id,chat_id=msg.chat.id)
 
 #?######################################################################
 #### activation_user
 def activation_user(msg : Message) :
-        name = db_Users_Get_Name_User(msg.from_user.id)
-        last_name = db_Users_Get_Last_Name_User(msg.from_user.id)
-        phone_number = db_Users_Get_Phone_Number_User(msg.from_user.id)
+        # name = db_Users_Get_Name_User(msg.from_user.id)
+        # last_name = db_Users_Get_Last_Name_User(msg.from_user.id)
+        # phone_number = db_Users_Get_Phone_Number_User(msg.from_user.id)
         bot.send_message(chat_id=msg.from_user.id,text=text_enter_name)
         bot.set_state(user_id=msg.chat.id,state=user_State.state_info_enter_name,chat_id=msg.chat.id)
 

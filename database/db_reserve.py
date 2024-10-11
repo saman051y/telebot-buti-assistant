@@ -198,9 +198,14 @@ def db_Reserve_Update_Approved_Of_Reserve(reserve_id:int,approved:bool):
         logging.error("updateApprovedOfReserve: id is not valid")
         return False
     try:
-        sql = f"""UPDATE reserve 
-                  SET approved = '{approved}' 
-                  WHERE id = {reserve_id};"""
+        if approved:
+            sql = f"""UPDATE reserve 
+                    SET approved = 1 
+                    WHERE id = {reserve_id};"""
+        else:
+            sql= f"""UPDATE reserve 
+                    SET approved = 0
+                    WHERE id = {reserve_id};"""
         with mysql.connector.connect(**DB_CONFIG) as connection:
             if connection.is_connected():
                 with connection.cursor()  as cursor:

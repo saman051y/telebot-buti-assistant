@@ -47,36 +47,24 @@ def gregorian_to_jalali(gregorian_date_str):
     
     return jalali_date_str
 #########################################################
-def add_time(initial_time: str, duration: str) -> str:
-    """
-    Add a duration to a given time.
-
-    Parameters:
-    - initial_time (str): The initial time in "HH:MM" format.
-    - duration (str): The duration to add in "HH:MM" format.
-
-    Returns:
-    - str: The new time in "HH:MM" format after adding the duration.
-    """
-    # Define the time format
-    time_format = "%H:%M"
+def add_times(time1, time2):
+    # تبدیل رشته‌های زمانی به timedelta
+    t1 = datetime.strptime(time1, "%H:%M:%S")
+    t2 = datetime.strptime(time2, "%H:%M:%S")
     
-    # Convert the initial time string to a datetime object
-    time_obj = datetime.strptime(initial_time, time_format)
+    # محاسبه مجموع زمان‌ها
+    delta1 = timedelta(hours=t1.hour, minutes=t1.minute, seconds=t1.second)
+    delta2 = timedelta(hours=t2.hour, minutes=t2.minute, seconds=t2.second)
     
-    # Parse the duration string to extract hours and minutes
-    hours, minutes = map(int, duration.split(":"))
+    total_delta = delta1 + delta2
     
-    # Create a timedelta object for the duration
-    time_delta = timedelta(hours=hours, minutes=minutes)
+    # تبدیل نتیجه به فرمت "HH:MM:SS"
+    total_seconds = int(total_delta.total_seconds())
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    seconds = total_seconds % 60
     
-    # Add the timedelta to the initial time
-    new_time = time_obj + time_delta
-    
-    # Format the new time as a string
-    new_time_str = new_time.strftime(time_format)
-    
-    return new_time_str
+    return f"{hours:02}:{minutes:02}:{seconds:02}"
 
 #########################################################
 def add_date(date_str:str, days:int):
@@ -345,6 +333,15 @@ def calculate_numbers_in_a_row(array):
     grouped.append((start, array[-1]))
     return grouped
 
+##########################################################
+def convert_to_standard_time(time_string, input_format="%H:%M:%S"):
+    try:
+        # تبدیل رشته زمانی به شیء datetime بر اساس فرمت ورودی
+        time_obj = datetime.strptime(time_string, input_format)
+        # تبدیل زمان به فرمت استاندارد "HH:MM:SS"
+        return time_obj.strftime("%H:%M:%S")
+    except ValueError:
+        return "Invalid format"
 ##########################################################
 def calculate_empty_time(date:str):
     #3th item is flag by 0 or 1 that show this time is (0=NOT RESERVED or 1=RESERVED)
