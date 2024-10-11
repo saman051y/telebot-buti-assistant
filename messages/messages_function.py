@@ -96,11 +96,34 @@ def text_make_reservation_info(price,time,services):
     for service in services:
         if (service[5] == 0 ):
             continue
-        names=f"{names} - {service[1]}"
+        names=f"{names} - {service[1]} \n"
     text=f"""
 هزینه کل خدمات انتخاب شده : {price}
 کل تایم رزرو شده : {time}
 خدمات انتخاب شده : {names}
+"""
+    return text
+#######################################################################
+def make_reservation_info_text(price:int,duration:str,date:str,time:str,services):
+    names=""
+    for service in services:
+        if (service[5] == 0 ):
+            continue
+        names=f"{names} - {service[1]}"
+    text=f"""
+هزینه کل :  {price}
+مدت زمان رزور شده : {duration}
+تاریخ انتخاب شده : {date}
+ساعت انتخاب شده : {time}
+خدمات انتخاب شده : {names}
+"""
+    return text
+#######################################################################
+def text_cart_info():
+    text="""
+شماره کارت: 
+مالک کارت:
+بانک :
 """
     return text
 #######################################################################

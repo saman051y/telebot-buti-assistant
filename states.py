@@ -12,6 +12,7 @@ class user_State(StatesGroup):
     state_info_update_last_name = State()
     state_info_update_phone_number = State()
     state_selecting_service=State()
+    get_rec=State
 #######################################################################
 class admin_State(StatesGroup):
 
@@ -27,6 +28,7 @@ class admin_State(StatesGroup):
     state_service_update_is_active= State()
     state_user_find =State()
     message_to_all=State()
+    send_deny_reason=State()
 
     ########## setwork state
     state_setWork_get_part=State()

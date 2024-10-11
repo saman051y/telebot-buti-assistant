@@ -1,6 +1,10 @@
 from datetime import datetime, timedelta
 from convertdate import persian
 import math
+from database.db_setwork import *
+from database.db_weeklysetting import *
+from database.db_reserve import *
+from messages.commands_msg import *
 #########################################################
 def convert_time_to_slot(time:str):
     """get a time like '01:30' return  6 (1 slot = 15 min)"""
@@ -43,36 +47,24 @@ def gregorian_to_jalali(gregorian_date_str):
     
     return jalali_date_str
 #########################################################
-def add_time(initial_time: str, duration: str) -> str:
-    """
-    Add a duration to a given time.
-
-    Parameters:
-    - initial_time (str): The initial time in "HH:MM" format.
-    - duration (str): The duration to add in "HH:MM" format.
-
-    Returns:
-    - str: The new time in "HH:MM" format after adding the duration.
-    """
-    # Define the time format
-    time_format = "%H:%M"
+def add_times(time1, time2):
+    # تبدیل رشته‌های زمانی به timedelta
+    t1 = datetime.strptime(time1, "%H:%M:%S")
+    t2 = datetime.strptime(time2, "%H:%M:%S")
     
-    # Convert the initial time string to a datetime object
-    time_obj = datetime.strptime(initial_time, time_format)
+    # محاسبه مجموع زمان‌ها
+    delta1 = timedelta(hours=t1.hour, minutes=t1.minute, seconds=t1.second)
+    delta2 = timedelta(hours=t2.hour, minutes=t2.minute, seconds=t2.second)
     
-    # Parse the duration string to extract hours and minutes
-    hours, minutes = map(int, duration.split(":"))
+    total_delta = delta1 + delta2
     
-    # Create a timedelta object for the duration
-    time_delta = timedelta(hours=hours, minutes=minutes)
+    # تبدیل نتیجه به فرمت "HH:MM:SS"
+    total_seconds = int(total_delta.total_seconds())
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    seconds = total_seconds % 60
     
-    # Add the timedelta to the initial time
-    new_time = time_obj + time_delta
-    
-    # Format the new time as a string
-    new_time_str = new_time.strftime(time_format)
-    
-    return new_time_str
+    return f"{hours:02}:{minutes:02}:{seconds:02}"
 
 #########################################################
 def add_date(date_str:str, days:int):
@@ -204,7 +196,7 @@ def time_deference(time_a,time_b):
 
 ######################################################### change timeDelta to Normal format
 def convertTimeDeltaToTime(timedelta):
-    """input like (1500) as totol seconds and it return in format HH:MM:SS as string"""
+    """input like (1500) as total seconds and it return in format HH:MM:SS as string"""
     total_seconds = int(timedelta)
     if total_seconds>3600 :
         hours, remainder = divmod(total_seconds, 3600)
@@ -218,7 +210,7 @@ def convertTimeDeltaToTime(timedelta):
     return time_string
 ########################################################## get name of days as persian calendar
 
-def convertDateToDayAsPersiancalendar(date:str):
+def convertDateToDayAsPersianCalendar(date:str):
     """input date string in Gorgian 'YYYY-MM-DD' format and return the day in Persian."""
 
     days_of_week_name = ['دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه', 'شنبه','یکشنبه']
@@ -231,7 +223,7 @@ def convertDateToDayAsPersiancalendar(date:str):
     return persian_day_name
 ########################################################## get name of Month as persian calendar
 # Persian month names mapping
-def convertDateToMonthAsPersiancalendar(date:str):
+def convertDateToMonthAsPersianCalendar(date:str):
     """Get a date string in Gorgian 'YYYY-MM-DD' format and return the day in Persian."""
     months_of_year_name = [
     'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
@@ -243,19 +235,149 @@ def convertDateToMonthAsPersiancalendar(date:str):
     return persian_month_str
 ########################################################## generate persian format date like 1403 مهر 08 شنبه
 def convertDateToPersianCalendar(date:str):
-    """input is Gorgian date like'224-09-29' and output is like '1403 مهر 08 شنبه' """
+    """input is Gregorian date like'224-09-29' and output is like '1403 مهر 08 شنبه' """
     jalali_date = gregorian_to_jalali(date)
     jalali_Year = jalali_date.split('-')[0]
-    jalali_month = convertDateToMonthAsPersiancalendar(date)
-    jalali_day_name = convertDateToDayAsPersiancalendar(date)
+    jalali_month = convertDateToMonthAsPersianCalendar(date)
+    jalali_day_name = convertDateToDayAsPersianCalendar(date)
     jalali_day_number= jalali_date.split('-')[2]
     text = f'{jalali_day_name} {jalali_day_number} {jalali_month} {jalali_Year}'
     return text 
-##########################################################
-def convertDateToDayAsGorgianCalendar(date:str):
+########################################################## input is date and output is name day of week
+def convertDateToDayAsGregorianCalendar(date:str):
     """input is date like '2024-05-04' and output is like 'saturday'"""
     days_of_week_name = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday','sunday']
     gregorian_date = datetime.strptime(date, '%Y-%m-%d')
     weekday_num = gregorian_date.weekday()
-    Gorgain_day_name = days_of_week_name[weekday_num]
-    return Gorgain_day_name
+    Gregorian_day_name = days_of_week_name[weekday_num]
+    return Gregorian_day_name
+########################################################## generate 7 day from now by default as weekly setting 
+def GenerateNext7Day() :
+    today = datetime.now().date()
+    get_default_parts= db_WeeklySetting_Get_Parts()
+    default_parts =[]
+    for i in range(2) :
+        default_part= get_default_parts[i][1]
+        start_time = 'Null'
+        end_time = 'Null'
+        if default_part not in [None , 'None' , 'Null']:
+            start_time=str(default_part.split('/')[0])
+            end_time=str(default_part.split('/')[1])
+        default_parts += [start_time , end_time]
+    for i in range(0,6):
+        date = today + timedelta(days=i)
+        day_of_week=convertDateToDayAsGregorianCalendar(date=str(date))
+        day_status=db_WeeklySetting_Get_Value(day_of_week)
+        result=False
+        if day_status[2] == '1':
+            # exist_day = db_SetWork_exist_date(str(date))
+            # if not exist_day:
+            result = db_SetWork_Create_date(date ,default_parts[0], default_parts[1], default_parts[2] , default_parts[3])
+########################################################## calculate slot_number from start_time
+def convert_slot_number_to_duration(start_time:str,slot_number:str):
+    """input is time like 08:30:00 and slot_number like 2 
+        and export is 2th 15Min then export is 09:00:00"""
+    
+    time_obj = datetime.strptime(start_time , "%H:%M:%S")
+    
+    # Calculate the total time to add based on the number of slots and slot duration
+    total_minutes = int(slot_number) * 15
+    
+    # Add the total minutes to the time object
+    new_time_obj = time_obj + timedelta(minutes=total_minutes)
+    
+    # Convert the updated time back to a string
+    return new_time_obj.strftime("%H:%M:%S")
+########################################################## input is duration and export is time_slot bu 15 Min
+def convert_duration_to_slot_number(time_str):
+    """input is duration and export is time_slot bu 15 Min like input 01:30:00 export 6"""
+    # Parse the time string into a datetime object
+    time_format = "%H:%M:%S"
+    time_obj = datetime.strptime(time_str, time_format)
+    
+    # Calculate total minutes since midnight
+    total_minutes = time_obj.hour * 60 + time_obj.minute
+    
+    # Calculate the slot number (each slot is 15 minutes)
+    slot_number = total_minutes // 15
+    
+    return slot_number
+##########################################################search for first time that empty as array
+def find_consecutive_sequence(array, sequence_length):
+    """input is array from empty time and get duration as time_slot number"""
+    # Iterate through the list to find the first group of `sequence_length` consecutive numbers
+    for i in range(len(array) - sequence_length + 1):
+        # Check if the next numbers in the sequence are consecutive
+        is_consecutive = all(array[i + j] == array[i] + j for j in range(sequence_length))
+        
+        if is_consecutive:
+            return array[i]  # Return the first number of the consecutive sequence
+########################################################## # user for calculate empty time
+def calculate_numbers_in_a_row(array):
+    """ find numbers in row like [1, 2, 3, 4, 14, 15, 16, 17, 18, 19, 20, 21, 22, 30] 
+        and export like [(1, 4), (14, 22), (30, 30)]
+        """
+    if not array:
+        return []
+    array.sort()  # Make sure the list is sorted
+    grouped = []
+    start = array[0]  # Start the first group
+    for i in range(1, len(array)):
+        # Check if the current number is not consecutive to the previous one
+        if array[i] != array[i - 1] + 1:
+            # Append the start and the previous element as a tuple
+            grouped.append((start, array[i - 1]))
+            start = array[i]  # Start a new group
+
+    # Append the last group
+    grouped.append((start, array[-1]))
+    return grouped
+
+##########################################################
+def convert_to_standard_time(time_string, input_format="%H:%M:%S"):
+    try:
+        # تبدیل رشته زمانی به شیء datetime بر اساس فرمت ورودی
+        time_obj = datetime.strptime(time_string, input_format)
+        # تبدیل زمان به فرمت استاندارد "HH:MM:SS"
+        return time_obj.strftime("%H:%M:%S")
+    except ValueError:
+        return "Invalid format"
+##########################################################
+def calculate_empty_time(date:str):
+    #3th item is flag by 0 or 1 that show this time is (0=NOT RESERVED or 1=RESERVED)
+    #this section is getting times that Not reserved
+    export_empty_list=[]
+    export_reserved_list=[]
+    merged_list =[]
+    for i in range(1,3):
+        duration_empty_time_as_slot_time=[]
+        duration_empty_time_as_time=[]
+        sorted_list_empty_time_as_array =[]
+        parts = db_SetWork_Get_Part1_or_Part2_of_Day(date=date ,part=i)
+        if parts in [False , None , 'False' , 'None']  :
+            return False
+        start_time = datetime.strptime(str(parts[0]),'%H:%M:%S').strftime('%H:%M:%S')
+        end_time = datetime.strptime(str(parts[1]),'%H:%M:%S').strftime('%H:%M:%S')
+        time_obj = datetime.strptime(start_time, "%H:%M:%S")
+        new_time_obj = time_obj + timedelta(minutes=15)
+        start_time_with_add_15Min = new_time_obj.strftime("%H:%M:%S")
+        start_time_with_add_15Min_and_seconds_00 = start_time_with_add_15Min[:7]+'0'
+        list_empty_time_as_array=db_Reserve_Get_Date_And_parts_Not_Reserved(date=date , start_time=start_time , end_time=end_time)
+        for i in range(len(list_empty_time_as_array)) : 
+            sorted_list_empty_time_as_array.append(list_empty_time_as_array[i][2])
+        duration_empty_time_as_slot_time=calculate_numbers_in_a_row(sorted_list_empty_time_as_array)
+        for y in range(len(duration_empty_time_as_slot_time)):
+            first_time=convert_slot_number_to_duration(start_time=start_time , slot_number=duration_empty_time_as_slot_time[y][0])
+            second_time=convert_slot_number_to_duration(start_time=start_time_with_add_15Min_and_seconds_00 , slot_number=duration_empty_time_as_slot_time[y][1])
+            duration_empty_time_as_time.append((first_time,second_time,'0'))
+        export_empty_list.extend(duration_empty_time_as_time)
+    #this section is getting times that reserved
+    reserved_list = db_Reserve_Get_Reserve_Of_Date(date=date)
+    for i in range(len(reserved_list)):
+        start_time = datetime.strptime(str(reserved_list[i][3]),'%H:%M:%S').strftime('%H:%M:%S')
+        end_time = datetime.strptime(str(reserved_list[i][4]),'%H:%M:%S').strftime('%H:%M:%S')
+        export_reserved_list.append((start_time , end_time , '1'))
+    merged_list.extend(export_empty_list)
+    merged_list.extend(export_reserved_list)
+    sorted_merged_list = sorted(merged_list, key=lambda x: x[0])
+    return sorted_merged_list

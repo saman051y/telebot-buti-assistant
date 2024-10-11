@@ -2,46 +2,12 @@ import logging
 import mysql.connector # type: ignore
 from mysql.connector import Error
 from auth.auth import DB_CONFIG
-from functions.time_date import *
 from database.db_weeklysetting import *
 ######################################################################################################
 """(date,part1_start_time,part1_end_time,part2_start_time,part2_end_time)"""
 ######################################################################################################
-########################################################################################! Insert Sectin
-def db_SetWork_Insert_New_date(date: str, part1_start_time: str, part1_end_time: str, part2_start_time: str, part2_end_time: str):
-    """(date, part1_start_time, part1_end_time, part2_start_time, part2_end_time)"""
-    try:
-        date_exist=db_SetWork_exist_date(date=date)
-        if not date_exist:
-
-            sql=f"""INSERT INTO setwork (date, part1_start_time, part1_end_time, part2_start_time, part2_end_time)
-                    VALUES ('{date}','{part1_start_time}','{part1_end_time}','{part2_start_time}','{part2_end_time}');"""
-
-            if part2_start_time is None :
-                sql=f"""INSERT INTO setwork (date, part1_start_time, part1_end_time)
-                    VALUES ('{date}','{part1_start_time}','{part1_end_time}');"""
-
-            if part1_start_time is None :
-                sql=f"""INSERT INTO setwork (date, part2_start_time, part2_end_time)
-                    VALUES ('{date}','{part2_start_time}','{part2_end_time}');"""
-            with mysql.connector.connect(**DB_CONFIG) as connection:
-                if connection.is_connected():
-                    with connection.cursor()  as cursor:
-                         cursor.execute(sql)
-                         connection.commit()# when something is created or updated or inserted;
-                         cursor.close()
-                         connection.close()
-                         return True
-                else:
-                    logging.error("Error in db_Setwork_Insert_New_date")
-        else:
-            return False
-    except Error as e :
-        logging.error(f"Error in db_Setwork_Insert_New_date : {e}") 
-        return False
-
-######################################################################################################
-def db_SetWork_Create_Date_Without_part(date: str, part1_start_time: str, part1_end_time: str, part2_start_time: str, part2_end_time: str):
+########################################################################################! Insert Section
+def db_SetWork_Create_date(date: str, part1_start_time: str, part1_end_time: str, part2_start_time: str, part2_end_time: str):
     """(date, part1_start_time, part1_end_time, part2_start_time, part2_end_time)"""
     try:
         date_exist=db_SetWork_exist_date(date=date)
@@ -77,6 +43,8 @@ def db_SetWork_Create_Date_Without_part(date: str, part1_start_time: str, part1_
     except Error as e :
         logging.error(f"Error in db_Setwork_Insert_New_date : {e}") 
         return False
+######################################################################################################
+
 #######################################################################################! Get Section
 ###################################### get all set work date al time
 def db_SetWork_Get_ALL_Days():
@@ -102,28 +70,27 @@ def db_Setwork_Get_One_Day(date:str):
     """request a day and get all parts of a day"""
     try:
         date_exist=db_SetWork_exist_date(date=date)
-        if date_exist:   
-            sql=f"""SELECT *
-                    FROM setwork
-                    WHERE date = '{date}';"""
-            with mysql.connector.connect(**DB_CONFIG) as connection:
-                if connection.is_connected():
-                    with connection.cursor()  as cursor:
-                        cursor.execute(sql)
-                        setwork=cursor.fetchone()
-                        cursor.close()
-                        connection.close()
-                        return setwork
-                else:
-                    logging.error("Error in db_Setwrk_Get_Day")
-        else: 
-            return False
+        if not date_exist:  
+            return False 
+        sql=f"""SELECT *
+                FROM setwork
+                WHERE date = '{date}';"""
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor()  as cursor:
+                    cursor.execute(sql)
+                    setwork=cursor.fetchone()
+                    cursor.close()
+                    connection.close()
+                    return setwork
+            else:
+                logging.error("Error in db_Setwrk_Get_Day")
     except Error as e :
         logging.error(f"Error in db_Setwrk_Get_Day : {e}") 
         return False
 ######################################  get one part of a day
 def db_SetWork_Get_Part1_or_Part2_of_Day(date:str, part:int):
-    """if (2024-04-05 , 2): you'll get part 2 of 2024-04-05"""
+    """if (2024-04-05 , 2): you'll get part 2 as array"""
     try:
         date_exist=db_SetWork_exist_date(date=date)
         if date_exist:   
@@ -139,11 +106,11 @@ def db_SetWork_Get_Part1_or_Part2_of_Day(date:str, part:int):
                         connection.close()
                         return setwork
                 else:
-                    logging.error("Error in db_Setwrk_Get_Day")
+                    logging.error("Error in db_Setwork_Get_Day")
         else: 
             return False
     except Error as e :
-        logging.error(f"Error in db_Setwrk_Get_Day : {e}") 
+        logging.error(f"Error in db_Setwork_Get_Day : {e}") 
         return False
 ######################################  is day exist or nor ?
 def db_SetWork_exist_date(date:str):
@@ -165,35 +132,35 @@ def db_SetWork_exist_date(date:str):
                         else: 
                             return setwork
                 else:
-                    logging.error("Error in db_Setwrk_Get_Day")
+                    logging.error("Error in db_Setwork_Get_Day")
     except Error as e :
-        logging.error(f"Error in db_Setwrk_Get_Day : {e}") 
+        logging.error(f"Error in db_Setwork_Get_Day : {e}") 
         return False
     
 ######################################
 # generate day with checking is exist day ? or is active day ? after all insert day bu defaul bot setting value 
-def db_Setwork_Generate_day(date:str):
-    try:
-       date_exist=db_SetWork_exist_date(date=date)
-       if date_exist is False:
-            day_name=convertDateToDayAsGorgianCalendar(date)
-            day_info=db_WeeklySetting_Get_Value(day_name)
-            is_day_active= day_info[2]
-            if is_day_active == '1':
-                list_parts=db_WeeklySetting_Get_Parts()
-                part1_start_time=list_parts[0][1]
-                part1_end_time=list_parts[1][1]
-                part2_start_time=list_parts[2][1]
-                part2_end_time=list_parts[3][1]
-                db_SetWork_Insert_New_date(date=date , part1_start_time=part1_start_time, part1_end_time=part1_end_time, part2_start_time=part2_start_time, part2_end_time=part2_end_time)
-                return True
-            if is_day_active == '0':
-                return False
-            return False
+# def db_Setwork_Generate_day(date:str):
+#     try:
+#        date_exist=db_SetWork_exist_date(date=date)
+#        if date_exist is False:
+#             day_name=convertDateToDayAsGregorianCalendar(date)
+#             day_info=db_WeeklySetting_Get_Value(day_name)
+#             is_day_active= day_info[2]
+#             if is_day_active == '1':
+#                 list_parts=db_WeeklySetting_Get_Parts()
+#                 part1_start_time=list_parts[0][1]
+#                 part1_end_time=list_parts[1][1]
+#                 part2_start_time=list_parts[2][1]
+#                 part2_end_time=list_parts[3][1]
+#                 db_SetWork_Insert_New_date(date=date , part1_start_time=part1_start_time, part1_end_time=part1_end_time, part2_start_time=part2_start_time, part2_end_time=part2_end_time)
+#                 return True
+#             if is_day_active == '0':
+#                 return False
+#             return False
                
-    except Error as e :
-        logging.error(f"Error in db_Setwork_Generate_day : {e}") 
-        return False
+#     except Error as e :
+#         logging.error(f"Error in db_Setwork_Generate_day : {e}") 
+#         return False
 ######################################
 #######################################################################################!update section
 ###################################### update all part ofday with date

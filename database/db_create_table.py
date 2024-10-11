@@ -87,7 +87,7 @@ def createSetWorkTable():
 #######################################################################################
 def createReserveTable():
     """ 
-        start_time and end_timelike 09:30:00
+        start_time and end_time like 09:30:00
         reservation_date like 2024-05-25
     """
     try:
@@ -99,9 +99,9 @@ def createReserveTable():
         end_time TIME NOT NULL,
         approved bool NOT NULl DEFAULT 0,
         payment INT NOT NULL DEFAULT 0 ,
-        CHECK (start_time < end_time),                  -- Ensures that start time is before end time 
-        CHECK (MINUTE(start_time) % 15 = 0),            -- Ensure times are on 15-min slots
-        CHECK (MINUTE(end_time) % 15 != 0),             -- Ensure times end at 14,29,44,59 Mins
+        -- CHECK (start_time < end_time),                  -- Ensures that start time is before end time 
+        -- CHECK (MINUTE(start_time) % 15 = 0),            -- Ensure times are on 15-min slots
+        -- CHECK (MINUTE(end_time) % 15 != 0),             -- Ensure times end at 14,29,44,59 Mins
         UNIQUE (date, start_time, end_time)             -- Prevent overlapping reservations
     );"""
         with mysql.connector.connect(**DB_CONFIG) as connection:

@@ -1,9 +1,11 @@
 #messages for all users
+from database.db_reserve import *
 from database.db_setwork import *
 from database.db_weeklysetting import *
 from telebot.types import InlineKeyboardButton ,InlineKeyboardMarkup,ReplyKeyboardMarkup,KeyboardButton,Message,CallbackQuery,ReplyKeyboardRemove
 from messages.messages_function import *
 from messages.commands_msg import *
+from datetime import datetime, timedelta
 ###############################################################! for client
 mark_text_reserve_time='رزرو وقت'
 mark_text_reserved_time='مشاهده رزرو ها '
@@ -52,7 +54,7 @@ def makrup_generate_service_list(sorted_serviceData):
         button = InlineKeyboardButton(text=text ,callback_data=f'showServiceList_{item[0]}')
         markup.add(button)
     return markup
-########################################## generate markup for weekly tiem
+########################################## generate markup for weekly time
 def makrup_generate_weekly_time_list():
     bot_setting=db_WeeklySetting_Get_All()
     markup = InlineKeyboardMarkup()
@@ -84,7 +86,7 @@ def makrup_generate_weekly_time_list():
 def makrup_generate_set_work_list_of_days() :
     markup = InlineKeyboardMarkup()
     today = datetime.now().date()
-    for i in range(0,6):
+    for i in range(7):
         date = today + timedelta(days=i)
         text=convertDateToPersianCalendar(date=str(date))
         button = InlineKeyboardButton(text=f'{text}' ,callback_data=f'SetWorkTime:{date}')
@@ -111,7 +113,7 @@ def makrup_generate_parts_list_of_set_work(date):
                 part_end_time= default_parts_str.split('/')[1]
             all_part += [(part_start_time)]
             all_part += [(part_end_time)]
-        result_update = db_SetWork_Create_Date_Without_part(date=date , part1_start_time=all_part[0] , part1_end_time=all_part[1] , part2_start_time=all_part[2] , part2_end_time=all_part[3])
+        result_update = db_SetWork_Create_date(date=date , part1_start_time=all_part[0] , part1_end_time=all_part[1] , part2_start_time=all_part[2] , part2_end_time=all_part[3])
         part=db_SetWork_Get_Part1_or_Part2_of_Day(date=date ,part=i+1)
     if part not in ['False',False]:
         for i in range(1,3):
@@ -136,14 +138,13 @@ def makrup_generate_parts_list_of_set_work(date):
             markup.add(*buttons_part)
         return markup
 ##########################################
-def markup_generate_services_for_reserve(services):
+def markup_generate_services_for_reserve(services,total_selected:int=0):
     """call back data is select_service_{id}
     AND for reservation selection end call back is make_reservation """
     markup=InlineKeyboardMarkup()
     if services is None or len(services)==0 :
         return markup.add(InlineKeyboardButton(text="هیچ سرویسی جهت رزرو موجود نیست",callback_data="!!!!!!!!!"))
     for service in services:
-        # print(service)
         if not service[4]:
             continue 
         id=service[0]
@@ -151,5 +152,19 @@ def markup_generate_services_for_reserve(services):
         price = service[3]
         isEnable="انتخاب شده" if service[5] ==1 else "انتخاب نشده"
         markup.add(InlineKeyboardButton(text=f"{name}:{price}:{isEnable}",callback_data=f"select_service_{id}"))
-    markup.add(InlineKeyboardButton(text="اتمام انتخاب",callback_data="make_reservation"))
+    if total_selected>0:
+        markup.add(InlineKeyboardButton(text="اتمام انتخاب",callback_data="make_reservation"))
+    return markup
+########################################## show parts of days by needed time for reserve 
+
+##########################################
+def makrup_generate_empty_time_of_day(delete_day:str) :
+    markup = InlineKeyboardMarkup()
+    today = datetime.now().date()
+    for i in range(7):
+        date = today + timedelta(days=i)
+        if delete_day != str(date) :
+            text=convertDateToPersianCalendar(date=str(date))
+            button = InlineKeyboardButton(text=f'{text}' ,callback_data=f'getEmptyTime:{date}')
+            markup.add(button)
     return markup
