@@ -1,4 +1,5 @@
 from auth.auth import *
+from database.db_reserve_service import getResSerWithResId
 from database.db_service import *
 from database.db_users import *
 from functions.time_date import *
@@ -104,7 +105,7 @@ def text_make_reservation_info(price,time,services):
 """
     return text
 #######################################################################
-def make_reservation_info_text(price:int,duration:str,date:str,time:str,services):
+def make_reservation_info_text_for_user(price:int,duration:str,date:str,time:str,services):
     names=""
     for service in services:
         if (service[5] == 0 ):
@@ -116,6 +117,41 @@ def make_reservation_info_text(price:int,duration:str,date:str,time:str,services
 تاریخ انتخاب شده : {date}
 ساعت انتخاب شده : {time}
 خدمات انتخاب شده : {names}
+"""
+    return text
+
+#######################################################################
+def make_reservation_info_text_for_admin(reserve_id,user_id):
+    #reserve info
+    reserve=db_Reserve_Get_Reserve_With_Id(reserve_id=reserve_id)
+    date=reserve[2]
+    start_time=reserve[3]
+    end_time=reserve[4]
+    price=reserve[6]
+    #service names
+    services_id=getResSerWithResId(reserve_id=reserve_id)
+    services=[]
+    for service_id in services_id:
+       services.append (db_Service_Get_Service_With_Id(service_id=service_id[0]))
+    names=""
+    total_price=0
+    for service in services:
+        names=f"{names} - {service[1]}"
+        total_price= total_price+ int(service[3])
+    week_day=get_weekday(f"{date}")
+    user=db_Users_Find_User_By_Id(user_id=user_id)
+    text=f"""
+اطلاعات کاربر
+نام: {user[4]}
+نام خانوادگی: {user[5]}
+نام کاربری:  {user[2]}
+شناسه کاربر: {user[0]}
+هزینه پرداخت شده :  {price}
+تاریخ انتخاب  :  {week_day} = {date} 
+ساعت شروع  : {start_time}
+ساعت اتمام : {end_time}
+خدمات رزرو شده : {names}
+مجموع قیمت خدمات انتخاب شده : {total_price}
 """
     return text
 #######################################################################

@@ -8,7 +8,7 @@ from messages.commands_msg import *
 from datetime import datetime, timedelta
 ###############################################################! for client
 mark_text_reserve_time='رزرو وقت'
-mark_text_reserved_time='مشاهده رزرو ها '
+mark_text_reserved_time='مشاهده رزرو ها'
 mark_text_support='پشتیبانی'
 mark_text_account_info='حساب کاربری'
 mark_text_update_name = 'ویرایش نام'
@@ -20,6 +20,7 @@ mark_text_admin_reserved_time = 'ساعت های رزرو شده'
 mark_text_admin_set_work_time = 'تنظیمات ساعت کاری'
 mark_text_admin_weekly_time = 'تنظیمات روز های هفته'
 mark_text_admin_set_service = 'تنظیمات خدمات'
+mark_text_admin_bot_setting="تنظیمات ربات"
 mark_text_admin_send_message_to_all='ارسال پیام همگانی'
 mark_text_admin_users_list='لیست مخاطبین'
 mark_text_admin_find_user='جستجو در مخاطبین'

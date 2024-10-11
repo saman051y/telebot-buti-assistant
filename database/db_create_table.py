@@ -24,6 +24,9 @@ def createTables():
         created=createWeeklySetting()
         if not created:
             return False
+        created=createBot_setting()
+        if not created:
+            return False
         logging.info("data base is working")
         return True
     except Error as e:
@@ -163,8 +166,32 @@ def createReserveServicesTable():
         logging.error(f"in createReserveTable : {e}") 
         return False
 #######################################################################################
+def createBot_setting():
+    """  bot_setting(name:varchar(20), value:varchar(20),)   """
+    try:
+        sql=f"""CREATE TABLE IF NOT EXISTS bot_setting (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(20) UNIQUE NOT NULL,
+                value VARCHAR(17) NOT NULL
+                );"""
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor()  as cursor:
+                     cursor.execute(sql)
+                     connection.commit()# when something is created or updated or inserted;
+                     cursor.close()
+                     connection.close()
+                     DefualtValueWeeklySetting()
+                     return True
+                
+            else:
+                logging.error("connection to database is not working")
+    except Error as e :
+        logging.error(f"in createBotSetting : {e}") 
+        return False
+#######################################################################################
 def createWeeklySetting():
-    """  createBotSetting(name:varchar(20), value:varchar(20),)   """
+    """  weekly_setting(name:varchar(20), value:varchar(20),)   """
     try:
         sql=f"""CREATE TABLE IF NOT EXISTS weekly_setting (
                 id INT AUTO_INCREMENT PRIMARY KEY,
