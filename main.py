@@ -4,12 +4,12 @@ from telebot import TeleBot , custom_filters , types,apihelper
 from telebot.storage import StateMemoryStorage
 from telebot.types import InlineKeyboardButton ,InlineKeyboardMarkup,ReplyKeyboardMarkup,KeyboardButton,Message,CallbackQuery,ReplyKeyboardRemove
 from auth.auth import *
-from database.db_functions import delete_reservation, make_reserve_transaction
+from database.db_functions import *
 from database.db_weeklysetting import *
 from database.db_create_table import *
 from database.db_setwork import *
 from database.db_users import *
-from functions.custom_funxtions import  extract_reserveId_and_userId, get_free_time_for_next_7day
+from functions.custom_functions import *
 from functions.log_functions import *
 from functions.time_date import *
 from messages.commands_msg import *
@@ -672,12 +672,19 @@ def start(msg : Message):
 def reserve_time(msg : Message):
     bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id) 
     counter=0
+    user_id=msg.from_user.id
+    user_is_valid=db_Users_Validation_User_By_Id(user_id=user_id)
+    if user_is_valid is False :
+        user_is_created =db_Users_Insert_New_User(user_id=msg.from_user.id,username=msg.from_user.username,join_date=datetime.now().date(),name='empty',last_name='empty',phone_number='0')
+        if user_is_created is False:
+            text=text_user_not_created
+            bot.send_message(chat_id=user_id,text=text,reply_markup=ReplyKeyboardRemove())
+            return False
     db_Users_Update_Username_User(user_id=msg.from_user.id , username=msg.from_user.username)#update Username while every reservation
     name = db_Users_Get_Name_User(msg.from_user.id)
     if name == 'empty' : 
         activation_user(msg=msg)
         return
-    
     services=db_Service_Get_All_Services()
     if services is None or len(services) ==0:
         bot.send_message(chat_id=msg.from_user.id,text=text_no_service_available)
@@ -1087,7 +1094,7 @@ def startMessageToAdmin(enable=True,disable_notification=True):
                 bot.send_document(admin, log_file,caption=f"{text}\n{error_message}",disable_notification=disable_notification)
             logging.info(f"send last log to admin [{admin}] : {latest_log_file}")
         else:
-            logging.info("ther is no log file to show")
+            logging.info("there is no log file to show")
             bot.send_message(chat_id=admin,text=f"{text}\n ⛔️فایل log وجود ندارد⛔️",disable_notification=disable_notification)
 
 ########################################################################! END :)

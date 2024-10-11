@@ -277,11 +277,12 @@ def GenerateNext7Day() :
 def convert_slot_number_to_duration(start_time:str,slot_number:str):
     """input is time like 08:30:00 and slot_number like 2 
         and export is 2th 15Min then export is 09:00:00"""
-    
+    print(slot_number)
+    slot_number=int(slot_number)
     time_obj = datetime.strptime(start_time , "%H:%M:%S")
     
     # Calculate the total time to add based on the number of slots and slot duration
-    total_minutes = int(slot_number) * 15
+    total_minutes = slot_number * 15
     
     # Add the total minutes to the time object
     new_time_obj = time_obj + timedelta(minutes=total_minutes)
