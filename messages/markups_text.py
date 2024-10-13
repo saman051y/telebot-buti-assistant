@@ -12,7 +12,6 @@ mark_text_reserved_time='مشاهده رزرو ها'
 mark_text_support='پشتیبانی'
 mark_text_account_info='حساب کاربری'
 mark_text_update_name = 'ویرایش نام'
-mark_text_update_last_name = 'ویرایش نام خانوادگی'
 mark_text_update_phone_number ='ویرایش شماره تماس'
 mark_text_admin_empty_time = 'ساعت های خالی'
 ###############################################################! for admin
@@ -37,6 +36,13 @@ mark_text_admin_delete_service='حذف سرویس'
 #########################################
 text_set_work_enable='تنظیم تایم کاری'
 text_set_work_disable='تنظیم تایم استراحت'
+
+######################################### create markup for account info in user panel
+def markup_generate_account_info(user_id:int):
+    markup = InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton(text=mark_text_update_name, callback_data=f'updateNameUser_{user_id}'))
+    markup.add(InlineKeyboardButton(text=mark_text_update_phone_number, callback_data=f'updatePhoneNumberUser_{user_id}'))
+    return markup
 ######################################### create markup for update service
 def markup_generate_service(ServiceID:int):
     markup = InlineKeyboardMarkup()
@@ -79,10 +85,6 @@ def makrup_generate_weekly_time_list():
     if len(buttons) >= 9:
         markup.row(*buttons[7:9])  # Last 2 buttons in the fifth row
     return markup
-
-
-
-
 ########################################## generate markup setwork list until 7 days
 def makrup_generate_set_work_list_of_days() :
     markup = InlineKeyboardMarkup()
