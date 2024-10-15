@@ -78,4 +78,4 @@ text_no_reserve_for_user="هیچ رزروی برای نمایش نیست"
 text_reserve_list_msg="لیست رزرو های شما در ۷ روز اینده"
 
 text_bot_is_disable="ربات غیر فعال است لطفا بعدا تلاش کنید"
-text_bot_setting="تنظیمات ربات"
+text_bot_setting="تنظیمات ربات در زیر امده است"

@@ -171,3 +171,21 @@ def makrup_generate_empty_time_of_day(delete_day:str) :
             button = InlineKeyboardButton(text=f'{text}' ,callback_data=f'getEmptyTime:{date}')
             markup.add(button)
     return markup
+##########################################
+##########################################
+def makrup_reserve_date(date_persian,weekDay,time,date):
+    """callback data : reserve_date_"""
+    return InlineKeyboardButton(text=f"{date_persian} : {time[:5]}",
+                                callback_data=f"reserve_date_{date}_{time}")
+##########################################
+def markup_admin_bot_setting(bot_is_enable:bool=True):
+    """
+    bot enable : change_bot_enable_disable
+    """
+    markup=InlineKeyboardMarkup()
+    bot_is_enable_text="فعال" if bot_is_enable else "غیرفعال"
+    btn=InlineKeyboardButton(text=f"وضعیت ربات : {bot_is_enable_text}",callback_data=f"change_bot_enable_disable")
+
+
+    markup.add(btn)
+    return markup

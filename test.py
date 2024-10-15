@@ -18,11 +18,7 @@ from functions.time_date import *
 
 # result =get_free_time_for_next_7day(part=1,duration="01:00:00")
 # print( result)
-
-
-result=get_free_time_for_next_7day(1,duration='02:00:00')
-# result=db_Reserve_Get_Date_And_parts_Not_Reserved('2024-10-14' , '15:15:01' , '20:15:00')
-# result= GenerateNext7Day()
+result =get_free_time_for_next_7day(duration="01:00:00")
 print(result)
 
 
