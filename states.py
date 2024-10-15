@@ -6,10 +6,8 @@ from telebot.types import Message
 
 class user_State(StatesGroup): 
     state_info_enter_name = State()
-    state_info_enter_last_name = State()
     state_info_enter_phone_number = State()
     state_info_update_name = State()
-    state_info_update_last_name = State()
     state_info_update_phone_number = State()
     state_selecting_service=State()
     get_rec=State

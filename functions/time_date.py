@@ -241,7 +241,7 @@ def convertDateToPersianCalendar(date:str):
     jalali_month = convertDateToMonthAsPersianCalendar(date)
     jalali_day_name = convertDateToDayAsPersianCalendar(date)
     jalali_day_number= jalali_date.split('-')[2]
-    text = f'{jalali_day_name} {jalali_day_number} {jalali_month} {jalali_Year}'
+    text = f'{jalali_day_name} {jalali_day_number} {jalali_month}'
     return text 
 ########################################################## input is date and output is name day of week
 def convertDateToDayAsGregorianCalendar(date:str):

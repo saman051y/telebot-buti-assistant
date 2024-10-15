@@ -11,9 +11,8 @@ def text_cleaner_info(data):
     username = data[2]
     join_date = convertDateToPersianCalendar(str(data[3]))
     name = data[4]
-    last_name = data[5]
-    export_text = (f"شناسه عددی       {user_id} \nشناسه کاربری      {username} \nنام                     {name}\n"
-     f"نام خانوادگی       {last_name}\nشماره تماس       {phone_number} \nتاریخ عضویت     {join_date}\n  ")
+    export_text = (f"شناسه عددی             {user_id} \n🔢 شناسه کاربری      {username} \n🔡 نام                     {name}\n"
+     f"📞 شماره تماس       {phone_number} \n📅 تاریخ عضویت     {join_date}\n.")
     return export_text
 #######################################################################
 def validation_admin(user_id):
@@ -24,36 +23,28 @@ def validation_admin(user_id):
 def createLabelServicesToShowOnButton(user_id):
     data = db_Service_Get_Service_With_Id(user_id)
     name=data[1]
-
-    time=f"{data[2]}"
+    time = datetime.strptime(str(data[2]),'%H:%M:%S').strftime('%H:%M')
     time=time[:5]
     price=data[3]
     is_active=data[4]
     if is_active == 1:
-        is_active_text = 'فعال'
+        is_active_text = '✅'
     else : 
-        is_active_text = 'غیر فعال'
-
-    export_text = (f" {name} - {time} - {price} - {is_active_text}")
+        is_active_text = '❌'
+    export_text = (f" {name}  {time}  {price} هزارتومان  {is_active_text}")
     return export_text
 #######################################################################
-def change_Username_To_URL(username,phone_number) :
-    if username=='None' :
-        export_text=f"شماره تماس : {phone_number} \n  فاقد آیدی میباشد    " 
-        return export_text
+def accountInfoCreateTextToShow(user_id=str) :
+    data_user=db_Users_Find_User_By_Id(user_id=user_id)
+    username=data_user[2]
+    if data_user in [False , 'False' , None , 'None']:
+        return False
     else :
-        export_text=f"شماره تماس : {phone_number} \n https://t.me/{username} "
-        return export_text
-    
-#######################################################################
-def createLabelUsersToShowOnButton(user_id:int):
-    data = list(db_Users_Find_User_By_Id(user_id))
-    phone_number=data[1]
-    username=data[2]
-    name=data[4]
-    last_name=data[5]
-    export_text=f"{name}  {last_name}"
-    return export_text
+        text_info_user=text_cleaner_info(data=data_user)
+        text =  f'{text_info_user}'
+        if data_user[2] not in [False , 'False' , None , 'None']:
+            text =  f'{text_info_user}\nhttps://t.me/{username}'
+    return text
 #######################################################################
 def ConvertVariableInWeeklySettingToPersian(data:str):
     """input is Gorgian day like 'friday' and output is like 'جمعه' """
@@ -73,13 +64,13 @@ def ConvertVariableInWeeklySettingToPersian(data:str):
     if data =='friday':
         result = 'جمعه'
     if data =='part1':
-        result = 'پارت اول'
+        result = 'صبح'
     if data =='part2':
-        result = 'پارت دوم'
+        result = 'عصر'
     if data =='1':
-        result ='  فعال  '
+        result ='✅'
     if data =='0':
-        result ='  غیر فعال  '
+        result ='❌'
     if data =='None':
         result ='خالی'
 

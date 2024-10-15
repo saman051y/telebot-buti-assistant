@@ -2,14 +2,12 @@
 import logging
 import mysql.connector # type: ignore
 from mysql.connector import Error
-
 from auth.auth import DB_CONFIG
     # """Services(id,name,time_slots,price,is_active)"""
-#todo: insert new timing for today
-def db_Service_Insert_Service(name :str,time_slots,price:int,is_active:bool):
+def db_Service_Insert_Service(name :str,time,price:int,is_active:bool):
     try:
         sql =f"""INSERT INTO services (name,time,price,is_active) 
-        VALUES ('{name}','{time_slots}',{price},{is_active});"""
+        VALUES ('{name}','{time}',{price},{is_active});"""
         with mysql.connector.connect(**DB_CONFIG) as connection:
             if connection.is_connected():
                 with connection.cursor()  as cursor:
@@ -48,14 +46,14 @@ def db_Service_Update_Service_Price(service_id:int,price:int):
     except Error as e:
         logging.error(f" updateServicePrice: {e}")
 ##############################################################################
-def db_Service_Update_Service_Time_Slot(service_id:int,time_slots:int):
+def db_Service_Update_Service_Time(service_id:int,time:str):
     valid_id=db_Service_Service_Valid_Id(service_id=service_id)
     if not valid_id:
         logging.error("updateServiceTimeSlot: id is not valid")
         return False
     try:
         sql = f"""UPDATE services 
-                  SET time_slots = {time_slots} 
+                  SET time = '{time}' 
                   WHERE id = {service_id};"""
         with mysql.connector.connect(**DB_CONFIG) as connection:
             if connection.is_connected():

@@ -54,8 +54,7 @@ def createUserTable():
         phone_number VARCHAR(11),
         username VARCHAR(255),
         join_date DATE NOT NULL,
-        name VARCHAR(255),
-        last_name VARCHAR(255)
+        name VARCHAR(255)
     );"""
         with mysql.connector.connect(**DB_CONFIG) as connection:
             if connection.is_connected():
@@ -135,7 +134,7 @@ def createReserveTable():
         logging.error(f"in createReserveTable : {e}") 
         return False
 #######################################################################################
-def createServicesTable():# todo work on this
+def createServicesTable():
     """Services(id,name,time_slots,price,is_active)"""
     try:
         sql=f""" CREATE TABLE IF NOT EXISTS services  (
