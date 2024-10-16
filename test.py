@@ -1,3 +1,4 @@
+from database.db_admin_list import db_admin_get_main_admin
 from database.db_bot_setting import db_bot_setting_get_value_by_name
 from database.db_reserve import *
 from database.db_users import *
@@ -18,12 +19,6 @@ from functions.time_date import *
 
 # result =get_free_time_for_next_7day(part=1,duration="01:00:00")
 # print( result)
-
-
-result=calculate_empty_time_and_reserved_time('2024-10-16')
-# result= GenerateNext7Day()
-print(result)
-
 
 
 

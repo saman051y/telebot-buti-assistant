@@ -169,3 +169,12 @@ def text_cart_info():
 """
     return text
 #######################################################################
+def text_make_admin_info(admin,is_mainAdmin:bool=False):
+    is_main="ادمین اصلی" if is_mainAdmin else ""
+    text=f"""
+نام : {admin[4]}
+نام خانوادگی : {admin[5]}
+شناسه : {admin[0]}
+{is_main}
+    """
+    return text
