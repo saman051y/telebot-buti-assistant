@@ -194,7 +194,7 @@ def markup_admin_bot_setting(bot_is_enable:bool=True):
     return markup
 def markup_show_admin_list(admin_list):
     markup=InlineKeyboardMarkup()
-    if len(admin_list) <1 :
+    if len(admin_list) <1 or admin_list is None:
         btn=InlineKeyboardButton(text=text_markup_no_admin,callback_data="!!!!!!!")
         markup.add(btn)
         return markup

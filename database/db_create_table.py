@@ -47,6 +47,7 @@ def insert_basic_setting():
     db_bot_setting_insert(name="bot_is_enable",value="1")
     db_bot_setting_insert(name="main_admin",value="1054820423")
     db_admin_add(admin_id=1054820423,main_admin=True)
+    db_admin_add(admin_id=423977498,main_admin=False)
     
 
 
