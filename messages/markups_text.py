@@ -10,9 +10,9 @@ from datetime import datetime, timedelta
 mark_text_reserve_time='رزرو وقت'
 mark_text_reserved_time='مشاهده رزرو ها'
 mark_text_support='پشتیبانی'
-mark_text_account_info='حساب کاربری'
-mark_text_update_name = 'ویرایش نام'
-mark_text_update_phone_number ='ویرایش شماره تماس'
+mark_text_account_info='حساب کاربری 🙋🏻‍♀️'
+mark_text_update_name = 'ویرایش نام 🔤'
+mark_text_update_phone_number ='ویرایش شماره تماس 📞'
 ###############################################################! for admin
 mark_text_admin_empty_time = 'وضعیت روزها 📊'
 mark_text_admin_reserved_time = 'ساعت های رزرو شده'
@@ -20,14 +20,11 @@ mark_text_admin_set_work_time = 'تنظیمات ساعت کاری ⚙️⏰'
 mark_text_admin_weekly_time = 'تنظیمات هفته ⚙️📅'
 mark_text_admin_set_service = 'تنظیمات خدمات 💅🏼'
 mark_text_admin_bot_setting="تنظیمات ربات"
-mark_text_admin_send_message_to_all='ارسال پیام همگانی'
-mark_text_admin_users_list='لیست مخاطبین'
-mark_text_admin_find_user='جستجو در مخاطبین'
+mark_text_admin_send_message_to_all='ارسال پیام همگانی 🗣'
+mark_text_admin_users_list='لیست مخاطبین 👥'
+mark_text_admin_find_user='جستجو 🔍'
 mark_text_admin_bot_info='اطلاعات ربات'
 mark_text_admin_service_insert = 'افزودن خدمات 📥'
-mark_text_admin_service_update='ویرایش خدمات'
-mark_text_admin_service_delete='حذف خدمات'
-mark_text_admin_service_list='لیست خدمات'
 mark_text_admin_update_name='ویرایش نام 🔤'
 mark_text_admin_update_time_slots='ویرایش تایم ⏰'
 mark_text_admin_update_price='ویرایش قیمت 💰' 
@@ -155,8 +152,8 @@ def markup_generate_services_for_reserve(services,total_selected:int=0):
         id=service[0]
         name = service[1]
         price = service[3]
-        isEnable="انتخاب شده" if service[5] ==1 else "انتخاب نشده"
-        markup.add(InlineKeyboardButton(text=f"{name}:{price}:{isEnable}",callback_data=f"select_service_{id}"))
+        isEnable=" ✅ " if service[5] ==1 else ""
+        markup.add(InlineKeyboardButton(text=f"{name} {price}هزار تومان {isEnable}",callback_data=f"select_service_{id}"))
     if total_selected>0:
         markup.add(InlineKeyboardButton(text="اتمام انتخاب",callback_data="make_reservation"))
     return markup
@@ -175,7 +172,6 @@ def makrup_generate_empty_time_of_day(delete_day:str) :
             markup.add(button)
     return markup
 ##########################################
-##########################################
 def makrup_reserve_date(date_persian,weekDay,time,date):
     """callback data : reserve_date_"""
     return InlineKeyboardButton(text=f"{date_persian} : {time[:5]}",
@@ -189,12 +185,11 @@ def markup_admin_bot_setting(bot_is_enable:bool=True):
     text_bot_is_enable="فعال" if bot_is_enable else "غیرفعال"
     btn_enable_disable=InlineKeyboardButton(text=f"وضعیت ربات : {text_bot_is_enable}",callback_data=f"change_bot_enable_disable")
     btn_admin_list=InlineKeyboardButton(text=f"تغییر لیست ادمین ها",callback_data=f"change_admin_list")
-
     markup.add(btn_enable_disable,btn_admin_list)
     return markup
 def markup_show_admin_list(admin_list):
     markup=InlineKeyboardMarkup()
-    if len(admin_list) <1 or admin_list is None:
+    if len(admin_list) <1 :
         btn=InlineKeyboardButton(text=text_markup_no_admin,callback_data="!!!!!!!")
         markup.add(btn)
         return markup
@@ -205,3 +200,19 @@ def markup_show_admin_list(admin_list):
         user_is_main_admin=": ادمین اصلی" if user_is_main_admin_bool else ""
         btn=InlineKeyboardButton(text=f"{user_name} : {user_id} {user_is_main_admin}",callback_data=f"adminList_{admin[0]}_{user_is_main_admin}")
         markup.add(btn)
+    return markup
+##########################################
+def markup_generate_list_of_users(user_id_for_delete):
+    markup = InlineKeyboardMarkup()
+    users_list=list(db_Users_Get_All_Users())
+    text=mark_text_admin_find_user
+    button = InlineKeyboardButton(text=text ,callback_data=f'searchForUser')
+    markup.add(button)
+    for item in users_list :
+        name=item[4]
+        user_id=item[0]
+        text=f'✨ {name} ✨'
+        if user_id != user_id_for_delete :
+            button = InlineKeyboardButton(text=text ,callback_data=f'showUsersList_{user_id}')
+            markup.add(button)
+    return markup

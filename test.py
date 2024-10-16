@@ -12,4 +12,3 @@ from messages.markups_text import *
 from messages.messages_function import *
 from functions.time_date import *
 ##############################################################################
-db_admin_add(423977498 , 0)
