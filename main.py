@@ -4,6 +4,7 @@ from telebot import TeleBot , custom_filters , types,apihelper
 from telebot.storage import StateMemoryStorage
 from telebot.types import InlineKeyboardButton ,InlineKeyboardMarkup,ReplyKeyboardMarkup,KeyboardButton,Message,CallbackQuery,ReplyKeyboardRemove
 from auth.auth import *
+from database.db_admin_list import *
 from database.db_functions import delete_reservation, make_reserve_transaction
 from database.db_weeklysetting import *
 from database.db_create_table import *
@@ -54,6 +55,87 @@ def convertUserID(call:CallbackQuery):
     text=call.message.text
     markup = markup_admin_bot_setting(bot_is_enable=bot_is_enable)
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text , reply_markup=markup)
+
+##########admin list
+@bot.callback_query_handler(func= lambda m:m.data ==("change_admin_list"))
+def convertUserID(call:CallbackQuery):
+    markup=InlineKeyboardMarkup()
+    btn1=InlineKeyboardButton(text=text_add_admin,callback_data=f"admin_list_add")
+    btn2=InlineKeyboardButton(text=text_list_admin,callback_data=f"admin_list_show")
+    # btn4=InlineKeyboardButton(text=text_change_main_admin,callback_data=f"admin_list_change_main")
+    markup.add(btn1)
+    markup.add(btn2)
+    # markup.add(btn4)
+    text=text_show_admin_setting
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text , reply_markup=markup)
+####### add admin
+@bot.callback_query_handler(func= lambda m:m.data ==("admin_list_add"))
+def convertUserID(call:CallbackQuery):
+    text=text_add_admin_msg
+    bot.send_message(chat_id=call.message.chat.id,text=text)
+    bot.set_state(user_id=call.message.chat.id,state=admin_State.state_add_admin,chat_id=call.message.chat.id)
+    with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
+        data['msg_id']=call.message.id
+
+@bot.message_handler(state=admin_State.state_add_admin)
+def setWork_section_state_get_part1(msg : Message):
+    admin_add= db_admin_add(admin_id=int(msg.text))
+    if admin_add:
+        text=text_admin_is_added
+    else:
+        text=text_admin_is_not_added  
+    markup=markup_admin_bot_setting()  
+    with bot.retrieve_data(user_id=msg.chat.id , chat_id=msg.chat.id) as data:
+        msg_id=data['msg_id']
+    
+    bot.delete_message(chat_id=msg.chat.id,message_id=msg_id)
+    bot.send_message(chat_id=msg.chat.id,text=text,reply_markup=markup)
+####### show list
+@bot.callback_query_handler(func= lambda m:m.data ==("admin_list_show"))
+def convertUserID(call:CallbackQuery):
+    admin_list=db_admin_get_all()
+    markup=markup_show_admin_list(admin_list)
+    text=text_admin_list
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text , reply_markup=markup)
+####### show one admin info
+@bot.callback_query_handler(func= lambda m:m.data.startswith("adminList_"))
+def convertUserID(call:CallbackQuery):
+    admin_id=int(call.data.split('_')[1])
+    admin_is_mainAdmin=bool(call.data.split('_')[2])
+    user=db_Users_Find_User_By_Id(admin_id)
+    text=text_make_admin_info(admin=user,is_mainAdmin=admin_is_mainAdmin)
+    markup=InlineKeyboardMarkup()
+    btn1=InlineKeyboardButton(text=text_remove_admin,callback_data=f"adminRemove_{admin_id}")
+    markup.add(btn1)
+    
+    if not admin_is_mainAdmin:
+        btn2=InlineKeyboardButton(text=text_promote_to_admin,callback_data=f"adminPromoteToMain_{admin_id}")
+        markup.add(btn2)    
+
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text , reply_markup=markup)
+####### promote admin to main_admin
+@bot.callback_query_handler(func= lambda m:m.data.startswith("adminPromoteToMain_"))
+def convertUserID(call:CallbackQuery):
+    admin_id=int(call.data.split('_')[1])
+    db_admin_set_main_admin(admin_id=admin_id)
+    markup=InlineKeyboardMarkup()
+    btn1=InlineKeyboardButton(text=text_remove_admin,callback_data=f"adminRemove_{admin_id}")
+    markup.add(btn1)
+    text=call.message.text
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text , reply_markup=markup)
+    
+######remove admin 
+@bot.callback_query_handler(func= lambda m:m.data.startswith("adminRemove_"))
+def convertUserID(call:CallbackQuery):   
+    admin_id=int(call.data.split('_')[1])
+    result =db_admin_remove_admin(admin_id=admin_id)
+    if result:
+        text=text_admin_is_deleted
+    else:
+        text=text_error_call_to_support
+    admin_list=db_admin_get_all()
+    markup=markup_show_admin_list(admin_list)
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text,reply_markup=markup)
     
 ############################################################################################ markup reserve time
 @bot.message_handler(func= lambda m:m.text == mark_text_admin_reserved_time)
@@ -960,7 +1042,8 @@ def reserve_section_enter_name_first_time(msg : Message):
     text=make_reservation_info_text_for_user(date=date,time=time,price=total_price,duration=total_time,services=services, )
     user_id =msg.from_user.id
     text=f"{text} \n reserve_id={reserve_id} \n user_id={user_id}" #! do not change it
-    bot.send_message(chat_id=MAIN_ADMIN_USER_ID[0],text=text,reply_to_message_id=forwarded_msg.message_id,disable_notification=True,reply_markup=markup)
+    main_admin=db_admin_get_main_admin()
+    bot.send_message(chat_id=main_admin[0],text=text,reply_to_message_id=forwarded_msg.message_id,disable_notification=True,reply_markup=markup)
     
     bot.delete_state(user_id= msg.from_user.id,chat_id=msg.chat.id)
 
@@ -1153,8 +1236,8 @@ def startMessageToAdmin(enable=True,disable_notification=True):
 
     #get last log    
     latest_log_file = get_latest_log_file()
-
-    for admin in MAIN_ADMIN_USER_ID:#send for all admins
+    admin_list=db_admin_get_all()
+    for admin in admin_list:#send for all admins
         if latest_log_file:
             last_3_errors=get_last_errors(latest_log_file)
             error_message = "\n".join(last_3_errors)
@@ -1186,6 +1269,7 @@ if __name__ == "__main__":
     createTables()
     insert_basic_setting()
     bot_is_enable = True if db_bot_setting_get_value_by_name(name="bot_is_enable") == "1" else False
+    # db_admin_add(admin_id=1054820423,main_admin=True)
     #basic functions 
     startMessageToAdmin()
     #bot setting

@@ -183,9 +183,22 @@ def markup_admin_bot_setting(bot_is_enable:bool=True):
     bot enable : change_bot_enable_disable
     """
     markup=InlineKeyboardMarkup()
-    bot_is_enable_text="فعال" if bot_is_enable else "غیرفعال"
-    btn=InlineKeyboardButton(text=f"وضعیت ربات : {bot_is_enable_text}",callback_data=f"change_bot_enable_disable")
+    text_bot_is_enable="فعال" if bot_is_enable else "غیرفعال"
+    btn_enable_disable=InlineKeyboardButton(text=f"وضعیت ربات : {text_bot_is_enable}",callback_data=f"change_bot_enable_disable")
+    btn_admin_list=InlineKeyboardButton(text=f"تغییر لیست ادمین ها",callback_data=f"change_admin_list")
 
-
-    markup.add(btn)
+    markup.add(btn_enable_disable,btn_admin_list)
     return markup
+def markup_show_admin_list(admin_list):
+    markup=InlineKeyboardMarkup()
+    if len(admin_list) <1 :
+        btn=InlineKeyboardButton(text=text_markup_no_admin,callback_data="!!!!!!!")
+        markup.add(btn)
+        return markup
+    for admin in admin_list:
+        user_name=db_Users_Get_Name_User(admin[0])
+        user_id=admin[0]
+        user_is_main_admin_bool=bool(admin[1])
+        user_is_main_admin=": ادمین اصلی" if user_is_main_admin_bool else ""
+        btn=InlineKeyboardButton(text=f"{user_name} : {user_id} {user_is_main_admin}",callback_data=f"adminList_{admin[0]}_{user_is_main_admin}")
+        markup.add(btn)
