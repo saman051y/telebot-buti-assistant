@@ -6,15 +6,15 @@ from telebot.types import InlineKeyboardButton ,InlineKeyboardMarkup,ReplyKeyboa
 from messages.messages_function import *
 from messages.commands_msg import *
 from datetime import datetime, timedelta
-###############################################################! for client
+###############################################################! for user
 mark_text_reserve_time='رزرو وقت'
 mark_text_reserved_time='مشاهده رزرو ها'
 mark_text_support='پشتیبانی'
 mark_text_account_info='حساب کاربری'
 mark_text_update_name = 'ویرایش نام'
 mark_text_update_phone_number ='ویرایش شماره تماس'
-mark_text_admin_empty_time = 'ساعت های خالی'
 ###############################################################! for admin
+mark_text_admin_empty_time = 'وضعیت روزها 📊'
 mark_text_admin_reserved_time = 'ساعت های رزرو شده'
 mark_text_admin_set_work_time = 'تنظیمات ساعت کاری'
 mark_text_admin_weekly_time = 'تنظیمات روز های هفته'
@@ -167,7 +167,8 @@ def makrup_generate_empty_time_of_day(delete_day:str) :
     for i in range(7):
         date = today + timedelta(days=i)
         if delete_day != str(date) :
-            text=convertDateToPersianCalendar(date=str(date))
-            button = InlineKeyboardButton(text=f'{text}' ,callback_data=f'getEmptyTime:{date}')
+            text_date=convertDateToPersianCalendar(date=str(date))
+            text = f'🗓 {text_date}'
+            button = InlineKeyboardButton(text=text ,callback_data=f'getEmptyTime:{date}')
             markup.add(button)
     return markup

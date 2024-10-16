@@ -355,7 +355,7 @@ def get_weekday(date_str):
     return weekdays_farsi[weekday_number]
 
 ##########################################################
-def calculate_empty_time(date:str):
+def calculate_empty_time_and_reserved_time(date:str):
     #3th item is flag by 0 or 1 that show this time is (0=NOT RESERVED or 1=RESERVED)
     #this section is getting times that Not reserved
     export_empty_list=[]
@@ -366,8 +366,10 @@ def calculate_empty_time(date:str):
         duration_empty_time_as_time=[]
         sorted_list_empty_time_as_array =[]
         parts = db_SetWork_Get_Part1_or_Part2_of_Day(date=date ,part=i)
-        if parts in [False , None , 'False' , 'None']  :
-            return False
+        if parts in [False, None, 'False', 'None']:
+            continue
+        if parts[0] in [False, None, 'False', 'None']:
+            continue
         start_time = datetime.strptime(str(parts[0]),'%H:%M:%S').strftime('%H:%M:%S')
         end_time = datetime.strptime(str(parts[1]),'%H:%M:%S').strftime('%H:%M:%S')
         time_obj = datetime.strptime(start_time, "%H:%M:%S")

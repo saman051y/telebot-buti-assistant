@@ -30,7 +30,7 @@ def start(msg : Message):
          bot.send_message(chat_id=msg.from_user.id,text=text_user_is_not_admin)
          return False
     markup=ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add(mark_text_admin_reserved_time , mark_text_admin_empty_time)
+    markup.add(mark_text_admin_empty_time)
     markup.add(mark_text_admin_set_work_time , mark_text_admin_weekly_time)
     markup.add(mark_text_admin_set_service,mark_text_admin_bot_setting)
     markup.add(mark_text_admin_users_list , mark_text_admin_find_user)
@@ -92,25 +92,49 @@ def reserve_time(msg : Message):
 ##### handle show empty time
 @bot.callback_query_handler(func= lambda m:m.data.startswith("getEmptyTime:"))
 def convertUserID(call:CallbackQuery):
+    GenerateNext7Day()
     date=call.data.split(':')[1]
     date_persian = convertDateToPersianCalendar(date=date)
-    list_empty_time=[]
-    text=f'{date_persian}\n{text_et_empty_time_is_false}'
-    list_empty_time=calculate_empty_time(date=date)
-    if list_empty_time not in [False,'False','[]'] : 
-        text=f'{date_persian}\n'
+    # list_empty_time=[]
+    list_empty_time=calculate_empty_time_and_reserved_time(date=date)
+    markup = InlineKeyboardMarkup()
+    if list_empty_time not in [False,'False',[], None , 'None'] : 
+        text=f'📅 {date_persian}\n\n'
         for i in range(len(list_empty_time)):
             first_time =str(list_empty_time[i][0])
             end_time =str(list_empty_time[i][1])
-            activation = str(list_empty_time[i][2])
+            activation = int(list_empty_time[i][2])
             first_time_without_seconds = first_time[:5]
             end_time_without_seconds = end_time[:5]
-            text_activation = 'رزرو شده است'
-            if activation == '0':
-                text_activation = 'آزاد'
-            text += f'\n از {first_time_without_seconds} الی {end_time_without_seconds} {text_activation}'
+            if activation == 1:
+                data_reserve=db_reserve_get_info_reserve_by_date_and_start_time(date=date , start_time=first_time)
+                user_id=data_reserve[1]
+                data_info=db_Users_Find_User_By_Id(user_id)
+                name=data_info[4]
+                text_button=f'💅🏼 {first_time_without_seconds} الی {end_time_without_seconds}  {name}'
+                button = InlineKeyboardButton(text=text_button ,callback_data=f'getInfoReserved_{date}_{user_id}_{first_time}')
+                markup.add(button)
+            if activation == 0:
+                text += f'{first_time_without_seconds} الی {end_time_without_seconds} 🆓\n'
+        bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text, reply_markup=markup)
+    else:
+        markup = makrup_generate_empty_time_of_day(delete_day=str(date))
+        text = f'📅 {date_persian}\n{text_empty_time_error_null}'
+        bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text , reply_markup=markup)
+########################################## get information of select reservation 
+#input is data, user_id, star_time, end_time and make and send message with markup 
+@bot.callback_query_handler(func= lambda m:m.data.startswith("getInfoReserved_"))
+def getInfoReservation(call:CallbackQuery):
+    date=call.data.split('_')[1]
+    user_id=call.data.split('_')[2]
+    start_time=call.data.split('_')[3]
+    text_reserve =text_cleaner_info_reserve(date=date , start_time=start_time) 
+    data_user=db_Users_Find_User_By_Id(user_id)
+    text_user = text_cleaner_info_user(data=data_user)
+    text = f'{text_reserve}\n\n اطلاعات کاربر 👩🏼‍🦰\n{text_user}'
+    markup = InlineKeyboardMarkup()
     markup = makrup_generate_empty_time_of_day(delete_day=str(date))
-    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text , reply_markup=markup)
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text, reply_markup=markup)
 ############################################################################################ markup set work time
 @bot.message_handler(func= lambda m:m.text == mark_text_admin_set_work_time)
 def reserve_time(msg : Message):
@@ -237,30 +261,28 @@ def setWork_section_state_update_part1(msg : Message):
             #when you update part1 and part 2 have time ->par1 should be before part2
             if part == 1:
                 part2=db_SetWork_Get_Part1_or_Part2_of_Day(date=date1 , part=2)
-                part2_start_time = str(part2[0])
-                part2_start_time_without_second = part2_start_time[:5]
-                if part2 not in [None , 'None'] :
+                if part2[0] not in [None , 'None',False ,'False'] :
+                    part2_start_time = str(part2[0])
+                    part2_start_time_without_second = part2_start_time[:5]
                     time_format = "%H:%M:%S"
                     check_start_time = datetime.strptime(part2_start_time, time_format).time()
                     check_end_time = datetime.strptime(end_time, time_format).time()
                     if not check_end_time<check_start_time :
                         bot.send_message(chat_id=msg.chat.id, text=f' پارت وارد شده باید تا قبل از ساعت {part2_start_time_without_second} باشد\n لطفا مجدد بازه را ارسال کنید ')
                         return
-                    
              #when you update part2 and part1 have time ->par2 should nbe after part1
             if part == 2:
                 part1=db_SetWork_Get_Part1_or_Part2_of_Day(date=date1 , part=1)
-                part1_end_time = str(part1[1])
-                part1_end_time_without_second = part1_end_time[:5]
-                if part1 not in [None , 'None'] :
+                if part1[0] not in [None , 'None',False ,'False'] :
+                    part1_end_time = str(part1[1])
+                    part1_end_time_without_second = part1_end_time[:5]
                     time_format = "%H:%M:%S"
                     check_start_time = datetime.strptime(start_time, time_format).time()
                     check_end_time = datetime.strptime(part1_end_time, time_format).time()
                     if not check_start_time>check_end_time :
                         bot.send_message(chat_id=msg.chat.id, text=f' پارت وارد شده باید تا بعد از ساعت {part1_end_time_without_second} باشد\n لطفا مجدد بازه را ارسال کنید ')
                         return
-                    
-            db_SetWork_Update_One_Part_Of_Day(date=date1 , part=part , start_time=start_time ,end_time=end_time)
+            result=db_SetWork_Update_One_Part_Of_Day(date=date1 , part=part , start_time=start_time ,end_time=end_time)
             persian_date=convertDateToPersianCalendar(date1)
             text_part= f'پارت اول'
             if part== 2 :
@@ -1049,7 +1071,7 @@ def account_info(msg : Message):
             activation_user(msg=msg)
     else :
         user_id=db_Users_Find_User_By_Id(msg.from_user.id)
-        text = text_cleaner_info(user_id)
+        text = text_cleaner_info_user(user_id)
         markup = markup_generate_account_info(msg.from_user.id)
         bot.send_message(chat_id=msg.chat.id,text=text, reply_markup=markup)
 
@@ -1072,7 +1094,7 @@ def account_info_state_update_name(msg : Message):
         markup=InlineKeyboardMarkup()
         markup = markup_generate_account_info(user_id=user_id)
         data_user=db_Users_Find_User_By_Id(msg.from_user.id)
-        text =  f'نام شما تغییر کرد\n\n'+text_cleaner_info(data_user)
+        text =  f'نام شما تغییر کرد\n\n'+text_cleaner_info_user(data_user)
         bot.send_message(chat_id=user_id,text=text,reply_markup=markup)
         bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)
     
@@ -1101,7 +1123,7 @@ def account_info_state_update_name(msg : Message):
         markup=InlineKeyboardMarkup()
         markup = markup_generate_account_info(user_id=user_id)
         data_user=db_Users_Find_User_By_Id(msg.from_user.id)
-        text = f'شماره تماس شما تغییر کرد\n\n'+ text_cleaner_info(data_user)
+        text = f'شماره تماس شما تغییر کرد\n\n'+ text_cleaner_info_user(data_user)
         bot.send_message(chat_id=user_id,text=text,reply_markup=markup)
         bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)
 ####################################################################### Support Section
