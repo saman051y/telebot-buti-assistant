@@ -34,7 +34,6 @@ def text_cleaner_info_reserve(date , start_time):
 def validation_admin(user_id):
     admin_list=db_admin_get_all()
     converted_list = [item[0] for item in admin_list]
-    print(converted_list)
     if user_id in converted_list:
         return True    
     return False

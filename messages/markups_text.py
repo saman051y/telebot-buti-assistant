@@ -189,14 +189,14 @@ def markup_admin_bot_setting(bot_is_enable:bool=True):
     text_bot_is_enable="فعال" if bot_is_enable else "غیرفعال"
     btn_enable_disable=InlineKeyboardButton(text=f"وضعیت ربات : {text_bot_is_enable}",callback_data=f"change_bot_enable_disable")
     btn_admin_list=InlineKeyboardButton(text=f"تغییر لیست ادمین ها",callback_data=f"change_admin_list")
-
     markup.add(btn_enable_disable,btn_admin_list)
     return markup
+######
 def markup_show_admin_list(admin_list):
     markup=InlineKeyboardMarkup()
-    if len(admin_list) <1 :
+    if len(admin_list) < 1  :
         btn=InlineKeyboardButton(text=text_markup_no_admin,callback_data="!!!!!!!")
-        markup.add(btn)
+        markup.add(btn) 
         return markup
     for admin in admin_list:
         user_name=db_Users_Get_Name_User(admin[0])
