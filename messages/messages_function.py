@@ -1,4 +1,5 @@
 from auth.auth import *
+from database.db_admin_list import db_admin_get_all
 from database.db_reserve_service import getResSerWithResId
 from database.db_service import *
 from database.db_users import *
@@ -31,7 +32,10 @@ def text_cleaner_info_reserve(date , start_time):
     return text
 #######################################################################
 def validation_admin(user_id):
-    if user_id in MAIN_ADMIN_USER_ID:
+    admin_list=db_admin_get_all()
+    converted_list = [item[0] for item in admin_list]
+    print(converted_list)
+    if user_id in converted_list:
         return True    
     return False
 #######################################################################
