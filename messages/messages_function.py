@@ -79,9 +79,9 @@ def ConvertVariableInWeeklySettingToPersian(data:str):
     if data =='friday':
         result = 'جمعه'
     if data =='part1':
-        result = 'صبح'
+        result = 'صبح ☀️'
     if data =='part2':
-        result = 'عصر'
+        result = 'عصر 🌙'
     if data =='1':
         result ='✅'
     if data =='0':
