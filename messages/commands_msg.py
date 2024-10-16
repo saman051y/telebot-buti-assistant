@@ -78,4 +78,19 @@ text_no_reserve_for_user="هیچ رزروی برای نمایش نیست"
 text_reserve_list_msg="لیست رزرو های شما در ۷ روز اینده"
 
 text_bot_is_disable="ربات غیر فعال است لطفا بعدا تلاش کنید"
-text_bot_setting="تنظیمات ربات"
+text_bot_setting="تنظیمات ربات در زیر امده است"
+
+text_show_admin_setting="برای تغییرات در لیست ادمین ها"
+text_add_admin_msg="شناسه عددی کاربر را  ارسلا کنید"
+text_add_admin="افزودن ادمین"
+text_list_admin="مشاهده لیست"
+text_remove_admin="حذف ادمین"
+text_change_main_admin="تغییر ادمین اصلی"
+text_admin_list="لیست ادمین ها"
+
+text_admin_is_not_added="مشکلی پیش امد دوباره تلاش کندی"
+text_admin_is_added="ادمین اضافه شد"
+
+text_promote_to_admin="تغییر به ادمین اصلی"
+text_markup_no_admin="هیج ادمین وجود ندارد"
+text_admin_is_deleted="ادمین حذف شد"

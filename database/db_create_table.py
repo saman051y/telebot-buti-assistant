@@ -3,6 +3,7 @@ import mysql.connector # type: ignore
 from mysql.connector import Error
 
 from auth.auth import DB_CONFIG
+from database.db_admin_list import db_admin_add
 from database.db_bot_setting import *
 #######################################################################################
 def createTables():
@@ -28,6 +29,9 @@ def createTables():
         created=createBot_setting()
         if not created:
             return False
+        created=createAdminTable()
+        if not created:
+            return False
         logging.info("data base is working")
         return True
     except Error as e:
@@ -42,6 +46,7 @@ def insert_basic_setting():
     db_bot_setting_insert(name="cart_bank",value="blue")
     db_bot_setting_insert(name="bot_is_enable",value="1")
     db_bot_setting_insert(name="main_admin",value="1054820423")
+    db_admin_add(admin_id=1054820423,main_admin=True)
     
 
 
@@ -180,12 +185,12 @@ def createReserveServicesTable():
         return False
 #######################################################################################
 def createBot_setting():
-    """  bot_setting(name:varchar(20), value:varchar(20),)   """
+    """  bot_setting(name:varchar(255), value:text,)   """
     try:
         sql=f"""CREATE TABLE IF NOT EXISTS bot_setting (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 name VARCHAR(255) UNIQUE NOT NULL,
-                value VARCHAR(255) 
+                value TEXT 
                 );"""
         with mysql.connector.connect(**DB_CONFIG) as connection:
             if connection.is_connected():
@@ -194,7 +199,30 @@ def createBot_setting():
                      connection.commit()# when something is created or updated or inserted;
                      cursor.close()
                      connection.close()
-                     DefualtValueWeeklySetting()
+                     DefaultValueWeeklySetting()
+                     return True
+                
+            else:
+                logging.error("connection to database is not working")
+    except Error as e :
+        logging.error(f"in createBotSetting : {e}") 
+        return False
+#######################################################################################
+def createAdminTable():
+    try:
+        sql=f"""CREATE TABLE IF NOT EXISTS admin_list (
+    admin_id INT PRIMARY KEY,
+    main_admin BOOLEAN NOT NULL
+    );
+    """
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor()  as cursor:
+                     cursor.execute(sql)
+                     connection.commit()# when something is created or updated or inserted;
+                     cursor.close()
+                     connection.close()
+                     DefaultValueWeeklySetting()
                      return True
                 
             else:
@@ -218,7 +246,7 @@ def createWeeklySetting():
                      connection.commit()# when something is created or updated or inserted;
                      cursor.close()
                      connection.close()
-                     DefualtValueWeeklySetting()
+                     DefaultValueWeeklySetting()
                      return True
                 
             else:
@@ -227,7 +255,7 @@ def createWeeklySetting():
         logging.error(f"in createBotSetting : {e}") 
         return False
 #######################################################################################
-def DefualtValueWeeklySetting() :
+def DefaultValueWeeklySetting() :
     try:
         sql_check=f"""SELECT COUNT(*) FROM weekly_setting"""
         sql_insert=f"""
@@ -257,6 +285,6 @@ def DefualtValueWeeklySetting() :
             else:
                 logging.error("connection to database is not working")
     except Error as e :
-        logging.error(f"in DefualtValueBotSetting : {e}") 
+        logging.error(f"in DefaultValueBotSetting : {e}") 
         return False
 #######################################################################################
