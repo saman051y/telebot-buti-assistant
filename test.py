@@ -19,9 +19,6 @@ from functions.time_date import *
 
 # result =get_free_time_for_next_7day(part=1,duration="01:00:00")
 # print( result)
-result =db_admin_get_main_admin()
-print(result)
-
 
 
 

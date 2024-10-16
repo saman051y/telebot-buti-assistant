@@ -4,16 +4,31 @@ from database.db_service import *
 from database.db_users import *
 from functions.time_date import *
 import re
-#######################################################################
-def text_cleaner_info(data):
+####################################################################### return a text of information user
+def text_cleaner_info_user(data):
     user_id = data[0]
     phone_number = data[1]
-    username = data[2]
+    username = f'@{data[2]}'
     join_date = convertDateToPersianCalendar(str(data[3]))
     name = data[4]
+    if username in [None,'None','Null']:
+        username = ''
     export_text = (f"شناسه عددی             {user_id} \n🔢 شناسه کاربری      {username} \n🔡 نام                     {name}\n"
      f"📞 شماره تماس       {phone_number} \n📅 تاریخ عضویت     {join_date}\n.")
     return export_text
+#######################################################################return a text of information user
+def text_cleaner_info_reserve(date , start_time):
+    data_reserve = db_reserve_get_info_reserve_by_date_and_start_time(date , start_time)
+    end_time  = str(data_reserve[4])
+    start_time=str(start_time)
+    start_time_without_seconds =start_time[:5]
+    end_time_without_seconds = end_time[:5]
+    approved = data_reserve[5]
+    text_approved=['رزرو نهایی شده است ✅','در انتظار تایید نهایی ⌛️']
+    payment = data_reserve[6]
+    persian_date=convertDateToPersianCalendar(date=date)
+    text = f'📅 {persian_date}\n⏰ {start_time_without_seconds} الی {end_time_without_seconds}\n💰 مبلغ {payment} هزار تومان\n{text_approved[approved]}'
+    return text
 #######################################################################
 def validation_admin(user_id):
     if user_id in MAIN_ADMIN_USER_ID:
@@ -40,7 +55,7 @@ def accountInfoCreateTextToShow(user_id=str) :
     if data_user in [False , 'False' , None , 'None']:
         return False
     else :
-        text_info_user=text_cleaner_info(data=data_user)
+        text_info_user=text_cleaner_info_user(data=data_user)
         text =  f'{text_info_user}'
         if data_user[2] not in [False , 'False' , None , 'None']:
             text =  f'{text_info_user}\nhttps://t.me/{username}'
@@ -64,9 +79,9 @@ def ConvertVariableInWeeklySettingToPersian(data:str):
     if data =='friday':
         result = 'جمعه'
     if data =='part1':
-        result = 'صبح'
+        result = 'صبح ☀️'
     if data =='part2':
-        result = 'عصر'
+        result = 'عصر 🌙'
     if data =='1':
         result ='✅'
     if data =='0':

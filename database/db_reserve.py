@@ -119,9 +119,52 @@ def db_Reserve_Get_Date_And_parts_Not_Reserved(date:str , start_time:str , end_t
     except Error as e:
         logging.error(f"getReserveOfDate : {e}")
 
-
-
-
+##################################################
+def db_reserve_get_info_reserve_by_date_and_start_time(date: str, start_time: str):
+    """Return user_id who reserved a specific date and start time."""
+    try:
+        sql = f"""SELECT user_id FROM reserve 
+                  WHERE date = '{date}' AND start_time = '{start_time}';"""
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor() as cursor:
+                    cursor.execute(sql)
+                    result = cursor.fetchone()  # Fetch the first matching record
+                    cursor.close()
+                    connection.close()
+                    if result:
+                        return int(result[0])  # Return user_id
+                    else:
+                        return None  # No matching reservation found
+            else:
+                logging.error("Connection to the database is not working.")
+                return False
+    except Error as e:
+        logging.error(f"db_get_user_by_reservation: {e}")
+        return False
+##################################################
+def db_reserve_get_info_reserve_by_date_and_start_time(date: str, start_time: str):
+    """Return id who reserved a specific date and start time."""
+    try:
+        sql = f"""SELECT * FROM reserve 
+                  WHERE date = '{date}' AND start_time = '{start_time}';"""
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor() as cursor:
+                    cursor.execute(sql)
+                    result = cursor.fetchone()  # Fetch the first matching record
+                    cursor.close()
+                    connection.close()
+                    if result:
+                        return result  # Return user_id
+                    else:
+                        return None  # No matching reservation found
+            else:
+                logging.error("Connection to the database is not working.")
+                return False
+    except Error as e:
+        logging.error(f"db_get_user_by_reservation: {e}")
+        return False
 # ##################################################! update section   
 def db_Reserve_Update_Date_Of_Reserve(reserve_id:int,new_date:str):
     valid_id=db_Reserve_Reserve_Valid_Id(reserve_id=reserve_id)

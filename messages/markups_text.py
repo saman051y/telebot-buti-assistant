@@ -6,33 +6,33 @@ from telebot.types import InlineKeyboardButton ,InlineKeyboardMarkup,ReplyKeyboa
 from messages.messages_function import *
 from messages.commands_msg import *
 from datetime import datetime, timedelta
-###############################################################! for client
+###############################################################! for user
 mark_text_reserve_time='رزرو وقت'
 mark_text_reserved_time='مشاهده رزرو ها'
 mark_text_support='پشتیبانی'
 mark_text_account_info='حساب کاربری'
 mark_text_update_name = 'ویرایش نام'
 mark_text_update_phone_number ='ویرایش شماره تماس'
-mark_text_admin_empty_time = 'ساعت های خالی'
 ###############################################################! for admin
+mark_text_admin_empty_time = 'وضعیت روزها 📊'
 mark_text_admin_reserved_time = 'ساعت های رزرو شده'
-mark_text_admin_set_work_time = 'تنظیمات ساعت کاری'
-mark_text_admin_weekly_time = 'تنظیمات روز های هفته'
-mark_text_admin_set_service = 'تنظیمات خدمات'
+mark_text_admin_set_work_time = 'تنظیمات ساعت کاری ⚙️⏰'
+mark_text_admin_weekly_time = 'تنظیمات هفته ⚙️📅'
+mark_text_admin_set_service = 'تنظیمات خدمات 💅🏼'
 mark_text_admin_bot_setting="تنظیمات ربات"
 mark_text_admin_send_message_to_all='ارسال پیام همگانی'
 mark_text_admin_users_list='لیست مخاطبین'
 mark_text_admin_find_user='جستجو در مخاطبین'
 mark_text_admin_bot_info='اطلاعات ربات'
-mark_text_admin_service_insert = 'افزودن خدمات'
+mark_text_admin_service_insert = 'افزودن خدمات 📥'
 mark_text_admin_service_update='ویرایش خدمات'
 mark_text_admin_service_delete='حذف خدمات'
 mark_text_admin_service_list='لیست خدمات'
-mark_text_admin_update_name='ویرایش نام'
-mark_text_admin_update_time_slots='ویرایش تایم'
-mark_text_admin_update_price='ویرایش قیمت'
-mark_text_admin_update_is_active='تغییر فعال بودن'
-mark_text_admin_delete_service='حذف سرویس'
+mark_text_admin_update_name='ویرایش نام 🔤'
+mark_text_admin_update_time_slots='ویرایش تایم ⏰'
+mark_text_admin_update_price='ویرایش قیمت 💰' 
+mark_text_admin_update_is_active='تغییر فعال بودن ✅❌'
+mark_text_admin_delete_service='حذف 🗑'
 #########################################
 text_set_work_enable='تنظیم تایم کاری'
 text_set_work_disable='تنظیم تایم استراحت'
@@ -92,7 +92,8 @@ def makrup_generate_set_work_list_of_days() :
     for i in range(7):
         date = today + timedelta(days=i)
         text=convertDateToPersianCalendar(date=str(date))
-        button = InlineKeyboardButton(text=f'{text}' ,callback_data=f'SetWorkTime:{date}')
+        text =f'🗓 {text}'
+        button = InlineKeyboardButton(text=text ,callback_data=f'SetWorkTime:{date}')
         markup.add(button)
     return markup
 ########################################## generate markup for parts list of set work  
@@ -125,7 +126,8 @@ def makrup_generate_parts_list_of_set_work(date):
             part_text2=''
             
             if part[0] in ['Null',None]:
-                part_text2 = 'افزودن پارت'
+                part_tex_array = ['صبح ☀️','عصر 🌙']
+                part_text2=f'📥 افزودن {part_tex_array[i-1]}'
                 button_part = InlineKeyboardButton(text=part_text2, callback_data=f'SetWorkUpdatePart:{i}:{date}')
                 markup.add(button_part)
             if part[0] not in ['Null',None]:
@@ -133,8 +135,8 @@ def makrup_generate_parts_list_of_set_work(date):
                 part_end_time = str(part[1])
                 text_part_start_time=part_start_time.split(':')[0]+ f':'+ part_start_time.split(':')[1]
                 text_part_end_time = part_end_time.split(':')[0]+ f':'+ part_end_time.split(':')[1]
-                part_text2=text_part_start_time + f' الی '+ text_part_end_time
-                button_part_delete = InlineKeyboardButton(text=f'حذف', callback_data=f'SetWorkDeletePart:{i}:{date}')
+                part_text2=f'⏰ {text_part_start_time} الی {text_part_end_time}'
+                button_part_delete = InlineKeyboardButton(text=f'حذف 🗑', callback_data=f'SetWorkDeletePart:{i}:{date}')
                 buttons_part += [button_part_delete] 
                 button_part = InlineKeyboardButton(text=part_text2, callback_data=f'SetWorkUpdatePart:{i}:{date}')
                 buttons_part += [button_part] 
@@ -167,8 +169,9 @@ def makrup_generate_empty_time_of_day(delete_day:str) :
     for i in range(7):
         date = today + timedelta(days=i)
         if delete_day != str(date) :
-            text=convertDateToPersianCalendar(date=str(date))
-            button = InlineKeyboardButton(text=f'{text}' ,callback_data=f'getEmptyTime:{date}')
+            text_date=convertDateToPersianCalendar(date=str(date))
+            text = f'🗓 {text_date}'
+            button = InlineKeyboardButton(text=text ,callback_data=f'getEmptyTime:{date}')
             markup.add(button)
     return markup
 ##########################################
