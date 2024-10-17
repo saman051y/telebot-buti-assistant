@@ -1,4 +1,4 @@
 /logs
 ./test.py
 
-*./__pycashe__
+*/__pycashe__
