@@ -7,9 +7,9 @@ from auth.auth import DB_CONFIG
 from functions.time_date import  add_times
 
 
-def make_reserve_transaction(user_id,price,start_time,date,services,duration):
-    end_time = add_times(time1=start_time,time2=duration)
-    print(end_time)
+def db_make_reserve_transaction(user_id,price,start_time,date,services,duration):
+    end_time1 = add_times(time1=start_time,time2=duration)
+    end_time=f"{end_time1[:5]}:00"
     successful=False
     try:
         with mysql.connector.connect(**DB_CONFIG) as connection:

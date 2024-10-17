@@ -20,6 +20,7 @@ mark_text_admin_set_work_time = 'تنظیمات ساعت کاری ⚙️⏰'
 mark_text_admin_weekly_time = 'تنظیمات هفته ⚙️📅'
 mark_text_admin_set_service = 'تنظیمات خدمات 💅🏼'
 mark_text_admin_bot_setting="تنظیمات ربات"
+mark_text_admin_custom_reserve="رزرو وقت کاستوم"
 mark_text_admin_send_message_to_all='ارسال پیام همگانی'
 mark_text_admin_users_list='لیست مخاطبین'
 mark_text_admin_find_user='جستجو در مخاطبین'
@@ -143,7 +144,7 @@ def makrup_generate_parts_list_of_set_work(date):
             markup.add(*buttons_part)
         return markup
 ##########################################
-def markup_generate_services_for_reserve(services,total_selected:int=0):
+def markup_generate_services_for_reserve(services,total_selected:int=0,admin:bool=False):
     """call back data is select_service_{id}
     AND for reservation selection end call back is make_reservation """
     markup=InlineKeyboardMarkup()
@@ -156,22 +157,30 @@ def markup_generate_services_for_reserve(services,total_selected:int=0):
         name = service[1]
         price = service[3]
         isEnable="انتخاب شده" if service[5] ==1 else "انتخاب نشده"
-        markup.add(InlineKeyboardButton(text=f"{name}:{price}:{isEnable}",callback_data=f"select_service_{id}"))
+        if admin:
+            markup.add(InlineKeyboardButton(text=f"{name}:{price}:{isEnable}",callback_data=f"admin_select_service_{id}"))
+        else:
+            markup.add(InlineKeyboardButton(text=f"{name}:{price}:{isEnable}",callback_data=f"select_service_{id}"))
     if total_selected>0:
-        markup.add(InlineKeyboardButton(text="اتمام انتخاب",callback_data="make_reservation"))
+        if admin:
+            markup.add(InlineKeyboardButton(text="اتمام انتخاب",callback_data="admin_make_reservation"))
+        else:
+            markup.add(InlineKeyboardButton(text="اتمام انتخاب",callback_data="make_reservation"))
     return markup
 ########################################## show parts of days by needed time for reserve 
 
 ##########################################
-def makrup_generate_empty_time_of_day(delete_day:str) :
+def makrup_generate_empty_time_of_day(delete_day:str,admin:bool=False) :
     markup = InlineKeyboardMarkup()
     today = datetime.now().date()
+    custom_reserve_text= "customReserve" if admin else ''
+    print(custom_reserve_text)
     for i in range(7):
         date = today + timedelta(days=i)
         if delete_day != str(date) :
             text_date=convertDateToPersianCalendar(date=str(date))
             text = f'🗓 {text_date}'
-            button = InlineKeyboardButton(text=text ,callback_data=f'getEmptyTime:{date}')
+            button = InlineKeyboardButton(text=text ,callback_data=f'{custom_reserve_text}getEmptyTime:{date}')
             markup.add(button)
     return markup
 ##########################################
@@ -194,6 +203,8 @@ def markup_admin_bot_setting(bot_is_enable:bool=True):
 ######
 def markup_show_admin_list(admin_list):
     markup=InlineKeyboardMarkup()
+    btn1=InlineKeyboardButton(text=text_add_admin,callback_data=f"admin_list_add")
+    markup.add(btn1) 
     if len(admin_list) < 1  :
         btn=InlineKeyboardButton(text=text_markup_no_admin,callback_data="!!!!!!!")
         markup.add(btn) 
@@ -205,3 +216,4 @@ def markup_show_admin_list(admin_list):
         user_is_main_admin=": ادمین اصلی" if user_is_main_admin_bool else ""
         btn=InlineKeyboardButton(text=f"{user_name} : {user_id} {user_is_main_admin}",callback_data=f"adminList_{admin[0]}_{user_is_main_admin}")
         markup.add(btn)
+        return markup

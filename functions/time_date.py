@@ -25,7 +25,7 @@ def convert_time_slot_to_time(time_slot:int):
     # فرمت کردن خروجی به صورت HH:MM
     return f"{hours:02}:{minutes:02}"
 #########################################################
-def gregorian_to_jalali(gregorian_date_str):
+def gregorian_to_jalali(gregorian_date_str,reverse:bool=False):
     """
     Convert Gregorian date from string format 'YYYY-MM-DD' to Jalali (Shamsi) date.
     :param gregorian_date_str: Date in Gregorian calendar in 'YYYY-MM-DD' format
@@ -44,6 +44,10 @@ def gregorian_to_jalali(gregorian_date_str):
     
     # Format Jalali date into 'YYYY-MM-DD' string
     jalali_date_str = f"{jalali_date[0]}-{jalali_date[1]:02d}-{jalali_date[2]:02d}"
+    if reverse :
+        # Format Jalali date into 'DD-MM_YYYY' string
+        jalali_date_str = f"{jalali_date[2]:02d}-{jalali_date[1]:02d}-{jalali_date[0]}"
+
     
     return jalali_date_str
 #########################################################
@@ -334,7 +338,7 @@ def calculate_numbers_in_a_row(array):
     return grouped
 
 ##########################################################
-def convert_to_standard_time(time_string, input_format="%H:%M:%S"):
+def convert_to_standard_time(time_string:str, input_format:str="%H:%M:%S"):
     try:
         # تبدیل رشته زمانی به شیء datetime بر اساس فرمت ورودی
         time_obj = datetime.strptime(time_string, input_format)
