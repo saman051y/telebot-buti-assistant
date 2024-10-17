@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 ###############################################################! for user
 mark_text_reserve_time='رزرو وقت'
 mark_text_reserved_time='مشاهده رزرو ها'
-mark_text_support='پشتیبانی'
+mark_text_support='پشتیبانی 💬'
 mark_text_account_info='حساب کاربری 🙋🏻‍♀️'
 mark_text_update_name = 'ویرایش نام 🔤'
 mark_text_update_phone_number ='ویرایش شماره تماس 📞'
@@ -23,7 +23,6 @@ mark_text_admin_bot_setting="تنظیمات ربات"
 mark_text_admin_custom_reserve="رزرو وقت کاستوم"
 mark_text_admin_send_message_to_all='ارسال پیام همگانی'
 mark_text_admin_users_list='لیست مخاطبین'
-mark_text_admin_find_user='جستجو در مخاطبین'
 mark_text_admin_send_message_to_all='ارسال پیام همگانی 🗣'
 mark_text_admin_users_list='لیست مخاطبین 👥'
 mark_text_admin_find_user='جستجو 🔍'
@@ -157,12 +156,12 @@ def markup_generate_services_for_reserve(services,total_selected:int=0,admin:boo
         name = service[1]
         price = service[3]
         isEnable=" ✅ " if service[5] ==1 else ""
-        markup.add(InlineKeyboardButton(text=f"{name} {price}هزار تومان {isEnable}",callback_data=f"select_service_{id}"))
+        markup.add(InlineKeyboardButton(text=f"💅🏼 {name} {price}هزار تومان {isEnable}",callback_data=f"select_service_{id}"))
     if total_selected>0:
         if admin:
-            markup.add(InlineKeyboardButton(text="اتمام انتخاب",callback_data="admin_make_reservation"))
+            markup.add(InlineKeyboardButton(text="تایید نهایی 💫",callback_data="admin_make_reservation"))
         else:
-            markup.add(InlineKeyboardButton(text="اتمام انتخاب",callback_data="make_reservation"))
+            markup.add(InlineKeyboardButton(text="تایید نهایی 💫",callback_data="make_reservation"))
     return markup
 ########################################## show parts of days by needed time for reserve 
 
@@ -183,7 +182,7 @@ def makrup_generate_empty_time_of_day(delete_day:str,admin:bool=False) :
 ##########################################
 def makrup_reserve_date(date_persian,weekDay,time,date):
     """callback data : reserve_date_"""
-    return InlineKeyboardButton(text=f"{date_persian} : {time[:5]}",
+    return InlineKeyboardButton(text=f"{date_persian} {time[:5]}",
                                 callback_data=f"reserve_date_{date}_{time}")
 ##########################################
 def markup_admin_bot_setting(bot_is_enable:bool=True):

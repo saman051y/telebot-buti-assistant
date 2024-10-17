@@ -106,12 +106,8 @@ def text_make_reservation_info(price,time,services):
     for service in services:
         if (service[5] == 0 ):
             continue
-        names=f"{names} - {service[1]} \n"
-    text=f"""
-هزینه کل خدمات انتخاب شده : {price}
-کل تایم رزرو شده : {time[:5]}
-خدمات انتخاب شده : {names}
-"""
+        names=f"{names}\n  ▫️{service[1]}"
+    text=f"💅🏼 خدمات رزرو شده:{names}\n\n⏱️ زمان مورد نیاز برای رزرو : {time[:5]}\n"
     return text
 #######################################################################
 def make_reservation_info_text_for_user(price:int,duration:str,date:str,time:str,services):
@@ -120,13 +116,8 @@ def make_reservation_info_text_for_user(price:int,duration:str,date:str,time:str
     for service in services:
         if (service[5] == 0 ):
             continue
-        names=f"{names} - {service[1]}"
-    text=f"""
-هزینه کل :  {price}
-تاریخ انتخاب شده : {date}
-ساعت انتخاب شده : {time[:5]}
-مدت زمان رزور شده : {duration[:5]}
-خدمات انتخاب شده : {names}
+        names=f"{names}▫️{service[1]}\n"
+    text=f"""📆تاریخ  {date}\n⏰ از ساعت {time[:5]} الی {duration[:5]} برای خدمات زیر رزرو خواهد شد\n\n{names}
 """
     return text
 
@@ -165,12 +156,9 @@ def make_reservation_info_text_for_admin(reserve_id,user_id):
 """
     return text
 #######################################################################
-def text_cart_info():
-    text="""
-شماره کارت: 
-مالک کارت:
-بانک :
-"""
+def text_cart_info(card_number,card_bank,card_user , price):
+    formatted_card_number = ' '.join([card_number[i:i+4] for i in range(0, len(card_number), 4)])
+    text=f"""لطفا مبلغ <b>{price}</b> هزار تومان به نام <b>{card_user}</b> برای  بانک {card_bank}</b>  واریز کنید\n{formatted_card_number}"""
     return text
 #######################################################################
 def text_user_reserve_info(reserve):

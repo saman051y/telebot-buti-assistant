@@ -31,12 +31,10 @@ def start(msg : Message):
          bot.send_message(chat_id=msg.from_user.id,text=text_user_is_not_admin)
          return False
     markup=ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add(mark_text_admin_empty_time)
+    markup.add(mark_text_admin_custom_reserve,mark_text_admin_empty_time)
     markup.add(mark_text_admin_set_work_time , mark_text_admin_weekly_time)
     markup.add(mark_text_admin_set_service,mark_text_admin_bot_setting)
-    markup.add(mark_text_admin_custom_reserve)
-    markup.add(mark_text_admin_users_list , mark_text_admin_find_user)
-    markup.add(mark_text_admin_send_message_to_all)
+    markup.add(mark_text_admin_users_list,mark_text_admin_send_message_to_all)
     bot.send_message(chat_id=msg.from_user.id,text=text_user_is_admin, reply_markup=markup)
 ############################################################################################ markup mark_text_admin_custom_reserve
 #todo reserve custom
@@ -767,16 +765,29 @@ def service_update_name(call:CallbackQuery):
     sorted_serviceData = sorted(serviceData, key=lambda item: item[4], reverse=True)
     markup=makrup_generate_service_list(sorted_serviceData)
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=f'{showText}\nآیتم بالا با موفقیت حذف شد\n.',reply_markup=markup)
-######################################################################## access to all users
-
-###########################################  finds user by ID
-### markup user find
-@bot.message_handler(func= lambda m:m.text == mark_text_admin_find_user)
+######################################################################## access to info all users
+@bot.message_handler(func= lambda m:m.text == mark_text_admin_users_list)
 def reserve_time(msg : Message):
     bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)  
-    bot.set_state(user_id=msg.from_user.id,state=admin_State.state_user_find,chat_id=msg.chat.id)
-    bot.send_message(chat_id=msg.chat.id,text=text_user_find)
-### state user find
+    markup=markup_generate_list_of_users(user_id_for_delete='0')
+    text=text_users_list
+    bot.send_message(chat_id=msg.chat.id,text=text, reply_markup=markup)
+
+
+@bot.callback_query_handler(func= lambda m:m.data.startswith("showUsersList_"))
+def showUserList(call:CallbackQuery):
+    user_id=int(call.data.split('_')[1])
+    text=accountInfoCreateTextToShow(user_id=user_id)
+    markup=markup_generate_list_of_users(user_id_for_delete=user_id)
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text,reply_markup=markup)
+
+@bot.callback_query_handler(func= lambda m:m.data.startswith("searchForUser"))
+def searchForUser(call:CallbackQuery):
+    bot.set_state(user_id=call.message.chat.id,state=admin_State.state_user_find,chat_id=call.message.chat.id)
+    text=text_user_find
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text)
+
+
 @bot.message_handler(state=admin_State.state_user_find)
 def user_section_user_find(msg : Message):
     if db_Users_Find_User_By_Id(user_id=msg.text) is False :
@@ -784,24 +795,8 @@ def user_section_user_find(msg : Message):
         return
     text = accountInfoCreateTextToShow(user_id=msg.text)
     bot.send_message(msg.chat.id,text, parse_mode='Markdown')
-    bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)  
-###########################################  get list Users
-@bot.message_handler(func= lambda m:m.text == mark_text_admin_users_list)
-def reserve_time(msg : Message):
-    bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)  
-    users_list=list(db_Users_Get_All_Users())
-    markup = InlineKeyboardMarkup()
-    for item in users_list :
-        name=item[4]
-        button = InlineKeyboardButton(text=name ,callback_data=f'showUsersList_{item[0]}')
-        markup.add(button)
-    bot.send_message(chat_id=msg.chat.id,text=text_users_list, reply_markup=markup)
+    bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id) 
 
-@bot.callback_query_handler(func= lambda m:m.data.startswith("showUsersList_"))
-def convertUserID(call:CallbackQuery):
-    user_id=int(call.data.split('_')[1])
-    text=accountInfoCreateTextToShow(user_id=user_id)
-    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text)
 ###########################################  send message to all
 @bot.message_handler(func=lambda m:m.text == mark_text_admin_send_message_to_all)
 def msg_to_all(msg : Message):
@@ -894,8 +889,8 @@ def reserve_time(msg : Message):
     if  not bot_is_enable: 
         bot_is_disable(user_id=msg.from_user.id) 
         return
-
-    db_Users_Update_Username_User(user_id=msg.from_user.id , username=msg.from_user.username)#update Username while every reservation
+    #update Username while every reservation
+    db_Users_Update_Username_User(user_id=msg.from_user.id , username=msg.from_user.username)
     name = db_Users_Get_Name_User(msg.from_user.id)
     if name == 'empty' : 
         activation_user(msg=msg)
@@ -935,18 +930,18 @@ def callback_query(call:CallbackQuery):
         if int(service[0]) == int(service_id):
             if service[5]==0: # if service need to active
                 if counter== 0:# if basic info not set
-                    services_name="خدمات انتخاب شده \n به ترتیب : نام - قیمت - مدت زمان مورد نیاز"
+                    services_name="لیست خدمات انتخاب شده : "
 
 
                 services[index]=service[:5] + (1,) 
                 duration_time=convert_to_standard_time(f"{services[index][2]}")
-                current_service_info=f"{services[index][1]} - {services[index][3]} HT - {duration_time[:5]}"
-                services_name=f"{services_name}\n {current_service_info}"
+                current_service_info=f"\n💅🏼 {services[index][1]} \n    💰 قیمت {services[index][3]} هزار تومان\n    ⏰ زمان موردنیاز {duration_time[:5]}"
+                services_name=f"\n{services_name}\n {current_service_info}"
                 counter=counter+1
             else:# if service wanna be disable
                 services[index]=service[:5] + (0,) 
                 duration_time=convert_to_standard_time(f"{services[index][2]}")
-                current_service_info=f"{services[index][1]} - {services[index][3]} HT - {duration_time[:5]}"
+                current_service_info=f"\n💅🏼 {services[index][1]} \n    💰 قیمت {services[index][3]} هزار تومان\n    ⏰ زمان موردنیاز {duration_time[:5]}"
                 services_name = services_name.replace(current_service_info, "").strip()
                 counter=counter-1
             break
@@ -955,8 +950,7 @@ def callback_query(call:CallbackQuery):
 
     if counter<1 :
         services_name=''
-    text=f"{text_reservation_init}\n {services_name}"
-
+    text=f"{services_name}"
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text, reply_markup=markup)
     
     with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
@@ -997,7 +991,7 @@ def callback_query(call:CallbackQuery):
             if day[0] == available_day_list[index+1][0]:
                 #part 1
                 date=day[0]
-                date_persian=gregorian_to_jalali(date)
+                date_persian=convertDateToPersianCalendar(date)
                 time=day[2]
                 weekDay=get_weekday(f"{date}")
                 btn=makrup_reserve_date(date=date,date_persian=date_persian,time=time,weekDay=weekDay)
@@ -1010,7 +1004,7 @@ def callback_query(call:CallbackQuery):
             else:
                 #just one part exist
                 date=day[0]
-                date_persian=gregorian_to_jalali(date)
+                date_persian=convertDateToPersianCalendar(date)
                 time=day[2]
                 weekDay=get_weekday(f"{date}")
                 btn=makrup_reserve_date(date=date,date_persian=date_persian,time=time,weekDay=weekDay)
@@ -1035,11 +1029,17 @@ def callback_query(call:CallbackQuery):
         services =data['services_choosing']
         total_time=data['total_time']
         total_price=data['total_price']
+        #time + duration and result is end time to show for user
+        start_time_obj = datetime.strptime(time, "%H:%M:%S")
+        duration_parts = list(map(int, total_time.split(':')))
+        duration_obj = timedelta(hours=duration_parts[0], minutes=duration_parts[1], seconds=duration_parts[2])
+        end_time_obj = start_time_obj + duration_obj
+        end_time = end_time_obj.strftime("%H:%M:%S")
 
-    text=make_reservation_info_text_for_user(date=date,time=time,price=total_price,duration=total_time,services=services, )
+    text=make_reservation_info_text_for_user(date=date,time=time,price=total_price,duration=end_time,services=services, )
     
     markup=InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton(text="ارسال رسید", callback_data="pic_receipt"))
+    markup.add(InlineKeyboardButton(text="ارسال رسید 💳", callback_data="pic_receipt"))
     with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
         data['services']=services 
         data['total_time']=total_time
@@ -1060,7 +1060,12 @@ def callback_query(call:CallbackQuery):
     bot.delete_state(user_id=call.message.from_user.id,chat_id=call.message.chat.id)
 
     text=call.message.text
-    cart_info=text_cart_info()
+    card_info=db_bot_setting_get_cart_info()
+    card_number=card_info[0][2]
+    car_bank = card_info[1][2]
+    card_user = card_info[2][2]
+    price = '120'
+    cart_info=text_cart_info(card_number,car_bank,card_user,price)
     text=f"{text}\n \n {cart_info}"
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text)
     
@@ -1346,8 +1351,8 @@ if __name__ == "__main__":
     insert_basic_setting()
     bot_is_enable = True if db_bot_setting_get_value_by_name(name="bot_is_enable") == "1" else False
     # db_admin_add(admin_id=1054820423,main_admin=True)
-    #basic functions 
-    # startMessageToAdmin()
+    # basic functions()
+    startMessageToAdmin()
     #bot setting
     bot.add_custom_filter(custom_filters.StateFilter(bot))
     bot.polling()
