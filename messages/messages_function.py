@@ -12,8 +12,8 @@ def text_cleaner_info_user(data):
     username = f'@{data[2]}'
     join_date = convertDateToPersianCalendar(str(data[3]))
     name = data[4]
-    if username in [None,'None','Null']:
-        username = ''
+    if username == '@None':
+        username = 'ندارد'
     export_text = (f"شناسه عددی             {user_id} \n🔢 شناسه کاربری      {username} \n🔡 نام                     {name}\n"
      f"📞 شماره تماس       {phone_number} \n📅 تاریخ عضویت     {join_date}\n.")
     return export_text
