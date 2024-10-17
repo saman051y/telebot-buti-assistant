@@ -1347,7 +1347,7 @@ if __name__ == "__main__":
     bot_is_enable = True if db_bot_setting_get_value_by_name(name="bot_is_enable") == "1" else False
     # db_admin_add(admin_id=1054820423,main_admin=True)
     #basic functions 
-    startMessageToAdmin()
+    # startMessageToAdmin()
     #bot setting
     bot.add_custom_filter(custom_filters.StateFilter(bot))
     bot.polling()
