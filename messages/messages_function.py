@@ -109,12 +109,13 @@ def text_make_reservation_info(price,time,services):
         names=f"{names} - {service[1]} \n"
     text=f"""
 هزینه کل خدمات انتخاب شده : {price}
-کل تایم رزرو شده : {time}
+کل تایم رزرو شده : {time[:5]}
 خدمات انتخاب شده : {names}
 """
     return text
 #######################################################################
 def make_reservation_info_text_for_user(price:int,duration:str,date:str,time:str,services):
+    date=gregorian_to_jalali(date,reverse=True)
     names=""
     for service in services:
         if (service[5] == 0 ):
@@ -122,9 +123,9 @@ def make_reservation_info_text_for_user(price:int,duration:str,date:str,time:str
         names=f"{names} - {service[1]}"
     text=f"""
 هزینه کل :  {price}
-مدت زمان رزور شده : {duration}
 تاریخ انتخاب شده : {date}
-ساعت انتخاب شده : {time}
+ساعت انتخاب شده : {time[:5]}
+مدت زمان رزور شده : {duration[:5]}
 خدمات انتخاب شده : {names}
 """
     return text
@@ -169,6 +170,23 @@ def text_cart_info():
 شماره کارت: 
 مالک کارت:
 بانک :
+"""
+    return text
+#######################################################################
+def text_user_reserve_info(reserve):
+    id=reserve[0]
+    user_id_reserver= reserve[1]
+    date=gregorian_to_jalali(gregorian_date_str=f"{reserve[2]}",reverse=True)
+    start_time=convert_to_standard_time(time_string=f"{reserve[3]}")
+    end_time=convert_to_standard_time(time_string=f"{reserve[4]}")
+    approved="تایید شده" if bool(reserve[5]) else "در انتظار تایید"
+    payment=reserve[6]
+    text=f"""
+تاریخ رزرو: {date}
+ساعت رزرو شده: {start_time[:5]}
+حدود اتمام زمان: {end_time[:5]}
+میزان پرداخت: {payment}
+وضعیت تایید: {approved}
 """
     return text
 #######################################################################

@@ -5,7 +5,7 @@ from telebot.storage import StateMemoryStorage
 from telebot.types import InlineKeyboardButton ,InlineKeyboardMarkup,ReplyKeyboardMarkup,KeyboardButton,Message,CallbackQuery,ReplyKeyboardRemove
 from auth.auth import *
 from database.db_admin_list import *
-from database.db_functions import delete_reservation, make_reserve_transaction
+from database.db_functions import delete_reservation, db_make_reserve_transaction
 from database.db_weeklysetting import *
 from database.db_create_table import *
 from database.db_setwork import *
@@ -34,9 +34,108 @@ def start(msg : Message):
     markup.add(mark_text_admin_empty_time)
     markup.add(mark_text_admin_set_work_time , mark_text_admin_weekly_time)
     markup.add(mark_text_admin_set_service,mark_text_admin_bot_setting)
+    markup.add(mark_text_admin_custom_reserve)
     markup.add(mark_text_admin_users_list , mark_text_admin_find_user)
     markup.add(mark_text_admin_send_message_to_all)
     bot.send_message(chat_id=msg.from_user.id,text=text_user_is_admin, reply_markup=markup)
+############################################################################################ markup mark_text_admin_custom_reserve
+#todo reserve custom
+#todo price < 4H 100  bala 4 sat 200 
+@bot.message_handler(func= lambda m:m.text == mark_text_admin_custom_reserve)
+def bot_setting(msg : Message):
+    #todo check is admin
+    counter=0
+    services=db_Service_Get_All_Services()
+    if services is None or len(services) ==0:
+        bot.send_message(chat_id=msg.from_user.id,text=text_no_service_available)
+        return False
+    services = [service + (0,) for service in services]
+    markup=markup_generate_services_for_reserve(services,total_selected=counter,admin=True)
+
+    text=text_reservation_init
+    bot.send_message(chat_id=msg.chat.id,reply_markup=markup,text=text)
+
+    bot.set_state(user_id=msg.chat.id,state=admin_State.state_reserve_custom_selecting,chat_id=msg.chat.id)
+
+
+    with bot.retrieve_data(user_id=msg.chat.id , chat_id=msg.chat.id) as data:
+        data['services_choosing']=services
+        data['services_name']=''
+        data['counter']=counter
+####selecting service - admin
+@bot.callback_query_handler(func= lambda m:m.data.startswith("admin_select_service_"))
+def convertUserID(call:CallbackQuery):
+    service_id=(call.data.split("_"))[3]
+    with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
+        services=data['services_choosing']
+        services_name=str(data["services_name"])
+        counter=data['counter']
+    # change enable <=> disable
+    for index, service in enumerate(services):
+
+        if int(service[0]) == int(service_id):
+            if service[5]==0: # if service need to active
+                if counter== 0:# if basic info not set
+                    services_name="خدمات انتخاب شده \n به ترتیب : نام - قیمت - مدت زمان مورد نیاز"
+
+
+                services[index]=service[:5] + (1,) 
+                duration_time=convert_to_standard_time(f"{services[index][2]}")
+                current_service_info=f"{services[index][1]} -{services[index][3]}HT- {duration_time[:5]}"
+                services_name=f"{services_name}\n {current_service_info}"
+                counter=counter+1
+            else:# if service wanna be disable
+                services[index]=service[:5] + (0,) 
+                duration_time=convert_to_standard_time(f"{services[index][2]}")
+                current_service_info=f"{services[index][1]} - {services[index][3]} HT - {duration_time[:5]}"
+                services_name = services_name.replace(current_service_info, "").strip()
+                counter=counter-1
+            break
+    markup=markup_generate_services_for_reserve(services,total_selected=counter,admin=True)
+
+
+    if counter<1 :
+        services_name=''
+    text=f"{text_reservation_init}\n {services_name}"
+
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text, reply_markup=markup)
+    
+    with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
+        data['services_choosing']=services
+        data['services_name']=services_name
+        data['counter']=counter
+
+
+#### admin end of selection reserve
+@bot.callback_query_handler(func=lambda call: call.data == ("admin_make_reservation"))
+def callback_query(call:CallbackQuery):
+    with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
+        services=data['services_choosing']
+    total_time = timedelta()
+    total_price = 0  
+    for service in services:
+        if service[5]==1:
+            total_time += service[2]  
+            total_price += service[3] 
+    #show days
+    markup=makrup_generate_empty_time_of_day(delete_day=0,admin=True)
+    text=text_admin_custom_select_day
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text , reply_markup=markup)
+    
+    with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
+        data['services_choosing']=services 
+        data['total_time']=total_time
+        data['total_price']=total_price
+##show reserve and send start time 
+@bot.callback_query_handler(func= lambda m:m.data.startswith("customReserve"))
+def convertUserID(call:CallbackQuery):
+    date=call.data.split(":")[1]
+    with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
+        services =data['services_choosing']
+        total_time=data['total_time']
+        total_price=data['total_price']
+
+    
 ############################################################################################ markup bot_setting
 @bot.message_handler(func= lambda m:m.text == mark_text_admin_bot_setting)
 def bot_setting(msg : Message):
@@ -60,12 +159,10 @@ def convertUserID(call:CallbackQuery):
 @bot.callback_query_handler(func= lambda m:m.data ==("change_admin_list"))
 def convertUserID(call:CallbackQuery):
     markup=InlineKeyboardMarkup()
-    btn1=InlineKeyboardButton(text=text_add_admin,callback_data=f"admin_list_add")
-    btn2=InlineKeyboardButton(text=text_list_admin,callback_data=f"admin_list_show")
-    # btn4=InlineKeyboardButton(text=text_change_main_admin,callback_data=f"admin_list_change_main")
-    markup.add(btn1)
-    markup.add(btn2)
-    # markup.add(btn4)
+
+    admin_list=db_admin_get_all()
+    markup=markup_show_admin_list(admin_list)
+    
     text=text_show_admin_setting
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text , reply_markup=markup)
 ####### add admin
@@ -79,24 +176,29 @@ def convertUserID(call:CallbackQuery):
 
 @bot.message_handler(state=admin_State.state_add_admin)
 def setWork_section_state_get_part1(msg : Message):
-    admin_add= db_admin_add(admin_id=int(msg.text))
+    admin_id=int(msg.text)
+    user_id_is_valid=db_Users_Validation_User_By_Id(admin_id)
+    
+    with bot.retrieve_data(user_id=msg.chat.id , chat_id=msg.chat.id) as data:
+        msg_id=data['msg_id']
+    if not user_id_is_valid:
+        text=text_user_id_is_not_valid
+        bot.delete_message(chat_id=msg.chat.id,message_id=msg_id)
+
+        bot.send_message(chat_id=msg.chat.id,text=text)
+        return 
+    
+    admin_add= db_admin_add(admin_id=admin_id)
     if admin_add:
         text=text_admin_is_added
     else:
         text=text_admin_is_not_added  
+    
     markup=markup_admin_bot_setting()  
-    with bot.retrieve_data(user_id=msg.chat.id , chat_id=msg.chat.id) as data:
-        msg_id=data['msg_id']
+
     
     bot.delete_message(chat_id=msg.chat.id,message_id=msg_id)
     bot.send_message(chat_id=msg.chat.id,text=text,reply_markup=markup)
-####### show list
-@bot.callback_query_handler(func= lambda m:m.data ==("admin_list_show"))
-def convertUserID(call:CallbackQuery):
-    admin_list=db_admin_get_all()
-    markup=markup_show_admin_list(admin_list)
-    text=text_admin_list
-    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text , reply_markup=markup)
 ####### show one admin info
 @bot.callback_query_handler(func= lambda m:m.data.startswith("adminList_"))
 def convertUserID(call:CallbackQuery):
@@ -761,17 +863,29 @@ def reserve_time(msg : Message):
     reserves= get_reserves_for_user(user_id=user_id,days=7)
     markup=InlineKeyboardMarkup()
     if len(reserves) <1 :
-        markup.add(InlineKeyboardButton(text=text_no_reserve_for_user,callback_data="!@!!!"))
+        markup.add(InlineKeyboardButton(text=text_no_reserve_for_user,callback_data="!!!!"))
     else:
         for reserve in reserves:
             date=gregorian_to_jalali(f"{reserve['date']}")
             start_time=convert_to_standard_time(f"{reserve['start_time']}")[:5]
             payment=(reserve['payment'])
             weekday=get_weekday(f"{reserve['date']}")
-            btn=InlineKeyboardButton(text=f"{weekday} : {date}: {start_time} : {payment} HT",callback_data="!!!!!!!!!!!")
+            reserve_id=reserve['id']
+            btn=InlineKeyboardButton(text=f"{weekday} : {date}: {start_time} : {payment} HT",callback_data=f"userSeeReserve_{reserve_id}")
             markup.add(btn)
 
     bot.send_message(chat_id=user_id,text=text_reserve_list_msg,reply_markup=markup)
+
+##########
+# see more details
+@bot.callback_query_handler(func=lambda call: call.data.startswith("userSeeReserve_"))
+def callback_query(call:CallbackQuery):
+    reserve_id=call.data.split("_")[1]
+    reserve=db_Reserve_Get_Reserve_With_Id(reserve_id=reserve_id)
+    text=text_user_reserve_info(reserve=reserve)
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text)
+
+
 ####################################################################### Insert Reserve Time Section
 #* mark_text_reserve_time handler
 @bot.message_handler(func= lambda m:m.text == mark_text_reserve_time)
@@ -780,13 +894,14 @@ def reserve_time(msg : Message):
     if  not bot_is_enable: 
         bot_is_disable(user_id=msg.from_user.id) 
         return
-    counter=0
+
     db_Users_Update_Username_User(user_id=msg.from_user.id , username=msg.from_user.username)#update Username while every reservation
     name = db_Users_Get_Name_User(msg.from_user.id)
     if name == 'empty' : 
         activation_user(msg=msg)
         return
     
+    counter=0 
     services=db_Service_Get_All_Services()
     if services is None or len(services) ==0:
         bot.send_message(chat_id=msg.from_user.id,text=text_no_service_available)
@@ -824,12 +939,14 @@ def callback_query(call:CallbackQuery):
 
 
                 services[index]=service[:5] + (1,) 
-                current_service_info=f"{services[index][1]}-{services[index][3]}-{services[index][2]}"
+                duration_time=convert_to_standard_time(f"{services[index][2]}")
+                current_service_info=f"{services[index][1]} - {services[index][3]} HT - {duration_time[:5]}"
                 services_name=f"{services_name}\n {current_service_info}"
                 counter=counter+1
             else:# if service wanna be disable
                 services[index]=service[:5] + (0,) 
-                current_service_info=f"{services[index][1]}-{services[index][3]}-{services[index][2]}"
+                duration_time=convert_to_standard_time(f"{services[index][2]}")
+                current_service_info=f"{services[index][1]} - {services[index][3]} HT - {duration_time[:5]}"
                 services_name = services_name.replace(current_service_info, "").strip()
                 counter=counter-1
             break
@@ -847,7 +964,7 @@ def callback_query(call:CallbackQuery):
         data['services_name']=services_name
         data['counter']=counter
     
-####end of selection :select part 1 or 2  #todo change to show time
+####end of selection 
 @bot.callback_query_handler(func=lambda call: call.data == ("make_reservation"))
 def callback_query(call:CallbackQuery):
     with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
@@ -901,7 +1018,6 @@ def callback_query(call:CallbackQuery):
 
 
 
-    # print(available_day_list)
     text=text_make_reservation_info(price=total_price,time=total_time,services=services)
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text,reply_markup=markup)
     with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
@@ -910,7 +1026,7 @@ def callback_query(call:CallbackQuery):
         data['total_price']=total_price
 
 
-##make reservation in db and send info to user : btn is send pic 
+## : btn is send pic 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("reserve_date_"))
 def callback_query(call:CallbackQuery):
     date=(call.data.split("_")[2])
@@ -966,7 +1082,7 @@ def handle_non_photo(msg: Message):
     bot.send_message(msg.chat.id, "لطفاً فقط یک عکس از رسید خود ارسال کنید.")
 
 
-## pic_receipt is sended as pic
+## pic_receipt is sended as pic and make reserve in db
 @bot.message_handler(state=user_State.get_rec,content_types=['photo'])
 def reserve_section_enter_name_first_time(msg : Message):
     with bot.retrieve_data(user_id=msg.chat.id , chat_id=msg.chat.id) as data:
@@ -984,7 +1100,7 @@ def reserve_section_enter_name_first_time(msg : Message):
     markup.add(deny_btn)
 
     user_id=msg.from_user.id
-    result,reserve_id=make_reserve_transaction(user_id=user_id,services=services,duration=total_time,price=total_price,date=date,start_time=time)
+    result,reserve_id=db_make_reserve_transaction(user_id=user_id,services=services,duration=total_time,price=total_price,date=date,start_time=time)
 
     if not result:
         text=text_transaction_problem

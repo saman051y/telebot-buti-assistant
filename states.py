@@ -14,6 +14,10 @@ class user_State(StatesGroup):
 #######################################################################
 class admin_State(StatesGroup):
 
+    state_reserve_custom_selecting = State()
+    state_reserve_custom_start_time = State()
+    state_reserve_custom_payment = State()
+
     ########## service states
     state_service_enter_name = State()
     state_service_enter_time_slots = State()
