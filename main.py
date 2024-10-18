@@ -977,11 +977,8 @@ def callback_query(call:CallbackQuery):
             total_price += service[3] 
     #get list and sort by date 
     total_time=convert_to_standard_time(time_string=f"{total_time}") 
-    print(f'total_time: {total_time}')
     available_day_list=get_free_time_for_next_7day(duration=total_time)
-    print(available_day_list)
     available_day_list = sorted(available_day_list, key=lambda x: x[0])
-    print(available_day_list)
 
     #create markups
     markup=InlineKeyboardMarkup()
@@ -989,13 +986,14 @@ def callback_query(call:CallbackQuery):
         markup.add(InlineKeyboardButton(text=text_no_time_for_reservations,callback_data="!!!!!!!!!!!"))
     else:
         is_tow_part_open=False
-        for index,day in enumerate(available_day_list[:-1]):
+        len_available_day_list=len(available_day_list)
+        for index,day in enumerate(available_day_list):
             
             if is_tow_part_open:
                 is_tow_part_open=False
                 continue
             
-            if day[0] == available_day_list[index+1][0]:
+            if len_available_day_list!=(index+1) and day[0] == available_day_list[index+1][0]:
                 #part 1
                 date=day[0]
                 date_persian=convertDateToPersianCalendar(date)
@@ -1087,7 +1085,7 @@ def callback_query(call:CallbackQuery):
 @bot.message_handler(state=user_State.get_rec, content_types=['text', 'video', 'document', 'audio', 'sticker', 'voice', 'location', 'contact'])
 def handle_non_photo(msg: Message):
     # پیام خطا برای ارسال محتوای غیر از عکس
-    bot.send_message(msg.chat.id, "لطفاً فقط یک عکس از رسید خود ارسال کنید.")
+    bot.send_message(msg.chat.id, "لطفاً فقط یک عکس از رسید خود ارسال کنید ❗️")
 
 
 ## pic_receipt is sended as pic and make reserve in db
@@ -1102,8 +1100,8 @@ def reserve_section_enter_name_first_time(msg : Message):
     bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)
     
     markup=InlineKeyboardMarkup()
-    approve_btn=InlineKeyboardButton(text="تایید رزرو و تراکنش",callback_data="approve_btn")
-    deny_btn=InlineKeyboardButton(text="رد کردن رزرو و تراکنش",callback_data="deny_btn")
+    approve_btn=InlineKeyboardButton(text="ثبت رزرو ✅",callback_data="approve_btn")
+    deny_btn=InlineKeyboardButton(text="رد کردن رزرو ❌",callback_data="deny_btn")
     markup.add(approve_btn)
     markup.add(deny_btn)
 
@@ -1135,7 +1133,7 @@ def reserve_section_enter_name_first_time(msg : Message):
 @bot.callback_query_handler(func=lambda call: call.data ==("approve_btn"))
 def callback_query(call:CallbackQuery):
     markup=InlineKeyboardMarkup()
-    btn=InlineKeyboardButton(text="این تراکنش تایید شد",callback_data="!?!?!?!")
+    btn=InlineKeyboardButton(text="این تراکنش تایید شد ✅",callback_data="!?!?!?!")
     markup.add(btn)
     info_text=call.message.text
     # approve transaction
@@ -1162,7 +1160,7 @@ def callback_query(call:CallbackQuery):
     reserve_id,user_id=extract_reserveId_and_userId(info_text)
     
     markup=InlineKeyboardMarkup()
-    btn=InlineKeyboardButton(text="این تراکنش رد شد",callback_data="!?!?!?!")
+    btn=InlineKeyboardButton(text="این تراکنش رد شد ❌",callback_data="!?!?!?!")
     btn2=InlineKeyboardButton(text="علت رد کردن تراکنش را بنویسید",callback_data=f"deny_message_to_{user_id}")
     markup.add(btn)
     markup.add(btn2)
@@ -1175,7 +1173,7 @@ def callback_query(call:CallbackQuery):
         bot.send_message(call.message.chat.id,text=text)
         return 
   
-    #send deny  msg to user
+    #send deny msg to user
     bot.send_message(chat_id=user_id,text=reserve_is_denied)
 
     #admin edit message
@@ -1205,7 +1203,7 @@ def deny_reason(msg : Message):
 
     deny_reason_msg=msg.text
     bot.send_message(chat_id=user_id,text=f"علت رد شدن تراکنش شما : \n {deny_reason_msg}")
-    bot.send_message(chat_id=msg.from_user.id,text="پیام شما برای کاربر ارسال شد")
+    bot.send_message(chat_id=msg.from_user.id,text="پیام شما برای کاربر ارسال شد ✅")
     bot.delete_state(user_id= msg.from_user.id,chat_id=msg.chat.id)
 
 #### activation_user

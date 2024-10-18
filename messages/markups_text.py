@@ -171,7 +171,6 @@ def makrup_generate_empty_time_of_day(delete_day:str,admin:bool=False) :
     markup = InlineKeyboardMarkup()
     today = datetime.now().date()
     custom_reserve_text= "customReserve" if admin else ''
-    print(custom_reserve_text)
     for i in range(7):
         date = today + timedelta(days=i)
         if delete_day != str(date) :
@@ -183,7 +182,7 @@ def makrup_generate_empty_time_of_day(delete_day:str,admin:bool=False) :
 ##########################################
 def makrup_reserve_date(date_persian,weekDay,time,date):
     """callback data : reserve_date_"""
-    return InlineKeyboardButton(text=f"{date_persian} : {time[:5]}",
+    return InlineKeyboardButton(text=f"{date_persian}  {time[:5]}",
                                 callback_data=f"reserve_date_{date}_{time}")
 ##########################################
 def markup_admin_bot_setting(bot_is_enable:bool=True):
