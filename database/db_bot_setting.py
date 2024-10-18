@@ -5,7 +5,7 @@ from mysql.connector import Error
 from auth.auth import DB_CONFIG
 
 
-#insert
+############################ insert
 def db_bot_setting_insert(name:str,value:str):
     sql = f"""INSERT INTO bot_setting (name, value) VALUES (%s, %s);"""
     try:
@@ -14,7 +14,6 @@ def db_bot_setting_insert(name:str,value:str):
                 with connection.cursor() as cursor:
                     cursor.execute(sql, (name, value))
                     connection.commit()
-                    print("Record inserted successfully")
     except Error as e:
         print(f"Error inserting record: {e}")
 ###########################update
@@ -26,7 +25,6 @@ def db_bot_setting_update(name, new_value):
                 with connection.cursor() as cursor:
                     cursor.execute(sql, (new_value, name))
                     connection.commit()
-                    print("Record updated successfully")
     except Error as e:
         print(f"Error updating record: {e}")
 
@@ -58,7 +56,22 @@ def db_bot_setting_get_all():
                     if result:
                         return result
                     else:
-                        print("No record found")
                         return None
     except Error as e:
         print(f"Error retrieving record: {e}")
+############################### get card info 
+def db_bot_setting_get_cart_info():
+    sql = f"""SELECT * FROM bot_setting WHERE name IN ('cart', 'cart_name', 'cart_bank');"""
+    try:
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor() as cursor:
+                    cursor.execute(sql)
+                    result = cursor.fetchall()
+                    if result:
+                        return result
+                    else:
+                        print("No record found")
+                        return None
+    except Error as e:
+        print(f"Error db_bot_setting_get_cart_info: {e}")

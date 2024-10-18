@@ -7,17 +7,17 @@ from messages.messages_function import *
 from messages.commands_msg import *
 from datetime import datetime, timedelta
 ###############################################################! for user
-mark_text_reserve_time='رزرو وقت'
-mark_text_reserved_time='مشاهده رزرو ها'
-mark_text_support='پشتیبانی'
+mark_text_reserve_time='رزرو وقت 💅🏼'
+mark_text_reserved_time='مشاهده رزرو ها 📜'
+mark_text_support='پشتیبانی 💬'
 mark_text_account_info='حساب کاربری 🙋🏻‍♀️'
 mark_text_update_name = 'ویرایش نام 🔤'
 mark_text_update_phone_number ='ویرایش شماره تماس 📞'
 ###############################################################! for admin
 mark_text_admin_empty_time = 'وضعیت روزها 📊'
 mark_text_admin_reserved_time = 'ساعت های رزرو شده'
-mark_text_admin_set_work_time = 'تنظیمات ساعت کاری ⚙️⏰'
-mark_text_admin_weekly_time = 'تنظیمات هفته ⚙️📅'
+mark_text_admin_set_work_time = 'تنظیمات ساعت کاری ⏰'
+mark_text_admin_weekly_time = 'تنظیمات هفته 📅'
 mark_text_admin_set_service = 'تنظیمات خدمات 💅🏼'
 mark_text_admin_bot_setting="تنظیمات ربات"
 mark_text_admin_custom_reserve="رزرو وقت کاستوم"
@@ -34,10 +34,13 @@ mark_text_admin_update_time_slots='ویرایش تایم ⏰'
 mark_text_admin_update_price='ویرایش قیمت 💰' 
 mark_text_admin_update_is_active='تغییر فعال بودن ✅❌'
 mark_text_admin_delete_service='حذف 🗑'
-#########################################
-text_set_work_enable='تنظیم تایم کاری'
-text_set_work_disable='تنظیم تایم استراحت'
-
+mark_text_admin_bot_setting = 'تنظیمات ربات 🤖'
+markup_text_add_admin="📥 افزودن ادمین"
+markup_text_list_admin="مشاهده لیست"
+markup_text_remove_admin="🗑 حذف ادمین"
+markup_text_change_main_admin="💬 تغییر به ادمین پاسخگو"
+markup_text_no_change_for_main_admin = 'بعد از عوض کردن ادمین پاسخگو💬 قادر به حذف ادمین هستید'
+markup_text_admin_list="لیست ادمین ها 👑"
 ######################################### create markup for account info in user panel
 def markup_generate_account_info(user_id:int):
     markup = InlineKeyboardMarkup()
@@ -190,26 +193,28 @@ def markup_admin_bot_setting(bot_is_enable:bool=True):
     bot enable : change_bot_enable_disable
     """
     markup=InlineKeyboardMarkup()
-    text_bot_is_enable="فعال" if bot_is_enable else "غیرفعال"
-    btn_enable_disable=InlineKeyboardButton(text=f"وضعیت ربات : {text_bot_is_enable}",callback_data=f"change_bot_enable_disable")
-    btn_admin_list=InlineKeyboardButton(text=f"تغییر لیست ادمین ها",callback_data=f"change_admin_list")
-    markup.add(btn_enable_disable,btn_admin_list)
+    text_bot_is_enable="فعال ✅" if bot_is_enable else "غیرفعال ❌"
+    btn_enable_disable=InlineKeyboardButton(text=f"🤖 ربات {text_bot_is_enable}",callback_data=f"change_bot_enable_disable")
+    btn_admin_list=InlineKeyboardButton(text=f"👑 تغییر ادمین ها",callback_data=f"change_admin_list")
+    btn_welcome_message=InlineKeyboardButton(text=f"💁‍♀️ تغییر پیام خوش آمدگویی",callback_data=f"welcome_message")
+    markup.add(btn_enable_disable)
+    markup.add(btn_admin_list)
+    markup.add(btn_welcome_message)
     return markup
 ######
 def markup_show_admin_list(admin_list):
     markup=InlineKeyboardMarkup()
-    btn1=InlineKeyboardButton(text=text_add_admin,callback_data=f"admin_list_add")
+    btn1=InlineKeyboardButton(text=markup_text_add_admin,callback_data=f"admin_list_add")
     markup.add(btn1) 
     if len(admin_list) < 1  :
         btn=InlineKeyboardButton(text=text_markup_no_admin,callback_data="!!!!!!!")
         markup.add(btn) 
         return markup
     for admin in admin_list:
-        user_name=db_Users_Get_Name_User(admin[0])
-        user_id=admin[0]
+        name=db_Users_Get_Name_User(admin[0])
         user_is_main_admin_bool=bool(admin[1])
-        user_is_main_admin=": ادمین اصلی" if user_is_main_admin_bool else ""
-        btn=InlineKeyboardButton(text=f"{user_name} : {user_id} {user_is_main_admin}",callback_data=f"adminList_{admin[0]}_{user_is_main_admin}")
+        user_is_main_admin="💬ادمین پاسخگو" if user_is_main_admin_bool else ""
+        btn=InlineKeyboardButton(text=f"👑 {name}  {user_is_main_admin}",callback_data=f"adminList_{admin[0]}_{user_is_main_admin}")
         markup.add(btn)
     return markup
 ##########################################
@@ -226,4 +231,18 @@ def markup_generate_list_of_users(user_id_for_delete):
         if user_id != user_id_for_delete :
             button = InlineKeyboardButton(text=text ,callback_data=f'showUsersList_{user_id}')
             markup.add(button)
+    return markup
+##########################################
+def markup_generate_reserved_list(reserve_list , delete_reserve_id:str):
+    markup=InlineKeyboardMarkup()
+    user_id= str(reserve_list[0]['user_id'])
+    for reserve in reserve_list:
+        reserve_id=reserve['id']
+        if delete_reserve_id != str(reserve_id):
+            date=convertDateToPersianCalendar(f"{reserve['date']}")
+            start_time=convert_to_standard_time(f"{reserve['start_time']}")[:5]
+            payment=(reserve['payment'])
+            text=f"🗓{date} ⏰{start_time} 💰{payment} هزار تومان"
+            btn=InlineKeyboardButton(text=text,callback_data=f"userSeeReserve_{reserve_id}_{user_id}")
+            markup.add(btn)
     return markup

@@ -5,6 +5,27 @@ from auth.auth import DB_CONFIG
 ######################################################################################################
 """input: name:varchar(20), value:varchar(20) """
 ######################################################################################################
+def db_WeeklySetting_Insert(name: str, value: str):
+    """Insert a new weekly setting with name and value."""
+    try:
+        sql = f"""INSERT INTO weekly_setting (name, value) VALUES ('{name}', '{value}');"""
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor() as cursor:
+                    cursor.execute(sql)
+                    connection.commit()  # Commit the transaction
+                    cursor.close()
+                    connection.close()
+                    logging.info(f"Inserted {name}: {value} into weekly_setting.")
+                    return True
+            else:
+                logging.error("Connection to database is not working")
+                return False
+    except Error as e:
+        logging.error(f"db_WeeklySetting_Insert_Value: {e}")
+        return False
+
+######################################################################################################
 def db_WeeklySetting_Update(name:str, value:str):
     """weekly setting(name:varchar(20), value:varchar(20)  and it will be updated"""
     try:
@@ -54,7 +75,10 @@ def db_WeeklySetting_Get_All():
                     result=cursor.fetchall()
                     cursor.close()
                     connection.close()
-                    return result
+                    if result:
+                        return result
+                    else:
+                        return None
             else:
                 logging.error("connection to database is not working")
     except Error as e :
