@@ -975,12 +975,13 @@ def callback_query(call:CallbackQuery):
         if service[5]==1:
             total_time += service[2]  
             total_price += service[3] 
-
     #get list and sort by date 
     total_time=convert_to_standard_time(time_string=f"{total_time}") 
+    print(f'total_time: {total_time}')
     available_day_list=get_free_time_for_next_7day(duration=total_time)
+    print(available_day_list)
     available_day_list = sorted(available_day_list, key=lambda x: x[0])
-    print(len(available_day_list))
+    print(available_day_list)
 
     #create markups
     markup=InlineKeyboardMarkup()

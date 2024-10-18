@@ -57,12 +57,11 @@ def get_free_time_for_next_7day(duration:str):
             #get first time that able to be reserved as time slot
             reserved_time_as_time_slot=find_consecutive_sequence(array_all_time_slot_for_each_day ,duration_as_time_slot)
             # print(f'reserved_time_as_time_slot = {reserved_time_as_time_slot}')
-            export_list= (date ,part, None)
             if reserved_time_as_time_slot not in[None ,'None']:
                 #convert time slot to time like time slot 2 of 8:00:00 is 08:30:00 (2th 15 Min of 08:00)
                 time_could_be_reserve = convert_slot_number_to_duration(start_time , reserved_time_as_time_slot )
                 export_list=(date,part,time_could_be_reserve)
-            days_list_can_reserve.append(export_list)
+                days_list_can_reserve.append(export_list)
     if days_list_can_reserve == [] :
         return None 
     return(days_list_can_reserve)
