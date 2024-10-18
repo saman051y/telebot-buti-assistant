@@ -791,7 +791,7 @@ def reserve_time(msg : Message):
 @bot.callback_query_handler(func= lambda m:m.data.startswith("showUsersList_"))
 def showUserList(call:CallbackQuery):
     user_id=int(call.data.split('_')[1])
-    text=accountInfoCreateTextToShow(user_id=user_id)
+    text=accountInfoCreateTextToShow(user_id=user_id, admin=True)
     markup=markup_generate_list_of_users(user_id_for_delete=user_id)
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text,reply_markup=markup)
 
@@ -1329,8 +1329,11 @@ def text_to_support(msg : Message):
     if  not bot_is_enable:
          bot_is_disable(user_id=msg.from_user.id) 
          return
-    bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id) 
-    bot.send_message(msg.chat.id, f"{text_support}\n{SUPPORT_USERNAME}", parse_mode='Markdown')
+    bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)
+    main_admin=db_admin_get_main_admin(main_admin)
+    support_msg=f"""<a href='tg://user?id={main_admin}'> برا ارتباط با پشتیبان لطفا روی این متن کلیک کنید </a>"""
+    text = f"{text_support}\n{support_msg} "
+    bot.send_message(msg.chat.id, text=text)
 #######################################################################
 def startMessageToAdmin(enable=True,disable_notification=True):
     if not enable:
@@ -1346,8 +1349,8 @@ def startMessageToAdmin(enable=True,disable_notification=True):
             last_3_errors=get_last_errors(latest_log_file)
             error_message = "\n".join(last_3_errors)
             with open(latest_log_file, 'rb') as log_file:
-                bot.send_document(admin, log_file,caption=f"{text}\n{error_message}",disable_notification=disable_notification)
-            logging.info(f"send last log to admin [{admin}] : {latest_log_file}")
+                bot.send_document(admin[0], log_file,caption=f"{text}\n{error_message}",disable_notification=disable_notification)
+            logging.info(f"send last log to admin [{admin[0]}] : {latest_log_file}")
         else:
             logging.info("there is no log file to show")
             bot.send_message(chat_id=admin,text=f"{text}\n ⛔️فایل log وجود ندارد⛔️",disable_notification=disable_notification)

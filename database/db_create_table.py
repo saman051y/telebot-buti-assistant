@@ -42,9 +42,9 @@ def insert_basic_setting():
     #check exist bot_setting
     result_bot_setting=db_bot_setting_get_all()
     if result_bot_setting is None:
-        db_bot_setting_insert(name="cart",value="6219861934279083")
-        db_bot_setting_insert(name="cart_name",value="سامان یعقوبی")
-        db_bot_setting_insert(name="cart_bank",value="blue")
+        db_bot_setting_insert(name="cart",value="6219861905892625")
+        db_bot_setting_insert(name="cart_name",value="سمانه نصیری")
+        db_bot_setting_insert(name="cart_bank",value="ملی")
         db_bot_setting_insert(name="bot_is_enable",value="1")
         db_bot_setting_insert(name="main_admin",value="1054820423")
         db_bot_setting_insert(name="welcome_message",value="خوش آمدید")

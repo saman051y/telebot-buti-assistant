@@ -53,7 +53,7 @@ def createLabelServicesToShowOnButton(user_id):
     export_text = (f" {name}  {time}  {price} هزارتومان  {is_active_text}")
     return export_text
 #######################################################################
-def accountInfoCreateTextToShow(user_id=str) :
+def accountInfoCreateTextToShow(user_id=str,admin:bool=False) :
     data_user=db_Users_Find_User_By_Id(user_id=user_id)
     username=data_user[2]
     if data_user in [False , 'False' , None , 'None']:
@@ -63,6 +63,10 @@ def accountInfoCreateTextToShow(user_id=str) :
         text =  f'{text_info_user}'
         if data_user[2] not in [False , 'False' , None , 'None']:
             text =  f'{text_info_user}\nhttps://t.me/{username}'
+        if admin==True:
+            name =data_user[4]
+            text_message_by_id=f"""<a href='tg://user?id={user_id}'> برا ارتباط با {name} روی این متن کلیک کنید </a>"""
+        text= f'{text}\n{text_message_by_id}'
     return text
 #######################################################################
 def ConvertVariableInWeeklySettingToPersian(data:str):
