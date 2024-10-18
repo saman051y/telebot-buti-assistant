@@ -861,19 +861,13 @@ def reserve_time(msg : Message):
 
     user_id=msg.from_user.id
     reserves= get_reserves_for_user(user_id=user_id,days=7)
+    reserves=sorted(reserves, key=lambda x: (x['date'], x['start_time']))
+
     markup=InlineKeyboardMarkup()
     if len(reserves) <1 :
         markup.add(InlineKeyboardButton(text=text_no_reserve_for_user,callback_data="!!!!"))
     else:
-        for reserve in reserves:
-            date=gregorian_to_jalali(f"{reserve['date']}")
-            start_time=convert_to_standard_time(f"{reserve['start_time']}")[:5]
-            payment=(reserve['payment'])
-            weekday=get_weekday(f"{reserve['date']}")
-            reserve_id=reserve['id']
-            btn=InlineKeyboardButton(text=f"{weekday} : {date}: {start_time} : {payment} HT",callback_data=f"userSeeReserve_{reserve_id}")
-            markup.add(btn)
-
+        markup=markup_generate_reserved_list(reserve_list=reserves , delete_reserve_id='0')
     bot.send_message(chat_id=user_id,text=text_reserve_list_msg,reply_markup=markup)
 
 ##########
@@ -881,9 +875,19 @@ def reserve_time(msg : Message):
 @bot.callback_query_handler(func=lambda call: call.data.startswith("userSeeReserve_"))
 def callback_query(call:CallbackQuery):
     reserve_id=call.data.split("_")[1]
+    user_id=call.data.split("_")[2]
+    reserves= get_reserves_for_user(user_id=user_id,days=7)
+    reserves=sorted(reserves, key=lambda x: (x['date'], x['start_time']))
+
+    markup=InlineKeyboardMarkup()
+    if len(reserves) <1 :
+        markup.add(InlineKeyboardButton(text=text_no_reserve_for_user,callback_data="!!!!"))
+    else:
+        markup=markup_generate_reserved_list(reserve_list=reserves , delete_reserve_id=reserve_id)
+    
     reserve=db_Reserve_Get_Reserve_With_Id(reserve_id=reserve_id)
     text=text_user_reserve_info(reserve=reserve)
-    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text)
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text,reply_markup=markup)
 
 
 ####################################################################### Insert Reserve Time Section
@@ -1066,7 +1070,9 @@ def callback_query(call:CallbackQuery):
     bot.delete_state(user_id=call.message.from_user.id,chat_id=call.message.chat.id)
 
     text=call.message.text
-    cart_info=text_cart_info()
+
+    #todo  insert pre payment to show user for payment
+    cart_info=text_cart_info(price ='120')
     text=f"{text}\n \n {cart_info}"
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text)
     
@@ -1264,6 +1270,12 @@ def updateNameUser(call:CallbackQuery):
 def account_info_state_update_name(msg : Message):
     with bot.retrieve_data(msg.from_user.id, msg.chat.id) as data:
         user_id = int(data['user_id'])
+
+        #prevent for conflict insert support text
+        if msg.text == 'پشتیبانی 💬':
+            bot.send_message(chat_id=msg.chat.id, text=text_enter_name)
+            return
+        
         db_Users_Update_Name_User(user_id=user_id , name=msg.text )
         markup=InlineKeyboardMarkup()
         markup = markup_generate_account_info(user_id=user_id)
@@ -1288,6 +1300,10 @@ def updateNameUser(call:CallbackQuery):
 def account_info_state_update_name(msg : Message):
     with bot.retrieve_data(msg.from_user.id, msg.chat.id) as data:
         user_id = int(data['user_id'])
+        #prevent for conflict insert support text
+        if msg.text == 'پشتیبانی 💬':
+            bot.send_message(chat_id=msg.chat.id, text=text_update_phone_number_error)
+            return
         pattern =r'^09\d{9}$'
         match = re.match(pattern, msg.text)
         if not match:

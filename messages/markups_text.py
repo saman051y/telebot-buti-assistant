@@ -7,9 +7,9 @@ from messages.messages_function import *
 from messages.commands_msg import *
 from datetime import datetime, timedelta
 ###############################################################! for user
-mark_text_reserve_time='رزرو وقت'
-mark_text_reserved_time='مشاهده رزرو ها'
-mark_text_support='پشتیبانی'
+mark_text_reserve_time='رزرو وقت 💅🏼'
+mark_text_reserved_time='مشاهده رزرو ها 📜'
+mark_text_support='پشتیبانی 💬'
 mark_text_account_info='حساب کاربری 🙋🏻‍♀️'
 mark_text_update_name = 'ویرایش نام 🔤'
 mark_text_update_phone_number ='ویرایش شماره تماس 📞'
@@ -226,4 +226,18 @@ def markup_generate_list_of_users(user_id_for_delete):
         if user_id != user_id_for_delete :
             button = InlineKeyboardButton(text=text ,callback_data=f'showUsersList_{user_id}')
             markup.add(button)
+    return markup
+##########################################
+def markup_generate_reserved_list(reserve_list , delete_reserve_id:str):
+    markup=InlineKeyboardMarkup()
+    user_id= str(reserve_list[0]['user_id'])
+    for reserve in reserve_list:
+        reserve_id=reserve['id']
+        if delete_reserve_id != str(reserve_id):
+            date=convertDateToPersianCalendar(f"{reserve['date']}")
+            start_time=convert_to_standard_time(f"{reserve['start_time']}")[:5]
+            payment=(reserve['payment'])
+            text=f"🗓{date} ⏰{start_time} 💰{payment} هزار تومان"
+            btn=InlineKeyboardButton(text=text,callback_data=f"userSeeReserve_{reserve_id}_{user_id}")
+            markup.add(btn)
     return markup

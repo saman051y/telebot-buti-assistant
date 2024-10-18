@@ -62,3 +62,19 @@ def db_bot_setting_get_all():
                         return None
     except Error as e:
         print(f"Error retrieving record: {e}")
+############################### get card info 
+def db_bot_setting_get_cart_info():
+    sql = f"""SELECT * FROM bot_setting WHERE name IN ('cart', 'cart_name', 'cart_bank');"""
+    try:
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor() as cursor:
+                    cursor.execute(sql)
+                    result = cursor.fetchall()
+                    if result:
+                        return result
+                    else:
+                        print("No record found")
+                        return None
+    except Error as e:
+        print(f"Error db_bot_setting_get_cart_info: {e}")

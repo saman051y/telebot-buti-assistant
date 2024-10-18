@@ -12,5 +12,5 @@ from messages.markups_text import *
 from messages.messages_function import *
 from functions.time_date import *
 ##############################################################################
-result=get_free_time_for_next_7day('01:00:00')
+result=get_reserves_for_user(user_id=423977498,days=7)
 print(result) 

@@ -1,5 +1,6 @@
 from auth.auth import *
 from database.db_admin_list import db_admin_get_all
+from database.db_bot_setting import *
 from database.db_reserve_service import getResSerWithResId
 from database.db_service import *
 from database.db_users import *
@@ -155,29 +156,25 @@ def make_reservation_info_text_for_admin(reserve_id,user_id):
 """
     return text
 #######################################################################
-def text_cart_info():
-    text="""
-شماره کارت: 
-مالک کارت:
-بانک :
-"""
+def text_cart_info(price):
+    card_info=db_bot_setting_get_cart_info()
+    card_number=card_info[0][2]
+    card_bank = card_info[1][2]
+    card_user = card_info[2][2]
+    price = price
+    card_number = ' '.join([card_number[i:i+4] for i in range(0, len(card_number), 4)])
+    text=f"""لطفا مبلغ <b>{price}</b> هزار تومان به نام <b>{card_user}</b> برای  بانک {card_bank}</b>  واریز کنید\n<code>{card_number}</code>"""
     return text
 #######################################################################
 def text_user_reserve_info(reserve):
     id=reserve[0]
     user_id_reserver= reserve[1]
-    date=gregorian_to_jalali(gregorian_date_str=f"{reserve[2]}",reverse=True)
+    date=convertDateToPersianCalendar(str(reserve[2]))
     start_time=convert_to_standard_time(time_string=f"{reserve[3]}")
     end_time=convert_to_standard_time(time_string=f"{reserve[4]}")
-    approved="تایید شده" if bool(reserve[5]) else "در انتظار تایید"
+    approved="تایید شده ✅" if bool(reserve[5]) else "در انتظار تایید ⌛️"
     payment=reserve[6]
-    text=f"""
-تاریخ رزرو: {date}
-ساعت رزرو شده: {start_time[:5]}
-حدود اتمام زمان: {end_time[:5]}
-میزان پرداخت: {payment}
-وضعیت تایید: {approved}
-"""
+    text=f"📅{date}\n⏰ {start_time[:5]} الی {end_time[:5]}\n💰 {payment} هزار تومان\nوضعیت تایید: {approved}"
     return text
 #######################################################################
 def text_make_admin_info(admin,is_mainAdmin:bool=False):
