@@ -156,14 +156,13 @@ def make_reservation_info_text_for_admin(reserve_id,user_id):
 """
     return text
 #######################################################################
-def text_cart_info(price):
+def text_cart_info(price:str):
     card_info=db_bot_setting_get_cart_info()
     card_number=card_info[0][2]
     card_bank = card_info[1][2]
     card_user = card_info[2][2]
-    price = price
-    card_number = ' '.join([card_number[i:i+4] for i in range(0, len(card_number), 4)])
-    text=f"""لطفا مبلغ <b>{price}</b> هزار تومان به نام <b>{card_user}</b> برای  بانک {card_bank}</b>  واریز کنید\n<code>{card_number}</code>"""
+    formatted_card_number = ' '.join([card_number[i:i+4] for i in range(0, len(card_number), 4)])
+    text=f"""لطفا مبلغ <b>{price}</b> هزار تومان به نام <b>{card_user}</b> برای  بانک <b>{card_bank}</b>  واریز کنید\n\n<code>{formatted_card_number}</code>"""
     return text
 #######################################################################
 def text_user_reserve_info(reserve):
@@ -178,11 +177,7 @@ def text_user_reserve_info(reserve):
     return text
 #######################################################################
 def text_make_admin_info(admin,is_mainAdmin:bool=False):
-    is_main="ادمین اصلی" if is_mainAdmin else ""
-    text=f"""
-نام : {admin[4]}
-نام خانوادگی : {admin[5]}
-شناسه : {admin[0]}
-{is_main}
-    """
+    is_main="👑 ادمین اصلی" if is_mainAdmin else ""
+    text=f"🔤 نام       : {admin[4]} \n🔢 شناسه : {admin[0]}\n{is_main}"
     return text
+

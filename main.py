@@ -31,19 +31,16 @@ def start(msg : Message):
          bot.send_message(chat_id=msg.from_user.id,text=text_user_is_not_admin)
          return False
     markup=ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add(mark_text_admin_empty_time)
+    markup.add(mark_text_admin_empty_time,mark_text_admin_custom_reserve)
     markup.add(mark_text_admin_set_work_time , mark_text_admin_weekly_time)
     markup.add(mark_text_admin_set_service,mark_text_admin_bot_setting)
-    markup.add(mark_text_admin_custom_reserve)
-    markup.add(mark_text_admin_users_list , mark_text_admin_find_user)
-    markup.add(mark_text_admin_send_message_to_all)
+    markup.add(mark_text_admin_users_list,mark_text_admin_send_message_to_all)
     bot.send_message(chat_id=msg.from_user.id,text=text_user_is_admin, reply_markup=markup)
 ############################################################################################ markup mark_text_admin_custom_reserve
 #todo reserve custom
 #todo price < 4H 100  bala 4 sat 200 
 @bot.message_handler(func= lambda m:m.text == mark_text_admin_custom_reserve)
 def bot_setting(msg : Message):
-    #todo check is admin
     counter=0
     services=db_Service_Get_All_Services()
     if services is None or len(services) ==0:
@@ -76,7 +73,7 @@ def convertUserID(call:CallbackQuery):
         if int(service[0]) == int(service_id):
             if service[5]==0: # if service need to active
                 if counter== 0:# if basic info not set
-                    services_name="خدمات انتخاب شده \n به ترتیب : نام - قیمت - مدت زمان مورد نیاز"
+                    services_name="خدمات انتخاب شده :"
 
 
                 services[index]=service[:5] + (1,) 
@@ -145,13 +142,29 @@ def bot_setting(msg : Message):
     bot.send_message(chat_id=msg.from_user.id,text=text,reply_markup=markup)
 
 
-### change_bot_enable_disable
+## change welcome message
+@bot.callback_query_handler(func= lambda m:m.data ==("welcome_message"))
+def welcome_message(call:CallbackQuery):
+    text=text_bot_setting_change_welcome_message
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text)
+    bot.set_state(user_id=call.message.chat.id,state=admin_State.state_change_welcome_message,chat_id=call.message.chat.id)
+
+@bot.message_handler(state=admin_State.state_change_welcome_message)
+def setWork_section_state_get_part1(msg : Message):
+    db_bot_setting_update(name='welcome_message' , new_value=msg.text)
+    text= text_bot_setting_changed_welcome_message
+    bot.send_message(chat_id=msg.from_user.id,text=text)
+    bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)  
+
+### change_bo
+# t_enable_disable
 @bot.callback_query_handler(func= lambda m:m.data ==("change_bot_enable_disable"))
 def convertUserID(call:CallbackQuery):
     value= "0" if bot_is_enable else "1"
     db_bot_setting_update(name="bot_is_enable",new_value=value)
     toggle_bot_status()
-    text=call.message.text
+    bot_status =['غیرفعال ❌','فعال ✅']
+    text=f'ربات برای کاربران عادی {bot_status[int(value)]} شد'
     markup = markup_admin_bot_setting(bot_is_enable=bot_is_enable)
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text , reply_markup=markup)
 
@@ -196,7 +209,6 @@ def setWork_section_state_get_part1(msg : Message):
     
     markup=markup_admin_bot_setting()  
 
-    
     bot.delete_message(chat_id=msg.chat.id,message_id=msg_id)
     bot.send_message(chat_id=msg.chat.id,text=text,reply_markup=markup)
 ####### show one admin info
@@ -207,23 +219,23 @@ def convertUserID(call:CallbackQuery):
     user=db_Users_Find_User_By_Id(admin_id)
     text=text_make_admin_info(admin=user,is_mainAdmin=admin_is_mainAdmin)
     markup=InlineKeyboardMarkup()
-    btn1=InlineKeyboardButton(text=text_remove_admin,callback_data=f"adminRemove_{admin_id}")
-    markup.add(btn1)
-    
     if not admin_is_mainAdmin:
-        btn2=InlineKeyboardButton(text=text_promote_to_admin,callback_data=f"adminPromoteToMain_{admin_id}")
-        markup.add(btn2)    
-
+        btn1=InlineKeyboardButton(text=markup_text_remove_admin,callback_data=f"adminRemove_{admin_id}")
+        markup.add(btn1)
+        btn2=InlineKeyboardButton(text=markup_text_change_main_admin,callback_data=f"adminPromoteToMain_{admin_id}")
+        markup.add(btn2)   
+    if admin_is_mainAdmin :
+        btn3=InlineKeyboardButton(text=markup_text_no_change_for_main_admin,callback_data=f"!!!!!!!")
+        markup.add(btn3)
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text , reply_markup=markup)
 ####### promote admin to main_admin
 @bot.callback_query_handler(func= lambda m:m.data.startswith("adminPromoteToMain_"))
 def convertUserID(call:CallbackQuery):
     admin_id=int(call.data.split('_')[1])
     db_admin_set_main_admin(admin_id=admin_id)
-    markup=InlineKeyboardMarkup()
-    btn1=InlineKeyboardButton(text=text_remove_admin,callback_data=f"adminRemove_{admin_id}")
-    markup.add(btn1)
-    text=call.message.text
+    admin_list=db_admin_get_all()
+    markup=markup_show_admin_list(admin_list)
+    text=text_show_admin_setting
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text , reply_markup=markup)
     
 ######remove admin 
@@ -768,15 +780,28 @@ def service_update_name(call:CallbackQuery):
     markup=makrup_generate_service_list(sorted_serviceData)
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=f'{showText}\nآیتم بالا با موفقیت حذف شد\n.',reply_markup=markup)
 ######################################################################## access to all users
-
-###########################################  finds user by ID
-### markup user find
-@bot.message_handler(func= lambda m:m.text == mark_text_admin_find_user)
+@bot.message_handler(func= lambda m:m.text == mark_text_admin_users_list)
 def reserve_time(msg : Message):
     bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)  
-    bot.set_state(user_id=msg.from_user.id,state=admin_State.state_user_find,chat_id=msg.chat.id)
-    bot.send_message(chat_id=msg.chat.id,text=text_user_find)
-### state user find
+    markup=markup_generate_list_of_users(user_id_for_delete='0')
+    text=text_users_list
+    bot.send_message(chat_id=msg.chat.id,text=text, reply_markup=markup)
+
+
+@bot.callback_query_handler(func= lambda m:m.data.startswith("showUsersList_"))
+def showUserList(call:CallbackQuery):
+    user_id=int(call.data.split('_')[1])
+    text=accountInfoCreateTextToShow(user_id=user_id)
+    markup=markup_generate_list_of_users(user_id_for_delete=user_id)
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text,reply_markup=markup)
+
+@bot.callback_query_handler(func= lambda m:m.data.startswith("searchForUser"))
+def searchForUser(call:CallbackQuery):
+    bot.set_state(user_id=call.message.chat.id,state=admin_State.state_user_find,chat_id=call.message.chat.id)
+    text=text_user_find
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text)
+
+
 @bot.message_handler(state=admin_State.state_user_find)
 def user_section_user_find(msg : Message):
     if db_Users_Find_User_By_Id(user_id=msg.text) is False :
@@ -784,24 +809,8 @@ def user_section_user_find(msg : Message):
         return
     text = accountInfoCreateTextToShow(user_id=msg.text)
     bot.send_message(msg.chat.id,text, parse_mode='Markdown')
-    bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)  
-###########################################  get list Users
-@bot.message_handler(func= lambda m:m.text == mark_text_admin_users_list)
-def reserve_time(msg : Message):
-    bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)  
-    users_list=list(db_Users_Get_All_Users())
-    markup = InlineKeyboardMarkup()
-    for item in users_list :
-        name=item[4]
-        button = InlineKeyboardButton(text=name ,callback_data=f'showUsersList_{item[0]}')
-        markup.add(button)
-    bot.send_message(chat_id=msg.chat.id,text=text_users_list, reply_markup=markup)
+    bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id) 
 
-@bot.callback_query_handler(func= lambda m:m.data.startswith("showUsersList_"))
-def convertUserID(call:CallbackQuery):
-    user_id=int(call.data.split('_')[1])
-    text=accountInfoCreateTextToShow(user_id=user_id)
-    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text)
 ###########################################  send message to all
 @bot.message_handler(func=lambda m:m.text == mark_text_admin_send_message_to_all)
 def msg_to_all(msg : Message):
@@ -848,7 +857,7 @@ def start(msg : Message):
     markup.add(mark_text_reserve_time)
     markup.add(mark_text_reserved_time)
     markup.add(mark_text_account_info ,mark_text_support)
-    text=text_start_msg
+    text=db_bot_setting_get_value_by_name(name='welcome_message')
     bot.send_message(chat_id=user_id,text=text,reply_markup=markup)
 #######################################################################  see all reserve 
 #* mark_text_reserved_time handler
@@ -1070,9 +1079,7 @@ def callback_query(call:CallbackQuery):
     bot.delete_state(user_id=call.message.from_user.id,chat_id=call.message.chat.id)
 
     text=call.message.text
-
-    #todo  insert pre payment to show user for payment
-    cart_info=text_cart_info(price ='120')
+    cart_info=text_cart_info(price='120')
     text=f"{text}\n \n {cart_info}"
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text)
     

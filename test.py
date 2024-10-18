@@ -12,5 +12,3 @@ from messages.markups_text import *
 from messages.messages_function import *
 from functions.time_date import *
 ##############################################################################
-result=get_reserves_for_user(user_id=423977498,days=7)
-print(result) 
