@@ -51,7 +51,7 @@ def db_admin_get_main_admin():
                     sql = "SELECT * FROM admin_list WHERE main_admin = TRUE;"
                     cursor.execute(sql)
                     main_admin = cursor.fetchone()
-                    return main_admin
+                    return main_admin[0]
     except mysql.connector.Error as e:
         logging.error(f"Error db_admin_get_main_admin: {e}")
         return None

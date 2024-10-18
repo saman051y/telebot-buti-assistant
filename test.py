@@ -12,3 +12,5 @@ from messages.markups_text import *
 from messages.messages_function import *
 from functions.time_date import *
 ##############################################################################
+result=get_free_time_for_next_7day('01:00:00')
+print(result) 

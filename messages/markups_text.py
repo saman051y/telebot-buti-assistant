@@ -149,7 +149,7 @@ def markup_generate_services_for_reserve(services,total_selected:int=0,admin:boo
     AND for reservation selection end call back is make_reservation """
     markup=InlineKeyboardMarkup()
     if services is None or len(services)==0 :
-        return markup.add(InlineKeyboardButton(text="هیچ سرویسی جهت رزرو موجود نیست",callback_data="!!!!!!!!!"))
+        return markup.add(InlineKeyboardButton(text="هیچ خدماتی جهت رزرو موجود نیست",callback_data="!!!!!!!!!"))
     for service in services:
         if not service[4]:
             continue 
@@ -157,12 +157,12 @@ def markup_generate_services_for_reserve(services,total_selected:int=0,admin:boo
         name = service[1]
         price = service[3]
         isEnable=" ✅ " if service[5] ==1 else ""
-        markup.add(InlineKeyboardButton(text=f"{name} {price}هزار تومان {isEnable}",callback_data=f"select_service_{id}"))
+        markup.add(InlineKeyboardButton(text=f"💅🏼 {name} {price}هزار تومان {isEnable}",callback_data=f"select_service_{id}"))
     if total_selected>0:
         if admin:
-            markup.add(InlineKeyboardButton(text="اتمام انتخاب",callback_data="admin_make_reservation"))
+            markup.add(InlineKeyboardButton(text="تایید نهایی 💫",callback_data="admin_make_reservation"))
         else:
-            markup.add(InlineKeyboardButton(text="اتمام انتخاب",callback_data="make_reservation"))
+            markup.add(InlineKeyboardButton(text="تایید نهایی 💫",callback_data="make_reservation"))
     return markup
 ########################################## show parts of days by needed time for reserve 
 
@@ -171,7 +171,6 @@ def makrup_generate_empty_time_of_day(delete_day:str,admin:bool=False) :
     markup = InlineKeyboardMarkup()
     today = datetime.now().date()
     custom_reserve_text= "customReserve" if admin else ''
-    print(custom_reserve_text)
     for i in range(7):
         date = today + timedelta(days=i)
         if delete_day != str(date) :
@@ -183,7 +182,7 @@ def makrup_generate_empty_time_of_day(delete_day:str,admin:bool=False) :
 ##########################################
 def makrup_reserve_date(date_persian,weekDay,time,date):
     """callback data : reserve_date_"""
-    return InlineKeyboardButton(text=f"{date_persian} : {time[:5]}",
+    return InlineKeyboardButton(text=f"{date_persian}  {time[:5]}",
                                 callback_data=f"reserve_date_{date}_{time}")
 ##########################################
 def markup_admin_bot_setting(bot_is_enable:bool=True):
