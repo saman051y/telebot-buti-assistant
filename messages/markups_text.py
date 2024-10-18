@@ -149,7 +149,7 @@ def markup_generate_services_for_reserve(services,total_selected:int=0,admin:boo
     AND for reservation selection end call back is make_reservation """
     markup=InlineKeyboardMarkup()
     if services is None or len(services)==0 :
-        return markup.add(InlineKeyboardButton(text="هیچ سرویسی جهت رزرو موجود نیست",callback_data="!!!!!!!!!"))
+        return markup.add(InlineKeyboardButton(text="هیچ خدماتی جهت رزرو موجود نیست",callback_data="!!!!!!!!!"))
     for service in services:
         if not service[4]:
             continue 
@@ -157,12 +157,12 @@ def markup_generate_services_for_reserve(services,total_selected:int=0,admin:boo
         name = service[1]
         price = service[3]
         isEnable=" ✅ " if service[5] ==1 else ""
-        markup.add(InlineKeyboardButton(text=f"{name} {price}هزار تومان {isEnable}",callback_data=f"select_service_{id}"))
+        markup.add(InlineKeyboardButton(text=f"💅🏼 {name} {price}هزار تومان {isEnable}",callback_data=f"select_service_{id}"))
     if total_selected>0:
         if admin:
-            markup.add(InlineKeyboardButton(text="اتمام انتخاب",callback_data="admin_make_reservation"))
+            markup.add(InlineKeyboardButton(text="تایید نهایی 💫",callback_data="admin_make_reservation"))
         else:
-            markup.add(InlineKeyboardButton(text="اتمام انتخاب",callback_data="make_reservation"))
+            markup.add(InlineKeyboardButton(text="تایید نهایی 💫",callback_data="make_reservation"))
     return markup
 ########################################## show parts of days by needed time for reserve 
 

@@ -935,18 +935,18 @@ def callback_query(call:CallbackQuery):
         if int(service[0]) == int(service_id):
             if service[5]==0: # if service need to active
                 if counter== 0:# if basic info not set
-                    services_name="خدمات انتخاب شده \n به ترتیب : نام - قیمت - مدت زمان مورد نیاز"
+                    services_name="لیست خدمات انتخاب شده : "
 
 
                 services[index]=service[:5] + (1,) 
                 duration_time=convert_to_standard_time(f"{services[index][2]}")
-                current_service_info=f"{services[index][1]} - {services[index][3]} HT - {duration_time[:5]}"
+                current_service_info=f"\n💅🏼 {services[index][1]} \n    💰 قیمت {services[index][3]} هزار تومان\n    ⏰ زمان موردنیاز {duration_time[:5]}"
                 services_name=f"{services_name}\n {current_service_info}"
                 counter=counter+1
             else:# if service wanna be disable
                 services[index]=service[:5] + (0,) 
                 duration_time=convert_to_standard_time(f"{services[index][2]}")
-                current_service_info=f"{services[index][1]} - {services[index][3]} HT - {duration_time[:5]}"
+                current_service_info=f"\n💅🏼 {services[index][1]} \n    💰 قیمت {services[index][3]} هزار تومان\n    ⏰ زمان موردنیاز {duration_time[:5]}"
                 services_name = services_name.replace(current_service_info, "").strip()
                 counter=counter-1
             break
@@ -955,7 +955,7 @@ def callback_query(call:CallbackQuery):
 
     if counter<1 :
         services_name=''
-    text=f"{text_reservation_init}\n {services_name}"
+    text=f"{services_name}"
 
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text, reply_markup=markup)
     
@@ -997,7 +997,7 @@ def callback_query(call:CallbackQuery):
             if day[0] == available_day_list[index+1][0]:
                 #part 1
                 date=day[0]
-                date_persian=gregorian_to_jalali(date)
+                date_persian=convertDateToPersianCalendar(date)
                 time=day[2]
                 weekDay=get_weekday(f"{date}")
                 btn=makrup_reserve_date(date=date,date_persian=date_persian,time=time,weekDay=weekDay)
@@ -1010,7 +1010,7 @@ def callback_query(call:CallbackQuery):
             else:
                 #just one part exist
                 date=day[0]
-                date_persian=gregorian_to_jalali(date)
+                date_persian=convertDateToPersianCalendar(date)
                 time=day[2]
                 weekDay=get_weekday(f"{date}")
                 btn=makrup_reserve_date(date=date,date_persian=date_persian,time=time,weekDay=weekDay)
@@ -1036,10 +1036,17 @@ def callback_query(call:CallbackQuery):
         total_time=data['total_time']
         total_price=data['total_price']
 
-    text=make_reservation_info_text_for_user(date=date,time=time,price=total_price,duration=total_time,services=services, )
+        #time + duration and result is end time to show for user
+        start_time_obj = datetime.strptime(time, "%H:%M:%S")
+        duration_parts = list(map(int, total_time.split(':')))
+        duration_obj = timedelta(hours=duration_parts[0], minutes=duration_parts[1], seconds=duration_parts[2])
+        end_time_obj = start_time_obj + duration_obj
+        end_time = end_time_obj.strftime("%H:%M:%S")
+
+    text=make_reservation_info_text_for_user(date=date,time=time,price=total_price,duration=end_time,services=services, )
     
     markup=InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton(text="ارسال رسید", callback_data="pic_receipt"))
+    markup.add(InlineKeyboardButton(text="ارسال رسید 💳", callback_data="pic_receipt"))
     with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
         data['services']=services 
         data['total_time']=total_time
@@ -1108,20 +1115,19 @@ def reserve_section_enter_name_first_time(msg : Message):
         return 
     
     
-    #msg to user
-    text=text_wait_for_approve
-    bot.send_message(msg.chat.id,text=text)
-
+    
     #msg to admin (the main one )
-    main_admin=int(db_bot_setting_get_value_by_name(name="main_admin"))
+    main_admin=int(db_admin_get_main_admin())
     forwarded_msg=bot.forward_message(chat_id=main_admin,from_chat_id=msg.chat.id,message_id=msg.message_id)
     text=make_reservation_info_text_for_user(date=date,time=time,price=total_price,duration=total_time,services=services, )
     user_id =msg.from_user.id
     text=f"{text} \n reserve_id={reserve_id} \n user_id={user_id}" #! do not change it
-    main_admin=db_admin_get_main_admin()
-    bot.send_message(chat_id=main_admin[0],text=text,reply_to_message_id=forwarded_msg.message_id,disable_notification=True,reply_markup=markup)
-    
+    bot.send_message(chat_id=main_admin,text=text,reply_to_message_id=forwarded_msg.message_id,disable_notification=True,reply_markup=markup)
     bot.delete_state(user_id= msg.from_user.id,chat_id=msg.chat.id)
+
+    #msg to user
+    text=text_wait_for_approve
+    bot.send_message(msg.chat.id,text=text)
 
 
 ### accept btn

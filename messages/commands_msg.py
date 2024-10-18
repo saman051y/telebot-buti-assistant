@@ -1,5 +1,5 @@
 text_start_msg="سلام خوش امدید"
-text_user_not_created='مشکلی پیش امده است لطفا مجدد ربات را راه انندازی کنید'
+text_user_not_created='مشکلی پیش امده است لطفا مجدد ربات را راه اندازی کنید'
 text_enter_name = 'لطفا نام و نام خانوادگی خود را به فارسی وارد کنید'
 text_enter_phone_number = 'شماره تماس خود را وارد کنید'
 text_update_phone_number_error = 'لطفا شماره همراه را وارد کنید\nشماره تماس باید با 09 شروع شود\n.'
@@ -64,7 +64,7 @@ text_et_empty_time_is_false='هیچ مشتری رزرو انجام نداده ا
 
 text_markup_part1="تایم صبح"
 text_markup_part2="تایم عصر"
-text_no_time_for_reservations="زمانی برای رزرو موجود نمیباشد لطفا تایم دیگری انتخاب کنید"
+text_no_time_for_reservations="زمانی برای رزرو موجود نمیباشد لطفا زمان دیگری انتخاب کنید"
 text_send_receipt="رسید تراکنش را ارسال کنید"
 text_wait_for_approve="رسید شما برای ادمین ارسلا شد لطفا منتظر تایید بمانید"
 text_transaction_problem="مشکلی در انجام تراکنش پیش امد لطفا دوباره تلاش کنید"
