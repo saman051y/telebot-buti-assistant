@@ -91,15 +91,26 @@ def date_isEq(time,eqTime):
     else:
         return False
 #########################################################
-def compare_time(lower,than):
-    """return true if time1 < time2"""
-    time_format = "%H:%M"
+
+def compare_time(lower: str, than: str) -> bool:
+    """Return True if time1 < time2."""
+    # بررسی فرمت و انتخاب الگوی مناسب
+    if len(lower) == 5:  # فرمت بدون ثانیه
+        time_format = "%H:%M"
+    else:  # فرمت با ثانیه
+        time_format = "%H:%M:%S"
+        
     time_A = datetime.strptime(lower, time_format).time()
-    time_B = datetime.strptime(than, time_format).time()
-    if time_A<time_B :
-        return True
-    else:
-        return False
+
+    # انجام همین کار برای ورودی دوم
+    if len(than) == 5:  # فرمت بدون ثانیه
+        time_format_than = "%H:%M"
+    else:  # فرمت با ثانیه
+        time_format_than = "%H:%M:%S"
+    
+    time_B = datetime.strptime(than, time_format_than).time()
+    
+    return time_A <= time_B
 #########################################################
 def compare_date(lower_eq,than):
     time_format = "%Y-%m-%d"
@@ -399,3 +410,19 @@ def calculate_empty_time_and_reserved_time(date:str):
     merged_list.extend(export_reserved_list)
     sorted_merged_list = sorted(merged_list, key=lambda x: x[0])
     return sorted_merged_list
+
+######################3
+def time_difference(time1: str, time2: str):
+    # بررسی فرمت ورودی‌ها و انتخاب الگوی مناسب
+    if len(time1) == 5:  # فرمت بدون ثانیه
+        time_format = "%H:%M"
+    else:  # فرمت با ثانیه
+        time_format = "%H:%M:%S"
+        
+    # تبدیل رشته‌ها به آبجکت‌های datetime
+    t1 = datetime.strptime(time1, time_format)
+    t2 = datetime.strptime(time2, time_format)
+    
+    # محاسبه اختلاف زمانی
+    time_diff = abs(t2 - t1)
+    return time_diff

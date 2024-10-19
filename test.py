@@ -12,5 +12,5 @@ from messages.markups_text import *
 from messages.messages_function import *
 from functions.time_date import *
 ##############################################################################
-result=db_bot_setting_get_cart_info()
+result=compare_time(lower="09:00:00",than="10:00:01")
 print(result) 

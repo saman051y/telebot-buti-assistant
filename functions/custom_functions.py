@@ -66,3 +66,30 @@ def get_free_time_for_next_7day(duration:str):
     if days_list_can_reserve == [] :
         return None 
     return(days_list_can_reserve)
+
+
+##################################33
+def calculate_time_difference(time_str1: str, time_str2: str) -> int:
+    # تعریف فرمت‌های مختلف
+    full_time_format = "%Y-%m-%d %H:%M:%S"
+    time_format = "%H:%M:%S"
+    
+    # تابعی برای استخراج زمان از ورودی
+    def extract_time(time_str):
+        try:
+            return datetime.strptime(time_str, full_time_format).time()
+        except ValueError:
+            return datetime.strptime(time_str, time_format).time()
+
+    # استخراج زمان‌ها
+    time1 = extract_time(time_str1)
+    time2 = extract_time(time_str2)
+    
+    # محاسبه اختلاف زمانی
+    time_difference = abs((datetime.combine(datetime.today(), time2) - datetime.combine(datetime.today(), time1)).total_seconds()) / 3600  # تبدیل به ساعت
+
+    # بررسی اختلاف و برگرداندن مقدار مناسب
+    if time_difference < 4:
+        return 100
+    else:
+        return 200

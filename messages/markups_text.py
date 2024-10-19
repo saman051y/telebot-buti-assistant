@@ -156,7 +156,10 @@ def markup_generate_services_for_reserve(services,total_selected:int=0,admin:boo
         name = service[1]
         price = service[3]
         isEnable=" ✅ " if service[5] ==1 else ""
-        markup.add(InlineKeyboardButton(text=f"💅🏼 {name} {price}هزار تومان {isEnable}",callback_data=f"select_service_{id}"))
+        if admin:
+            markup.add(InlineKeyboardButton(text=f"💅🏼 {name} {price}هزار تومان {isEnable}",callback_data=f"admin_select_service_{id}"))
+        else:
+            markup.add(InlineKeyboardButton(text=f"💅🏼 {name} {price}هزار تومان {isEnable}",callback_data=f"select_service_{id}"))
     if total_selected>0:
         if admin:
             markup.add(InlineKeyboardButton(text="تایید نهایی 💫",callback_data="admin_make_reservation"))
@@ -170,7 +173,6 @@ def makrup_generate_empty_time_of_day(delete_day:str,admin:bool=False) :
     markup = InlineKeyboardMarkup()
     today = datetime.now().date()
     custom_reserve_text= "customReserve" if admin else ''
-    print(custom_reserve_text)
     for i in range(7):
         date = today + timedelta(days=i)
         if delete_day != str(date) :

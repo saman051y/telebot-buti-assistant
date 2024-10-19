@@ -29,7 +29,7 @@ text_updated_service_name='نام خدمات ویرایش شد'
 text_updated_service_time_slots='تایم خدمات ویرایش شد'
 text_updated_service_price='قیمت خدمات ویرایش شد'
 text_updated_service_is_active='فعال بودن خدمات ویرایش شد'
-text_time_is_not_valid="ساعت ورودی معتبر نمیباشد"
+text_time_is_not_valid="ساعت ورودی معتبر نمیباشد لطفا دوباره تلاش کنید"
 
 text_user_find ='شناسه عددی مور نظر خود را ارسال کتید'
 text_user_not_find ='کاربری با این شناسه عددی یافت نشد، لظفا مجددا سعی کنید'
@@ -102,4 +102,5 @@ text_reserve_custom="رزرو ساعت کاستوم"
 make_line="-----------------------------------------------------------------------"
 text_admin_custom_select_day="از لیست زیر رزو مد نظر را انتخاب کنید"
 text_pease_send_start_time="لطفا زمان شروع رزرو را بنویسید"
-text_pease_send_end_time="لطفا زمان اتمام رزرو را بنویسید"
+text_please_send_end_time="لطفا زمان اتمام رزرو را بنویسید"
+text_send_start_time_msg="لطفا زمان شروع رزرور را وارد کنید به عنوان مقال '09:00' زمان باید حتما باه ۱۵ بدقیقه بخش پذیر باشد"

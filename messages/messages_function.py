@@ -158,7 +158,9 @@ def make_reservation_info_text_for_admin(reserve_id,user_id):
 #######################################################################
 def text_cart_info(card_number,card_bank,card_user , price):
     formatted_card_number = ' '.join([card_number[i:i+4] for i in range(0, len(card_number), 4)])
-    text=f"""لطفا مبلغ <b>{price}</b> هزار تومان به نام <b>{card_user}</b> برای  بانک {card_bank}</b>  واریز کنید\n{formatted_card_number}"""
+    text=f"""
+    لطفا مبلغ <b>{price}</b> هزار تومان به نام <b>{card_user}</b> برای  بانک <b> {card_bank}</b>  واریز کنید
+    <code>{formatted_card_number}</code>"""
     return text
 #######################################################################
 def text_user_reserve_info(reserve):

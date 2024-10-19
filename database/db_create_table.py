@@ -3,7 +3,7 @@ import mysql.connector # type: ignore
 from mysql.connector import Error
 
 from auth.auth import DB_CONFIG
-from database.db_admin_list import db_admin_add
+from database.db_admin_list import db_admin_add,db_admin_get_all
 from database.db_bot_setting import *
 #######################################################################################
 def createTables():
@@ -39,16 +39,21 @@ def createTables():
 #######################################################################################
 def insert_basic_setting():
     result=db_bot_setting_get_all()
-    if result is not None:
-        return False
-    db_bot_setting_insert(name="cart",value="6219861934279083")
-    db_bot_setting_insert(name="cart_name",value="سامان یعقوبی")
-    db_bot_setting_insert(name="cart_bank",value="blue")
-    db_bot_setting_insert(name="bot_is_enable",value="1")
-    db_bot_setting_insert(name="main_admin",value="1054820423")
-    db_admin_add(admin_id=1054820423,main_admin=True)
-    db_admin_add(admin_id=423977498,main_admin=False)
+    if result is None or len(result)<1:
+        db_bot_setting_insert(name="cart",value="6219861934279083")
+        db_bot_setting_insert(name="cart_name",value="سامان یعقوبی")
+        db_bot_setting_insert(name="cart_bank",value="blue")
+        db_bot_setting_insert(name="bot_is_enable",value="1")
+        db_bot_setting_insert(name="main_admin",value="1054820423")
+        logging.info("first init info in db_bot_setting is done")
+    result =db_admin_get_all()
+    if result is None or len(result)<1:
+        db_admin_add(admin_id=1054820423,main_admin=True)#saman
+        db_admin_add(admin_id=423977498,main_admin=False)#nasiri
+        logging.info("first init info in db_bot_setting is done")
     
+    logging.info("db_bot_setting and db_admin_list ,is done before ")
+
 
 
 #######################################################################################
