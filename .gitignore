@@ -1,6 +1,6 @@
 /logs/*
-./test.py
-/test.py
+
+
 test.py
 ########################## { https://github.com/github/gitignore/blob/main/Python.gitignore }
 # Byte-compiled / optimized / DLL files
