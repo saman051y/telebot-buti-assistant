@@ -14,4 +14,3 @@ from functions.time_date import *
 ##############################################################################
 result=compare_time(lower="09:00:00",than="10:00:01")
 print(result) 
-asdfsdaf
