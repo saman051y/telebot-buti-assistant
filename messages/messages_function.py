@@ -1,6 +1,6 @@
 from auth.auth import *
 from database.db_admin_list import db_admin_get_all
-from database.db_bot_setting import db_bot_setting_get_cart_info
+from database.db_bot_setting import *
 from database.db_reserve_service import getResSerWithResId
 from database.db_service import *
 from database.db_users import *
@@ -53,7 +53,7 @@ def createLabelServicesToShowOnButton(user_id):
     export_text = (f" {name}  {time}  {price} هزارتومان  {is_active_text}")
     return export_text
 #######################################################################
-def accountInfoCreateTextToShow(user_id=str) :
+def accountInfoCreateTextToShow(user_id=str,admin:bool=False) :
     data_user=db_Users_Find_User_By_Id(user_id=user_id)
     username=data_user[2]
     if data_user in [False , 'False' , None , 'None']:
@@ -63,6 +63,10 @@ def accountInfoCreateTextToShow(user_id=str) :
         text =  f'{text_info_user}'
         if data_user[2] not in [False , 'False' , None , 'None']:
             text =  f'{text_info_user}\nhttps://t.me/{username}'
+        if admin==True:
+            name =data_user[4]
+            text_message_by_id=f"""<a href='tg://user?id={user_id}'> برا ارتباط با {name} روی این متن کلیک کنید </a>"""
+        text= f'{text}\n{text_message_by_id}'
     return text
 #######################################################################
 def ConvertVariableInWeeklySettingToPersian(data:str):
@@ -121,7 +125,6 @@ def make_reservation_info_text_for_user(price:int,duration:str,date:str,time:str
     text=f"""📆تاریخ  {date}\n⏰ از ساعت {time[:5]} الی {duration[:5]} برای خدمات زیر رزرو خواهد شد\n\n{names}
 """
     return text
-
 #######################################################################
 def make_reservation_info_text_for_admin(reserve_id,user_id):
     #reserve info
@@ -162,23 +165,25 @@ def text_cart_info(card_number,card_bank,card_user , price):
     text=f"""
     لطفا مبلغ <b>{price}</b> هزار تومان به نام <b>{card_user}</b> برای  بانک <b> {card_bank}</b>  واریز کنید
     <code>{formatted_card_number}</code>"""
+    #confilict
+def text_cart_info(price:str):
+    card_info=db_bot_setting_get_cart_info()
+    card_number=card_info[0][2]
+    card_bank = card_info[1][2]
+    card_user = card_info[2][2]
+    formatted_card_number = ' '.join([card_number[i:i+4] for i in range(0, len(card_number), 4)])
+    text=f"""لطفا مبلغ <b>{price}</b> هزار تومان به نام <b>{card_user}</b> برای  بانک <b>{card_bank}</b>  واریز کنید\n\n<code>{formatted_card_number}</code>"""
     return text
 #######################################################################
 def text_user_reserve_info(reserve):
     id=reserve[0]
     user_id_reserver= reserve[1]
-    date=gregorian_to_jalali(gregorian_date_str=f"{reserve[2]}",reverse=True)
+    date=convertDateToPersianCalendar(str(reserve[2]))
     start_time=convert_to_standard_time(time_string=f"{reserve[3]}")
     end_time=convert_to_standard_time(time_string=f"{reserve[4]}")
-    approved="تایید شده" if bool(reserve[5]) else "در انتظار تایید"
+    approved="تایید شده ✅" if bool(reserve[5]) else "در انتظار تایید ⌛️"
     payment=reserve[6]
-    text=f"""
-تاریخ رزرو: {date}
-ساعت رزرو شده: {start_time[:5]}
-حدود اتمام زمان: {end_time[:5]}
-میزان پرداخت: {payment}
-وضعیت تایید: {approved}
-"""
+    text=f"📅{date}\n⏰ {start_time[:5]} الی {end_time[:5]}\n💰 {payment} هزار تومان\nوضعیت تایید: {approved}"
     return text
 #######################################################################
 def text_make_admin_info(admin,is_mainAdmin:bool=False):

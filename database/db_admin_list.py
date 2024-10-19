@@ -12,7 +12,6 @@ def db_admin_add(admin_id:int, main_admin:bool=False):
                     sql = "INSERT INTO admin_list (admin_id, main_admin) VALUES (%s, %s);"
                     cursor.execute(sql, (admin_id, main_admin))
                     connection.commit()
-                    print("Admin added successfully.")
                     return True
     except mysql.connector.Error as e:
         logging.error(f"Error db_admin_add: {e}")
@@ -26,7 +25,7 @@ def db_admin_update(admin_id, main_admin):
                     sql = "UPDATE admin_list SET main_admin = %s WHERE admin_id = %s;"
                     cursor.execute(sql, (main_admin, admin_id))
                     connection.commit()
-                    print("Admin updated successfully.")
+                    return True
     except mysql.connector.Error as e:
         logging.error(f"Error db_admin_update: {e}")
 #######################################################################################
@@ -38,7 +37,10 @@ def db_admin_get_all():
                     sql = "SELECT * FROM admin_list;"
                     cursor.execute(sql)
                     admins = cursor.fetchall()
-                    return admins
+                    if admins:
+                        return admins
+                    else:
+                        return None
     except mysql.connector.Error as e:
         logging.error(f"Error db_admin_get_all: {e}")
         return None
@@ -51,7 +53,7 @@ def db_admin_get_main_admin():
                     sql = "SELECT * FROM admin_list WHERE main_admin = TRUE;"
                     cursor.execute(sql)
                     main_admin = cursor.fetchone()
-                    return main_admin
+                    return main_admin[0]
     except mysql.connector.Error as e:
         logging.error(f"Error db_admin_get_main_admin: {e}")
         return None
@@ -80,6 +82,5 @@ def db_admin_set_main_admin(admin_id):
                     cursor.execute(sql_update_false)  # Set all other main_admins to false
                     cursor.execute(sql_update_true)   # Set the specified admin_id to true
                     connection.commit()
-                    print("Main admin updated successfully.")
     except mysql.connector.Error as e:
         logging.error(f"Error setting main admin: {e}")

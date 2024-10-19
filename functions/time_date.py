@@ -250,7 +250,7 @@ def convertDateToMonthAsPersianCalendar(date:str):
     return persian_month_str
 ########################################################## generate persian format date like 1403 مهر 08 شنبه
 def convertDateToPersianCalendar(date:str):
-    """input is Gregorian date like'224-09-29' and output is like '1403 مهر 08 شنبه' """
+    """input is Gregorian date like'2024-09-29' and output is like '1403 مهر 08 شنبه' """
     jalali_date = gregorian_to_jalali(date)
     jalali_Year = jalali_date.split('-')[0]
     jalali_month = convertDateToMonthAsPersianCalendar(date)

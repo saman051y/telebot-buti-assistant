@@ -33,6 +33,7 @@ class admin_State(StatesGroup):
     state_service_update_price= State()
     state_service_update_is_active= State()
     state_add_admin=State()
+    state_change_welcome_message=State()
     state_user_find =State()
     message_to_all=State()
     send_deny_reason=State()

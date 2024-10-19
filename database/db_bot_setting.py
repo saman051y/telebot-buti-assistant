@@ -5,7 +5,7 @@ from mysql.connector import Error
 from auth.auth import DB_CONFIG
 
 
-#insert
+############################ insert
 def db_bot_setting_insert(name:str,value:str):
     sql = f"""INSERT INTO bot_setting (name, value) VALUES (%s, %s);"""
     try:

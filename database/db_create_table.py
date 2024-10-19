@@ -3,8 +3,9 @@ import mysql.connector # type: ignore
 from mysql.connector import Error
 
 from auth.auth import DB_CONFIG
-from database.db_admin_list import db_admin_add,db_admin_get_all
+from database.db_admin_list import *
 from database.db_bot_setting import *
+from database.db_weeklysetting import *
 #######################################################################################
 def createTables():
     try:
@@ -53,8 +54,19 @@ def insert_basic_setting():
         logging.info("first init info in db_bot_setting is done")
     
     logging.info("db_bot_setting and db_admin_list ,is done before ")
+    #check exist weekly_setting
+    result_weekly_setting=db_WeeklySetting_Get_All()
 
-
+    if result_weekly_setting is None:
+        db_WeeklySetting_Insert(name='saturday' , value='1' )
+        db_WeeklySetting_Insert(name='sunday'   , value='1' )
+        db_WeeklySetting_Insert(name='monday'   , value='1' )
+        db_WeeklySetting_Insert(name='tuesday'  , value='1' )
+        db_WeeklySetting_Insert(name='wednesday', value='1' )
+        db_WeeklySetting_Insert(name='thursday' , value='1' )
+        db_WeeklySetting_Insert(name='friday'   , value='1' )
+        db_WeeklySetting_Insert(name='part1', value='09:00:01/15:00:00')
+        db_WeeklySetting_Insert(name='part2', value='15:00:01/20:00:00')
 
 #######################################################################################
 def createUserTable():
@@ -205,7 +217,6 @@ def createBot_setting():
                      connection.commit()# when something is created or updated or inserted;
                      cursor.close()
                      connection.close()
-                     DefaultValueWeeklySetting()
                      return True
                 
             else:
@@ -217,7 +228,7 @@ def createBot_setting():
 def createAdminTable():
     try:
         sql=f"""CREATE TABLE IF NOT EXISTS admin_list (
-    admin_id INT PRIMARY KEY,
+    admin_id BIGINT PRIMARY KEY,
     main_admin BOOLEAN NOT NULL
     );
     """
@@ -228,7 +239,6 @@ def createAdminTable():
                      connection.commit()# when something is created or updated or inserted;
                      cursor.close()
                      connection.close()
-                     DefaultValueWeeklySetting()
                      return True
                 
             else:
@@ -252,45 +262,11 @@ def createWeeklySetting():
                      connection.commit()# when something is created or updated or inserted;
                      cursor.close()
                      connection.close()
-                     DefaultValueWeeklySetting()
                      return True
                 
             else:
                 logging.error("connection to database is not working")
     except Error as e :
         logging.error(f"in createBotSetting : {e}") 
-        return False
-#######################################################################################
-def DefaultValueWeeklySetting() :
-    try:
-        sql_check=f"""SELECT COUNT(*) FROM weekly_setting"""
-        sql_insert=f"""
-                    INSERT INTO weekly_setting (name, value)
-                    VALUES 
-                        ('saturday', '1'),
-                        ('sunday', '1'),
-                        ('monday', '1'),
-                        ('tuesday', '1'),
-                        ('wednesday', '1'),
-                        ('thursday', '1'),
-                        ('friday', '1'),
-                        ('part1', '09:00:01/15:00:00'),
-                        ('part2', '15:00:01/20:00:00');
-                    """
-        with mysql.connector.connect(**DB_CONFIG) as connection:
-            if connection.is_connected():
-                with connection.cursor()  as cursor:
-                     cursor.execute(sql_check)
-                     count = cursor.fetchone()[0]# when something is created or updated or inserted;
-                     if count == 0:
-                         cursor.execute(sql_insert)
-                         connection.commit()
-                     cursor.close()
-                     connection.close()
-                     return True
-            else:
-                logging.error("connection to database is not working")
-    except Error as e :
-        logging.error(f"in DefaultValueBotSetting : {e}") 
         return False
 #######################################################################################
