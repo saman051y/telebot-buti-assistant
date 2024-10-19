@@ -25,7 +25,7 @@ import re
 #* 1 : make sure all Admin markup check that admin have access ( check if it is admin start markup )
 #* 2 : make sure all user markup check that bot is enable
 #* 3 : edit text's
-#* 4 : make sure all markup start with delete state
+#* 4 : make sure all markup  and commands start with delete state
 #* 5 : suggestion => in section below (search it) : show the cart info to user before user select send_pic
     #* search this =>  @bot.callback_query_handler(func=lambda call: call.data.startswith("reserve_date_")) 
     # 
@@ -76,6 +76,7 @@ def bot_setting(msg : Message):
 @bot.callback_query_handler(func= lambda m:m.data.startswith("admin_select_service_"))
 def convertUserID(call:CallbackQuery):
     service_id=(call.data.split("_"))[3]
+
     with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
         services=data['services_choosing']
         services_name=str(data["services_name"])
@@ -135,6 +136,7 @@ def callback_query(call:CallbackQuery):
         data['services_choosing']=services 
         data['total_time']=total_time
         data['total_price']=total_price
+
 ##show reserve and send start time 
 @bot.callback_query_handler(func= lambda m:m.data.startswith("customReserve"))
 def convertUserID(call:CallbackQuery):
@@ -144,6 +146,7 @@ def convertUserID(call:CallbackQuery):
         total_time=data['total_time']
         total_price=data['total_price']
     text=text_send_start_time_msg
+    bot.delete_message(chat_id=call.message.chat.id,message_id=call.message.id)
 
     # show times
     date_persian = convertDateToPersianCalendar(date=date)
@@ -248,6 +251,7 @@ def msg_handler(msg : Message):
                                 services=services,start_time=f"{start_time}",user_id=user_id)
     text=text_reserve_custom_is_done
     bot.send_message(chat_id=msg.from_user.id,text=text)
+    bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)  
     
 ############################################################################################ markup bot_setting
 @bot.message_handler(func= lambda m:m.text == mark_text_admin_bot_setting)
@@ -1037,6 +1041,7 @@ def start(msg : Message):
             text=text_user_not_created
             bot.send_message(chat_id=user_id,text=text,reply_markup=ReplyKeyboardRemove())
             return False
+    
     markup=ReplyKeyboardMarkup(resize_keyboard=True)
     markup.add(mark_text_reserve_time)
     markup.add(mark_text_reserved_time)
@@ -1265,15 +1270,11 @@ def callback_query(call:CallbackQuery):
     bot.delete_state(user_id=call.message.from_user.id,chat_id=call.message.chat.id)
 
     text=call.message.text
-    #todo:confilict caatd info
-    card_info=db_bot_setting_get_cart_info()
-    card_number=card_info[0][2]
-    car_bank = card_info[1][2]
-    card_user = card_info[2][2]
+
     #
     price = calculate_time_difference(time_str1=f"{start_time}",time_str2=f"{end_time}")
     
-    cart_info=text_cart_info(card_number,car_bank,card_user,price)
+    cart_info=text_cart_info(price)
     text=f"{text}\n \n {cart_info}"
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text)
     
@@ -1523,7 +1524,7 @@ def text_to_support(msg : Message):
          bot_is_disable(user_id=msg.from_user.id) 
          return
     bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)
-    main_admin=db_admin_get_main_admin(main_admin)
+    main_admin=db_admin_get_main_admin()
     support_msg=f"""<a href='tg://user?id={main_admin}'> برا ارتباط با پشتیبان لطفا روی این متن کلیک کنید </a>"""
     text = f"{text_support}\n{support_msg} "
     bot.send_message(msg.chat.id, text=text)

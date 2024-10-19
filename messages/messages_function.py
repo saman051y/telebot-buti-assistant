@@ -160,12 +160,6 @@ def make_reservation_info_text_for_admin(reserve_id,user_id):
 """
     return text
 #######################################################################
-def text_cart_info(card_number,card_bank,card_user , price):
-    formatted_card_number = ' '.join([card_number[i:i+4] for i in range(0, len(card_number), 4)])
-    text=f"""
-    لطفا مبلغ <b>{price}</b> هزار تومان به نام <b>{card_user}</b> برای  بانک <b> {card_bank}</b>  واریز کنید
-    <code>{formatted_card_number}</code>"""
-    #confilict
 def text_cart_info(price:str):
     card_info=db_bot_setting_get_cart_info()
     card_number=card_info[0][2]
@@ -174,6 +168,10 @@ def text_cart_info(price:str):
     formatted_card_number = ' '.join([card_number[i:i+4] for i in range(0, len(card_number), 4)])
     text=f"""لطفا مبلغ <b>{price}</b> هزار تومان به نام <b>{card_user}</b> برای  بانک <b>{card_bank}</b>  واریز کنید\n\n<code>{formatted_card_number}</code>"""
     return text
+
+
+
+
 #######################################################################
 def text_user_reserve_info(reserve):
     id=reserve[0]
