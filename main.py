@@ -10,7 +10,7 @@ from database.db_weeklysetting import *
 from database.db_create_table import *
 from database.db_setwork import *
 from database.db_users import *
-from functions.custom_functions import  extract_reserveId_and_userId, get_free_time_for_next_7day
+from functions.custom_functions import  calculate_time_difference, extract_reserveId_and_userId, get_free_time_for_next_7day
 from functions.log_functions import *
 from functions.time_date import *
 from messages.commands_msg import *
@@ -20,6 +20,15 @@ from states import *
 from database.db_service import *
 from functions.time_date import *
 import re
+
+#todo Nasiri
+#* 1 : make sure all Admin markup check that admin have access ( check if it is admin start markup )
+#* 2 : make sure all user markup check that bot is enable
+#* 3 : edit text's
+#* 4 : make sure all markup start with delete state
+#* 5 : suggestion => in section below (search it) : show the cart info to user before user select send_pic
+    #* search this =>  @bot.callback_query_handler(func=lambda call: call.data.startswith("reserve_date_")) 
+    # 
 ##########################################################
 bot =TeleBot(token = BOT_TOKEN, parse_mode="HTML")
 bot_is_enable=True
@@ -31,6 +40,7 @@ def start(msg : Message):
          bot.send_message(chat_id=msg.from_user.id,text=text_user_is_not_admin)
          return False
     markup=ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.add(mark_text_admin_custom_reserve,mark_text_admin_empty_time)
     markup.add(mark_text_admin_empty_time,mark_text_admin_custom_reserve)
     markup.add(mark_text_admin_set_work_time , mark_text_admin_weekly_time)
     markup.add(mark_text_admin_set_service,mark_text_admin_bot_setting)
@@ -41,6 +51,9 @@ def start(msg : Message):
 #todo price < 4H 100  bala 4 sat 200 
 @bot.message_handler(func= lambda m:m.text == mark_text_admin_custom_reserve)
 def bot_setting(msg : Message):
+    if not validation_admin(msg.from_user.id) : 
+        bot.send_message(chat_id=msg.from_user.id,text=text_user_is_not_admin)
+        return False 
     counter=0
     services=db_Service_Get_All_Services()
     if services is None or len(services) ==0:
@@ -94,7 +107,6 @@ def convertUserID(call:CallbackQuery):
     if counter<1 :
         services_name=''
     text=f"{text_reservation_init}\n {services_name}"
-
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text, reply_markup=markup)
     
     with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
@@ -131,17 +143,189 @@ def convertUserID(call:CallbackQuery):
         services =data['services_choosing']
         total_time=data['total_time']
         total_price=data['total_price']
+    text=text_send_start_time_msg
 
+    # show times
+    date_persian = convertDateToPersianCalendar(date=date)
+    list_empty_time=calculate_empty_time_and_reserved_time(date=date)
+    if list_empty_time not in [False,'False',[], None , 'None'] : 
+            text+=f'📅 {date_persian}\n\n'
+            for i in range(len(list_empty_time)):
+                first_time =str(list_empty_time[i][0])
+                end_time =str(list_empty_time[i][1])
+                activation = int(list_empty_time[i][2])
+                first_time_without_seconds = first_time[:5]
+                end_time_without_seconds = end_time[:5]
+                if activation == 0:
+                    text += f'{first_time_without_seconds} الی {end_time_without_seconds} 🆓\n'
+    bot.send_message(chat_id=call.message.chat.id,text=text)
+    text=text_pease_send_start_time
+
+    bot.send_message(chat_id=call.message.chat.id,text=text)
+
+    bot.set_state(user_id=call.message.chat.id,state=admin_State.custom_reserve_start_time,chat_id=call.message.chat.id)
+    with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
+        data['services_choosing']=services 
+        data['total_time']=total_time
+        data['total_price']=total_price
+        data['date']=date
+
+
+### get start time
+@bot.message_handler(state=admin_State.custom_reserve_start_time)
+def msg_handler(msg : Message):
+    with bot.retrieve_data(user_id=msg.chat.id , chat_id=msg.chat.id) as data:
+        date=data['date']
+    
+    # #send day reserve info to user
+    # reserves=db_Reserve_Get_Reserve_Of_Date(date=date)
+    # reserve_info_text=''
+    # for reserve in reserves:
+    #     reserve_info_text=f"{text} \n {text_user_reserve_info(reserve)}"
+    # bot.send_message(chat_id=msg.from_user.id,text=text)
+
+
+    #check time validation 
+    start_time=f"{msg.text}:01"
+    list_empty_time=calculate_empty_time_and_reserved_time(date=date)
+    valid_time=False
+    for free_time in list_empty_time:
+        if  free_time[2]=='0' and compare_time(lower=free_time[0],than=start_time ) and compare_time(lower=start_time,than=free_time[1] ):
+            valid_time = compare_time(lower=free_time[0],than=start_time )
+            if valid_time :
+                break
+
+
+    if not valid_time :
+        text=text_time_is_not_valid
+        bot.send_message(chat_id=msg.from_user.id,text=text)
+        return
+
+
+
+    text=text_please_send_end_time
+    bot.send_message(chat_id=msg.from_user.id,text=text)
+    bot.set_state(user_id=msg.chat.id,state=admin_State.custom_reserve_end_time,chat_id=msg.chat.id)
+    with bot.retrieve_data(user_id=msg.chat.id , chat_id=msg.chat.id) as data:
+        data['start_time']=start_time
+
+
+
+####get end time
+@bot.message_handler(state=admin_State.custom_reserve_end_time)
+def msg_handler(msg : Message):
+    with bot.retrieve_data(user_id=msg.chat.id , chat_id=msg.chat.id) as data:
+        start_time=data['start_time']
+        date=data['date']
+
+
+    #check time validation 
+    end_time=f"{msg.text}:00"
+
+    list_empty_time=calculate_empty_time_and_reserved_time(date=date)
+    valid_time=False
+    for free_time in list_empty_time:
+        if free_time[2]=='0' and compare_time(lower=free_time[0],than=start_time ) and compare_time(lower=start_time,than=free_time[1] ):
+           valid_time=compare_time(lower=f"{end_time}",than=f"{free_time[1]}")
+           if valid_time:
+               break
+
+    if not valid_time :
+        text=text_time_is_not_valid
+        bot.send_message(chat_id=msg.from_user.id,text=text)
+        return
+
+
+    #save info to db 
+    with bot.retrieve_data(user_id=msg.chat.id , chat_id=msg.chat.id) as data:
+        start_time=data['start_time']
+        services =data['services_choosing']
+        user_id=msg.from_user.id
+        price=data['total_price']
+        date=data['date']
+        duration=time_difference(time1=f"{start_time}",time2=f"{end_time}")
+    result,reserve_id=db_make_reserve_transaction(date=date,duration=f"{duration}",price=price,
+                                services=services,start_time=f"{start_time}",user_id=user_id)
+    text=text_reserve_custom_is_done
+    bot.send_message(chat_id=msg.from_user.id,text=text)
     
 ############################################################################################ markup bot_setting
 @bot.message_handler(func= lambda m:m.text == mark_text_admin_bot_setting)
 def bot_setting(msg : Message):
-    #todo : check user is admin
+    if not validation_admin(msg.from_user.id) : 
+        bot.send_message(chat_id=msg.from_user.id,text=text_user_is_not_admin)
+        return False    
     text=text_bot_setting
     markup = markup_admin_bot_setting(bot_is_enable=bot_is_enable)
     bot.send_message(chat_id=msg.from_user.id,text=text,reply_markup=markup)
 
 
+### change card info 
+@bot.callback_query_handler(func= lambda m:m.data ==("change_cart_info"))
+def change_cart_info(call:CallbackQuery):
+
+
+    bot.delete_message(chat_id=call.message.chat.id,message_id=call.message.id)
+    text=get_card_info()
+
+    text=f"{text}\n\n{text_send_card_name}"
+    bot.send_message(chat_id=call.message.chat.id,text=text)
+    bot.set_state(user_id=call.message.chat.id,state=admin_State.get_card_number,chat_id=call.message.chat.id)
+    
+####number id done => get bank name 
+@bot.message_handler(state=admin_State.get_card_number)
+def setWork_section_state_get_part1(msg : Message):
+    card_number=str(msg.text)
+    result = (len(card_number) == 16)
+    if not result:
+        text=text_card_number_is_not_valid
+        bot.send_message(chat_id=msg.chat.id,text=text)
+        return
+
+    text=text_send_card_bank_name
+    bot.send_message(chat_id=msg.chat.id,text=text)
+    bot.set_state(user_id=msg.chat.id,state=admin_State.get_card_bank_name,chat_id=msg.chat.id)
+    with bot.retrieve_data(user_id=msg.chat.id , chat_id=msg.chat.id) as data:
+        data['card_number']=card_number
+    
+## bank_name is done : get owner name 
+@bot.message_handler(state=admin_State.get_card_bank_name)
+def setWork_section_state_get_part1(msg : Message):
+    card_bank_name=str(msg.text)
+
+    text=text_send_card_bank_owner
+    bot.send_message(chat_id=msg.chat.id,text=text)
+    bot.set_state(user_id=msg.chat.id,state=admin_State.get_card_owner_name,chat_id=msg.chat.id)
+    with bot.retrieve_data(user_id=msg.chat.id , chat_id=msg.chat.id) as data:
+        data['card_bank_name']=card_bank_name
+
+        
+## card_owner is done save info in db 
+@bot.message_handler(state=admin_State.get_card_owner_name)
+def setWork_section_state_get_part1(msg : Message):
+    card_bank_owner=str(msg.text)
+    with bot.retrieve_data(user_id=msg.chat.id , chat_id=msg.chat.id) as data:
+        card_bank_name=data['card_bank_name']
+        card_number=data['card_number']
+    result =db_bot_setting_update(name="cart",new_value=card_number)
+    if result:
+        result = db_bot_setting_update(name="cart_name",new_value=card_bank_owner)
+    if result :
+        result =db_bot_setting_update(name="cart_bank",new_value=card_bank_name)
+    if not result:
+        text=text_problem_with_save_card_info
+        bot.send_message(chat_id=msg.chat.id,text=text)
+        return 
+    
+    text=get_card_info()
+    bot.send_message(chat_id=msg.chat.id,text=text)
+
+    text=text_info_is_saved
+    bot.send_message(chat_id=msg.chat.id,text=text)
+    
+
+  ########################################################################  
+### change_bot_enable_disable
 ## change welcome message
 @bot.callback_query_handler(func= lambda m:m.data ==("welcome_message"))
 def welcome_message(call:CallbackQuery):
@@ -791,7 +975,7 @@ def reserve_time(msg : Message):
 @bot.callback_query_handler(func= lambda m:m.data.startswith("showUsersList_"))
 def showUserList(call:CallbackQuery):
     user_id=int(call.data.split('_')[1])
-    text=accountInfoCreateTextToShow(user_id=user_id, admin=True)
+    text=accountInfoCreateTextToShow(user_id=user_id)
     markup=markup_generate_list_of_users(user_id_for_delete=user_id)
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text,reply_markup=markup)
 
@@ -907,8 +1091,8 @@ def reserve_time(msg : Message):
     if  not bot_is_enable: 
         bot_is_disable(user_id=msg.from_user.id) 
         return
-
-    db_Users_Update_Username_User(user_id=msg.from_user.id , username=msg.from_user.username)#update Username while every reservation
+    #update Username while every reservation
+    db_Users_Update_Username_User(user_id=msg.from_user.id , username=msg.from_user.username)
     name = db_Users_Get_Name_User(msg.from_user.id)
     if name == 'empty' : 
         activation_user(msg=msg)
@@ -954,7 +1138,7 @@ def callback_query(call:CallbackQuery):
                 services[index]=service[:5] + (1,) 
                 duration_time=convert_to_standard_time(f"{services[index][2]}")
                 current_service_info=f"\n💅🏼 {services[index][1]} \n    💰 قیمت {services[index][3]} هزار تومان\n    ⏰ زمان موردنیاز {duration_time[:5]}"
-                services_name=f"{services_name}\n {current_service_info}"
+                services_name=f"\n{services_name}\n {current_service_info}"
                 counter=counter+1
             else:# if service wanna be disable
                 services[index]=service[:5] + (0,) 
@@ -969,7 +1153,6 @@ def callback_query(call:CallbackQuery):
     if counter<1 :
         services_name=''
     text=f"{services_name}"
-
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text, reply_markup=markup)
     
     with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
@@ -1038,7 +1221,7 @@ def callback_query(call:CallbackQuery):
         data['total_price']=total_price
 
 
-## : btn is send pic 
+## btn is send pic 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("reserve_date_"))
 def callback_query(call:CallbackQuery):
     date=(call.data.split("_")[2])
@@ -1047,7 +1230,6 @@ def callback_query(call:CallbackQuery):
         services =data['services_choosing']
         total_time=data['total_time']
         total_price=data['total_price']
-
         #time + duration and result is end time to show for user
         start_time_obj = datetime.strptime(time, "%H:%M:%S")
         duration_parts = list(map(int, total_time.split(':')))
@@ -1065,6 +1247,8 @@ def callback_query(call:CallbackQuery):
         data['total_price']=total_price
         data['date']=date
         data['time']=time
+        data['start_time']=start_time_obj
+        data['end_time']=end_time
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text,reply_markup=markup)
 
 ### get pic_receipt msg
@@ -1076,10 +1260,20 @@ def callback_query(call:CallbackQuery):
         total_price=data['total_price']
         date=data['date']
         time=data['time']
+        start_time=data['start_time']
+        end_time=data['end_time']
     bot.delete_state(user_id=call.message.from_user.id,chat_id=call.message.chat.id)
 
     text=call.message.text
-    cart_info=text_cart_info(price='120')
+    #todo:confilict caatd info
+    card_info=db_bot_setting_get_cart_info()
+    card_number=card_info[0][2]
+    car_bank = card_info[1][2]
+    card_user = card_info[2][2]
+    #
+    price = calculate_time_difference(time_str1=f"{start_time}",time_str2=f"{end_time}")
+    
+    cart_info=text_cart_info(card_number,car_bank,card_user,price)
     text=f"{text}\n \n {cart_info}"
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text)
     
@@ -1111,7 +1305,6 @@ def reserve_section_enter_name_first_time(msg : Message):
         date=data['date']
         time=data['time']
     bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)
-    
     markup=InlineKeyboardMarkup()
     approve_btn=InlineKeyboardButton(text="ثبت رزرو ✅",callback_data="approve_btn")
     deny_btn=InlineKeyboardButton(text="رد کردن رزرو ❌",callback_data="deny_btn")
@@ -1344,6 +1537,9 @@ def startMessageToAdmin(enable=True,disable_notification=True):
     #get last log    
     latest_log_file = get_latest_log_file()
     admin_list=db_admin_get_all()
+    if admin_list is None or len (admin_list)<1 :
+        logging.error("send start msg = admin list is none ")
+        return False
     for admin in admin_list:#send for all admins
         if latest_log_file:
             last_3_errors=get_last_errors(latest_log_file)
@@ -1377,7 +1573,6 @@ if __name__ == "__main__":
     insert_basic_setting()
     bot_is_enable = True if db_bot_setting_get_value_by_name(name="bot_is_enable") == "1" else False
     # db_admin_add(admin_id=1054820423,main_admin=True)
-    #basic functions 
     startMessageToAdmin()
     #bot setting
     bot.add_custom_filter(custom_filters.StateFilter(bot))

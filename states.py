@@ -15,9 +15,13 @@ class user_State(StatesGroup):
 class admin_State(StatesGroup):
 
     state_reserve_custom_selecting = State()
-    state_reserve_custom_start_time = State()
+    custom_reserve_start_time = State()
+    custom_reserve_end_time = State()
     state_reserve_custom_payment = State()
-
+    ##########cart info 
+    get_card_number=State()
+    get_card_bank_name=State()
+    get_card_owner_name=State()
     ########## service states
     state_service_enter_name = State()
     state_service_enter_time_slots = State()

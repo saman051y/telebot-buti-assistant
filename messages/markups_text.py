@@ -23,7 +23,6 @@ mark_text_admin_bot_setting="تنظیمات ربات"
 mark_text_admin_custom_reserve="رزرو وقت کاستوم"
 mark_text_admin_send_message_to_all='ارسال پیام همگانی'
 mark_text_admin_users_list='لیست مخاطبین'
-mark_text_admin_find_user='جستجو در مخاطبین'
 mark_text_admin_send_message_to_all='ارسال پیام همگانی 🗣'
 mark_text_admin_users_list='لیست مخاطبین 👥'
 mark_text_admin_find_user='جستجو 🔍'
@@ -160,7 +159,10 @@ def markup_generate_services_for_reserve(services,total_selected:int=0,admin:boo
         name = service[1]
         price = service[3]
         isEnable=" ✅ " if service[5] ==1 else ""
-        markup.add(InlineKeyboardButton(text=f"💅🏼 {name} {price}هزار تومان {isEnable}",callback_data=f"select_service_{id}"))
+        if admin:
+            markup.add(InlineKeyboardButton(text=f"💅🏼 {name} {price}هزار تومان {isEnable}",callback_data=f"admin_select_service_{id}"))
+        else:
+            markup.add(InlineKeyboardButton(text=f"💅🏼 {name} {price}هزار تومان {isEnable}",callback_data=f"select_service_{id}"))
     if total_selected>0:
         if admin:
             markup.add(InlineKeyboardButton(text="تایید نهایی 💫",callback_data="admin_make_reservation"))
