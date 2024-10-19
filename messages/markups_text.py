@@ -195,7 +195,9 @@ def markup_admin_bot_setting(bot_is_enable:bool=True):
     text_bot_is_enable="فعال" if bot_is_enable else "غیرفعال"
     btn_enable_disable=InlineKeyboardButton(text=f"وضعیت ربات : {text_bot_is_enable}",callback_data=f"change_bot_enable_disable")
     btn_admin_list=InlineKeyboardButton(text=f"تغییر لیست ادمین ها",callback_data=f"change_admin_list")
+    btn_card_info=InlineKeyboardButton(text=f"تنظیمات شماره کارت",callback_data=f"change_cart_info")
     markup.add(btn_enable_disable,btn_admin_list)
+    markup.add(btn_card_info)
     return markup
 ######
 def markup_show_admin_list(admin_list):

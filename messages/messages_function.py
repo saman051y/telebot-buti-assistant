@@ -1,5 +1,6 @@
 from auth.auth import *
 from database.db_admin_list import db_admin_get_all
+from database.db_bot_setting import db_bot_setting_get_cart_info
 from database.db_reserve_service import getResSerWithResId
 from database.db_service import *
 from database.db_users import *
@@ -188,4 +189,18 @@ def text_make_admin_info(admin,is_mainAdmin:bool=False):
 شناسه : {admin[0]}
 {is_main}
     """
+    return text
+
+######################################3
+def get_card_info():
+    card_info=db_bot_setting_get_cart_info()
+    card_number=card_info[0][2]
+    car_bank = card_info[1][2]
+    card_user = card_info[2][2]
+    formatted_card_number = ' '.join([card_number[i:i+4] for i in range(0, len(card_number), 4)])
+    text=f"""
+شماره کارت : <code>{formatted_card_number}</code>
+نام مالک کارت : {card_user}
+نام بانک کارت : {car_bank}
+"""
     return text

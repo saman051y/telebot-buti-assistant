@@ -20,6 +20,15 @@ from states import *
 from database.db_service import *
 from functions.time_date import *
 import re
+
+#todo Nasiri
+#* 1 : make sure all Admin markup check that admin have access ( check if it is admin start markup )
+#* 2 : make sure all user markup check that bot is enable
+#* 3 : edit text's
+#* 4 : make sure all markup start with delete state
+#* 5 : suggestion => in section below (search it) : show the cart info to user before user select send_pic
+    #* search this =>  @bot.callback_query_handler(func=lambda call: call.data.startswith("reserve_date_")) 
+    # 
 ##########################################################
 bot =TeleBot(token = BOT_TOKEN, parse_mode="HTML")
 bot_is_enable=True
@@ -236,20 +245,85 @@ def msg_handler(msg : Message):
         duration=time_difference(time1=f"{start_time}",time2=f"{end_time}")
     result,reserve_id=db_make_reserve_transaction(date=date,duration=f"{duration}",price=price,
                                 services=services,start_time=f"{start_time}",user_id=user_id)
-    print(f"result= {result}")
-    print (f"reserve_id={reserve_id}")
-    text="asdfds"
+    text=text_reserve_custom_is_done
     bot.send_message(chat_id=msg.from_user.id,text=text)
     
 ############################################################################################ markup bot_setting
 @bot.message_handler(func= lambda m:m.text == mark_text_admin_bot_setting)
 def bot_setting(msg : Message):
-    #todo : check user is admin
+    if not validation_admin(msg.from_user.id) : 
+        bot.send_message(chat_id=msg.from_user.id,text=text_user_is_not_admin)
+        return False    
     text=text_bot_setting
     markup = markup_admin_bot_setting(bot_is_enable=bot_is_enable)
     bot.send_message(chat_id=msg.from_user.id,text=text,reply_markup=markup)
 
 
+### change card info 
+@bot.callback_query_handler(func= lambda m:m.data ==("change_cart_info"))
+def change_cart_info(call:CallbackQuery):
+
+
+    bot.delete_message(chat_id=call.message.chat.id,message_id=call.message.id)
+    text=get_card_info()
+
+    text=f"{text}\n\n{text_send_card_name}"
+    bot.send_message(chat_id=call.message.chat.id,text=text)
+    bot.set_state(user_id=call.message.chat.id,state=admin_State.get_card_number,chat_id=call.message.chat.id)
+    
+####number id done => get bank name 
+@bot.message_handler(state=admin_State.get_card_number)
+def setWork_section_state_get_part1(msg : Message):
+    card_number=str(msg.text)
+    result = (len(card_number) == 16)
+    if not result:
+        text=text_card_number_is_not_valid
+        bot.send_message(chat_id=msg.chat.id,text=text)
+        return
+
+    text=text_send_card_bank_name
+    bot.send_message(chat_id=msg.chat.id,text=text)
+    bot.set_state(user_id=msg.chat.id,state=admin_State.get_card_bank_name,chat_id=msg.chat.id)
+    with bot.retrieve_data(user_id=msg.chat.id , chat_id=msg.chat.id) as data:
+        data['card_number']=card_number
+    
+## bank_name is done : get owner name 
+@bot.message_handler(state=admin_State.get_card_bank_name)
+def setWork_section_state_get_part1(msg : Message):
+    card_bank_name=str(msg.text)
+
+    text=text_send_card_bank_owner
+    bot.send_message(chat_id=msg.chat.id,text=text)
+    bot.set_state(user_id=msg.chat.id,state=admin_State.get_card_owner_name,chat_id=msg.chat.id)
+    with bot.retrieve_data(user_id=msg.chat.id , chat_id=msg.chat.id) as data:
+        data['card_bank_name']=card_bank_name
+
+        
+## card_owner is done save info in db 
+@bot.message_handler(state=admin_State.get_card_owner_name)
+def setWork_section_state_get_part1(msg : Message):
+    card_bank_owner=str(msg.text)
+    with bot.retrieve_data(user_id=msg.chat.id , chat_id=msg.chat.id) as data:
+        card_bank_name=data['card_bank_name']
+        card_number=data['card_number']
+    result =db_bot_setting_update(name="cart",new_value=card_number)
+    if result:
+        result = db_bot_setting_update(name="cart_name",new_value=card_bank_owner)
+    if result :
+        result =db_bot_setting_update(name="cart_bank",new_value=card_bank_name)
+    if not result:
+        text=text_problem_with_save_card_info
+        bot.send_message(chat_id=msg.chat.id,text=text)
+        return 
+    
+    text=get_card_info()
+    bot.send_message(chat_id=msg.chat.id,text=text)
+
+    text=text_info_is_saved
+    bot.send_message(chat_id=msg.chat.id,text=text)
+    
+
+  ########################################################################  
 ### change_bot_enable_disable
 @bot.callback_query_handler(func= lambda m:m.data ==("change_bot_enable_disable"))
 def convertUserID(call:CallbackQuery):

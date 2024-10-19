@@ -14,9 +14,11 @@ def db_bot_setting_insert(name:str,value:str):
                 with connection.cursor() as cursor:
                     cursor.execute(sql, (name, value))
                     connection.commit()
-                    print("Record inserted successfully")
+                    logging.info("Record inserted successfully")
+                    return True
     except Error as e:
-        print(f"Error inserting record: {e}")
+        logging.error(f"Error inserting record: {e}")
+        return False
 ###########################update
 def db_bot_setting_update(name, new_value):
     sql = f"""UPDATE bot_setting SET value = %s WHERE name = %s;"""
@@ -26,10 +28,11 @@ def db_bot_setting_update(name, new_value):
                 with connection.cursor() as cursor:
                     cursor.execute(sql, (new_value, name))
                     connection.commit()
-                    print("Record updated successfully")
+                    logging.info("Record updated successfully")
+                    return True
     except Error as e:
-        print(f"Error updating record: {e}")
-
+        logging.error(f"Ercror updating record: {e}")
+        return False
 ###############################get
 def db_bot_setting_get_value_by_name(name:str):
     sql = f"""SELECT value FROM bot_setting WHERE name = %s;"""
@@ -42,10 +45,10 @@ def db_bot_setting_get_value_by_name(name:str):
                     if result:
                         return result[0]
                     else:
-                        print("No record found")
+                        logging.info("No record found")
                         return None
     except Error as e:
-        print(f"Error retrieving record: {e}")
+        logging.error(f"Error retrieving record: {e}")
 ###############################get
 def db_bot_setting_get_all():
     sql = f"""SELECT * FROM bot_setting ;"""
@@ -58,10 +61,10 @@ def db_bot_setting_get_all():
                     if result:
                         return result
                     else:
-                        print("No record found")
+                        logging.error("No record found")
                         return None
     except Error as e:
-        print(f"Error retrieving record: {e}")
+        logging.error(f"Error retrieving record: {e}")
 ############################### get card info
 def db_bot_setting_get_cart_info():
     sql = f"""SELECT * FROM bot_setting WHERE name IN ('cart', 'cart_name', 'cart_bank');"""
@@ -74,7 +77,7 @@ def db_bot_setting_get_cart_info():
                     if result:
                         return result
                     else:
-                        print("No record found")
+                        logging.error("No record found")
                         return None
     except Error as e:
-        print(f"Error db_bot_setting_get_cart_info: {e}")
+        logging.error(f"Error db_bot_setting_get_cart_info: {e}")
