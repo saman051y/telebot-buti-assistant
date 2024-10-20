@@ -41,22 +41,23 @@ def createTables():
 def insert_basic_setting():
     result=db_bot_setting_get_all()
     if result is None or len(result)<1:
-        db_bot_setting_insert(name="cart",value="6219861934279083")
-        db_bot_setting_insert(name="cart_name",value="سامان یعقوبی")
-        db_bot_setting_insert(name="cart_bank",value="blue")
+        db_bot_setting_insert(name="cart",value="5022291508281118")
+        db_bot_setting_insert(name="cart_name",value="سمانه نصیری")
+        db_bot_setting_insert(name="cart_bank",value="پاسارگاد")
         db_bot_setting_insert(name="bot_is_enable",value="1")
         db_bot_setting_insert(name="main_admin",value="1054820423")
         db_bot_setting_insert(name="welcome_message",value="خوش امدید")
         logging.info("first init info in db_bot_setting is done")
+
     result =db_admin_get_all()
     if result is None or len(result)<1:
-        db_admin_add(admin_id=1054820423,main_admin=True)#saman
-        db_admin_add(admin_id=423977498,main_admin=False)#nasiri
-        logging.info("first init info in db_bot_setting is done")
+        db_admin_add(admin_id=1054820423,main_admin=False)#saman
+        db_admin_add(admin_id=423977498,main_admin=False)#Ho3ein
+        db_admin_add(admin_id=316900317,main_admin=True)#samaneh
+        logging.info("first init info in db_admin_list is done")
     
     #check exist weekly_setting
     result_weekly_setting=db_WeeklySetting_Get_All()
-
     if result_weekly_setting is None:
         db_WeeklySetting_Insert(name='saturday' , value='1' )
         db_WeeklySetting_Insert(name='sunday'   , value='1' )
@@ -67,9 +68,7 @@ def insert_basic_setting():
         db_WeeklySetting_Insert(name='friday'   , value='1' )
         db_WeeklySetting_Insert(name='part1', value='09:00:01/15:00:00')
         db_WeeklySetting_Insert(name='part2', value='15:00:01/20:00:00')
-
-
-    logging.info("db_bot_setting and db_admin_list ,is done before ")
+    logging.info("db_bot_setting and db_weekly_setting,is done before ")
 
 #######################################################################################
 def createUserTable():
