@@ -279,7 +279,7 @@ def GenerateNext7Day() :
             start_time=str(default_part.split('/')[0])
             end_time=str(default_part.split('/')[1])
         default_parts += [start_time , end_time]
-    for i in range(0,6):
+    for i in range(0,7):
         date = today + timedelta(days=i)
         day_of_week=convertDateToDayAsGregorianCalendar(date=str(date))
         day_status=db_WeeklySetting_Get_Value(day_of_week)

@@ -20,7 +20,7 @@ mark_text_admin_set_work_time = 'تنظیمات ساعت کاری ⏰'
 mark_text_admin_weekly_time = 'تنظیمات هفته 📅'
 mark_text_admin_set_service = 'تنظیمات خدمات 💅🏼'
 mark_text_admin_bot_setting="تنظیمات ربات"
-mark_text_admin_custom_reserve="رزرو وقت کاستوم"
+mark_text_admin_custom_reserve="رزرو ساعت دلخواه ⏬"
 mark_text_admin_send_message_to_all='ارسال پیام همگانی'
 mark_text_admin_users_list='لیست مخاطبین'
 mark_text_admin_send_message_to_all='ارسال پیام همگانی 🗣'
@@ -199,7 +199,7 @@ def markup_admin_bot_setting(bot_is_enable:bool=True):
     btn_enable_disable=InlineKeyboardButton(text=f"🤖 ربات {text_bot_is_enable}",callback_data=f"change_bot_enable_disable")
     btn_admin_list=InlineKeyboardButton(text=f"👑 تغییر ادمین ها",callback_data=f"change_admin_list")
     btn_welcome_message=InlineKeyboardButton(text=f"💁‍♀️ تغییر پیام خوش آمدگویی",callback_data=f"welcome_message")
-    btn_change_card_info=InlineKeyboardButton(text=f"تغییر شماره کارت",callback_data=f"change_cart_info")
+    btn_change_card_info=InlineKeyboardButton(text=f"💳 تغییر شماره کارت",callback_data=f"change_cart_info")
     markup.add(btn_enable_disable)
     markup.add(btn_admin_list)
     markup.add(btn_welcome_message)
