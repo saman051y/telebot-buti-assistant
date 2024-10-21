@@ -37,7 +37,7 @@ jobs:
 
     - name: Deploy to Server
       run: |
-        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }} && docker stop ${{ secrets.CONTAINER_NAME }} || true && docker rm ${{ secrets.CONTAINER_NAME }} || true && docker run -d --name ${{ secrets.CONTAINER_NAME }} ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}"
+        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }} && docker stop ${{ secrets.CONTAINER_NAME }} || true && docker rm ${{ secrets.CONTAINER_NAME }} || true && docker run -d -t --name ${{ secrets.CONTAINER_NAME }} --restart unless-stopped ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}"
 
     - name: Check if Container is Running
       run: |
