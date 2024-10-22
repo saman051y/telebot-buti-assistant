@@ -16,7 +16,7 @@ jobs:
     - name: Build Docker image
       run: |
         docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }} .
-        docker images  # برای بررسی تصویرهای ساخته‌شده
+        docker images  # بررسی تصویرهای ساخته‌شده
 
     - name: Create .env file
       run: |
@@ -46,8 +46,13 @@ jobs:
 
     - name: Deploy to Server
       run: |
-        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }} && docker stop ${{ secrets.CONTAINER_NAME }} || true && docker rm ${{ secrets.CONTAINER_NAME }} || true && docker run -d -t --name ${{ secrets.CONTAINER_NAME }} --restart unless-stopped ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}"
+        scp .env ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/path/to/destination  # کپی کردن فایل .env به سرور
+        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }} && docker stop ${{ secrets.CONTAINER_NAME }} || true && docker rm ${{ secrets.CONTAINER_NAME }} || true && docker run -d --env-file /path/to/destination/.env --name ${{ secrets.CONTAINER_NAME }} --restart unless-stopped ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}"
 
     - name: Check if Container is Running
       run: |
         ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "if [ \$(docker ps -q -f name=${{ secrets.CONTAINER_NAME }}) ]; then echo 'Container is running'; else echo 'Container is not running'; exit 1; fi"
+      
+    - name: Check .env inside Container
+      run: |
+        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "docker exec ${{ secrets.CONTAINER_NAME }} cat /path/to/.env"
