@@ -44,10 +44,14 @@ jobs:
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
+    - name: Create destination directory on Server
+      run: |
+        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "mkdir -p /root/git/buti_ass/env"  # ایجاد دایرکتوری در سرور
+
     - name: Deploy to Server
       run: |
-        scp .env ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/path/to/destination  # کپی کردن فایل .env به سرور
-        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }} && docker stop ${{ secrets.CONTAINER_NAME }} || true && docker rm ${{ secrets.CONTAINER_NAME }} || true && docker run -d --env-file /path/to/destination/.env --name ${{ secrets.CONTAINER_NAME }} --restart unless-stopped ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}"
+        scp .env ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/root/git/buti_ass/env/.env # کپی کردن فایل .env به سرور
+        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }} && docker stop ${{ secrets.CONTAINER_NAME }} || true && docker rm ${{ secrets.CONTAINER_NAME }} || true && docker run -d --env-file /root/git/buti_ass/env/.env --name ${{ secrets.CONTAINER_NAME }} --restart unless-stopped ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}"
 
     - name: Check if Container is Running
       run: |
@@ -55,4 +59,4 @@ jobs:
       
     - name: Check .env inside Container
       run: |
-        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "docker exec ${{ secrets.CONTAINER_NAME }} cat /path/to/.env"
+        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "docker exec ${{ secrets.CONTAINER_NAME }} cat /root/git/buti_ass/env/.env"
