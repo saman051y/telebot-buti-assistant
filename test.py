@@ -12,5 +12,5 @@ from messages.markups_text import *
 from messages.messages_function import *
 from functions.time_date import *
 ##############################################################################
-result=compare_time(lower="09:00:00",than="10:00:01")
+result=get_free_time_for_next_7day(duration="0:45:00")
 print(result) 

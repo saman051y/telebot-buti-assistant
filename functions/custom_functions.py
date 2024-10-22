@@ -39,11 +39,16 @@ def get_free_time_for_next_7day(duration:str):
             if parts_of_Day : 
                 days_list.append((date, parts_of_Day[0], parts_of_Day[1]))
             # print(f'days_list {days_list}\n')
-        #search empty time by duration in each day that user could reserve 
+        #search empty time by duration in each day that user could reserve
+        print(days_list)
         for i in range(len(days_list)):
             array_all_time_slot_for_each_day=[]
             list_time_that_could_be_reserve =[]
             date=str(days_list[i][0])
+                        # بررسی مقدار None
+            if days_list[i][1] is None or days_list[i][2] is None:
+                continue  # اگر یکی از مقادیر None بود، ادامه دهید و از چاپ صرف‌نظر کنید
+
             # print(f'date = {date}')
             start_time = datetime.strptime(str(days_list[i][1]),'%H:%M:%S').strftime('%H:%M:%S')
             # print(f'start_time = {start_time}')

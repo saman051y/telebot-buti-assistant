@@ -1559,19 +1559,25 @@ def bot_is_disable(user_id):
     bot.send_message(chat_id=user_id,text=text_bot_is_disable)
 ########################################################################! END :)
 if __name__ == "__main__":
-    #log init
+    # log init
     log_filename = f"./logs/output_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"
     logging.basicConfig(filename=log_filename,
-                    level=logging.INFO,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    logging.info("logging is running")
+                        level=logging.INFO,
+                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logging.info("Logging is running")
     remove_old_logs()
     
-    #db setting
-    createTables()
-    insert_basic_setting()
-    bot_is_enable = True if db_bot_setting_get_value_by_name(name="bot_is_enable") == "1" else False
-    startMessageToAdmin()
-    #bot setting
-    bot.add_custom_filter(custom_filters.StateFilter(bot))
-    bot.polling()
+    try:
+        # db setting
+        createTables()
+        insert_basic_setting()
+        bot_is_enable = True if db_bot_setting_get_value_by_name(name="bot_is_enable") == "1" else False
+        startMessageToAdmin()
+        
+        # bot setting
+        bot.add_custom_filter(custom_filters.StateFilter(bot))
+        bot.polling()
+
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        raise  # Raise the exception again to crash the program
