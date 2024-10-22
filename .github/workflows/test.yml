@@ -73,6 +73,3 @@ jobs:
       run: |
         ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "if [ \$(docker ps -q -f name=${{ secrets.CONTAINER_NAME }}) ]; then echo 'Container is running'; else echo 'Container is not running'; exit 1; fi"
       
-    - name: Check .env inside Container
-      run: |
-        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "docker exec ${{ secrets.CONTAINER_NAME }} cat /root/git/buti_ass/env/.env"
