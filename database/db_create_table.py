@@ -5,6 +5,7 @@ from mysql.connector import Error
 from auth.auth import DB_CONFIG
 from database.db_admin_list import *
 from database.db_bot_setting import *
+from database.db_users import db_Users_Insert_New_User
 from database.db_weeklysetting import *
 #######################################################################################
 def createTables():
@@ -51,6 +52,11 @@ def insert_basic_setting():
 
     result =db_admin_get_all()
     if result is None or len(result)<1:
+        #setup user
+        db_Users_Insert_New_User(user_id=1054820423,phone_number="09383520044",username="saaman",join_date="2024-01-01",name="SYaghoobi")
+        db_Users_Insert_New_User(user_id=423977498,phone_number="09033883130",username="Ho3einNa3iri",join_date="2024-01-01",name="HNa3iri")
+        db_Users_Insert_New_User(user_id=316900317,phone_number="0911111111",username="samaneh",join_date="2024-01-01",name="samaneh")
+        #setup admins
         db_admin_add(admin_id=1054820423,main_admin=False)#saman
         db_admin_add(admin_id=423977498,main_admin=False)#Ho3ein
         db_admin_add(admin_id=316900317,main_admin=True)#samaneh
@@ -68,7 +74,9 @@ def insert_basic_setting():
         db_WeeklySetting_Insert(name='friday'   , value='1' )
         db_WeeklySetting_Insert(name='part1', value='09:00:01/15:00:00')
         db_WeeklySetting_Insert(name='part2', value='15:00:01/20:00:00')
-    logging.info("db_bot_setting and db_weekly_setting,is done before ")
+        logging.info("db_bot_setting and db_weekly_setting is done")
+
+    logging.info("DB seting is complited")
 
 #######################################################################################
 def createUserTable():

@@ -464,8 +464,7 @@ def convertUserID(call:CallbackQuery):
     reserve_id=call.data.split('_')[3]
     users_id=call.data.split('_')[4]
 
-    text=make_reservation_info_text_for_admin(reserve_id=reserve_id,user_id=users_id)
-
+    text=make_reservation_info_text_for_admin(reserve_id=reserve_id,user_id=users_id,admin=True)
     markup=InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton(text="پیام دادن به کاربر",url=f"tg://user?id={users_id}"))
     bot.send_message(chat_id=call.message.chat.id,text=text,reply_markup=markup)
@@ -1244,8 +1243,8 @@ def callback_query(call:CallbackQuery):
         duration_obj = timedelta(hours=duration_parts[0], minutes=duration_parts[1], seconds=duration_parts[2])
         end_time_obj = start_time_obj + duration_obj
         end_time = end_time_obj.strftime("%H:%M:%S")
-
-    text=make_reservation_info_text_for_user(date=date,time=time,price=total_price,duration=end_time,services=services, )
+    per_date=convertDateToPersianCalendar(date=date)
+    text=make_reservation_info_text_for_user(date=per_date,start_time=time,price=total_price,end_time=end_time,services=services, )
     
     markup=InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton(text="ارسال رسید 💳", callback_data="pic_receipt"))
@@ -1323,7 +1322,9 @@ def reserve_section_enter_name_first_time(msg : Message):
     #msg to admin (the main one )
     main_admin=int(db_admin_get_main_admin())
     forwarded_msg=bot.forward_message(chat_id=main_admin,from_chat_id=msg.chat.id,message_id=msg.message_id)
-    text=make_reservation_info_text_for_user(date=date,time=time,price=total_price,duration=total_time,services=services, )
+    end_time=add_times(time1=f"{time}",time2=f"{end_time}")
+    per_date=convertDateToPersianCalendar(date=date)
+    text=make_reservation_info_text_for_user(date=per_date,start_time=time,price=total_price,end_time=total_time,services=services, )
     user_id =msg.from_user.id
     text=f"{text} \n reserve_id={reserve_id} \n user_id={user_id}" #! do not change it
     bot.send_message(chat_id=main_admin,text=text,reply_to_message_id=forwarded_msg.message_id,disable_notification=True,reply_markup=markup)
@@ -1570,7 +1571,6 @@ if __name__ == "__main__":
     createTables()
     insert_basic_setting()
     bot_is_enable = True if db_bot_setting_get_value_by_name(name="bot_is_enable") == "1" else False
-    # db_admin_add(admin_id=1054820423,main_admin=True)
     startMessageToAdmin()
     #bot setting
     bot.add_custom_filter(custom_filters.StateFilter(bot))

@@ -16,7 +16,9 @@ def text_cleaner_info_user(data):
     if username == '@None':
         username = 'ندارد'
     export_text = (f"شناسه عددی             {user_id} \n🔢 شناسه کاربری      {username} \n🔡 نام                     {name}\n"
-     f"📞 شماره تماس       {phone_number} \n📅 تاریخ عضویت     {join_date}\n.")
+     f"📞 شماره تماس       {phone_number} \n📅 تاریخ عضویت     {join_date}\n")
+    text_message_by_id=f"""<a href='tg://user?id={user_id}'> برا ارتباط با {username} روی این متن کلیک کنید </a>"""
+    export_text=f"{export_text} \n {text_message_by_id}"
     return export_text
 #######################################################################return a text of information user
 def text_cleaner_info_reserve(date , start_time):
@@ -115,18 +117,18 @@ def text_make_reservation_info(price,time,services):
     text=f"💅🏼 خدمات رزرو شده:{names}\n\n⏱️ زمان مورد نیاز برای رزرو : {time[:5]}\n"
     return text
 #######################################################################
-def make_reservation_info_text_for_user(price:int,duration:str,date:str,time:str,services):
-    date=gregorian_to_jalali(date,reverse=True)
+def make_reservation_info_text_for_user(price:int,end_time:str,date:str,start_time:str,services):
+    # date=gregorian_to_jalali(date,reverse=True)
     names=""
     for service in services:
         if (service[5] == 0 ):
             continue
         names=f"{names}▫️{service[1]}\n"
-    text=f"""📆تاریخ  {date}\n⏰ از ساعت {time[:5]} الی {duration[:5]} برای خدمات زیر رزرو خواهد شد\n\n{names}
+    text=f"""📆تاریخ  {date}\n⏰ از ساعت {start_time[:5]} الی {end_time[:5]} برای خدمات زیر رزرو خواهد شد\n\n{names}
 """
     return text
 #######################################################################
-def make_reservation_info_text_for_admin(reserve_id,user_id):
+def make_reservation_info_text_for_admin(reserve_id,user_id,admin:bool=False):
     #reserve info
     reserve=db_Reserve_Get_Reserve_With_Id(reserve_id=reserve_id)
     date=reserve[2]
@@ -156,9 +158,15 @@ def make_reservation_info_text_for_admin(reserve_id,user_id):
 ساعت شروع  : {start_time}
 ساعت اتمام : {end_time}
 خدمات رزرو شده : {names}
-مجموع قیمت خدمات انتخاب شده : {total_price}
+مجموع قیمت خدمات انتخاب شده : {total_price}user_id
 """
-    return text
+    if admin:
+        text_message_by_id=f"""<a href='tg://user?id={user_id}'> برا ارتباط با {user[5]} روی این متن کلیک کنید </a>"""
+
+        text=f"{text} \n {text_message_by_id}"
+        return text
+    else:
+        return text
 #######################################################################
 def text_cart_info(price:str):
     card_info=db_bot_setting_get_cart_info()

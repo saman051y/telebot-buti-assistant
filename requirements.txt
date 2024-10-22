@@ -2,3 +2,4 @@ telebot
 mysql-connector-python
 convertdate
 schedule
+python-dotenv
