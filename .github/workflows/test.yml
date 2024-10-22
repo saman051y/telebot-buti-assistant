@@ -48,10 +48,20 @@ jobs:
       run: |
         ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "mkdir -p /root/git/buti_ass/env"  # ایجاد دایرکتوری در سرور
 
-    - name: Deploy to Server
+    - name: copy eve file to server
       run: |
         scp .env ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/root/git/buti_ass/env/.env # کپی کردن فایل .env به سرور
-        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }} && docker stop ${{ secrets.CONTAINER_NAME }} || true && docker rm ${{ secrets.CONTAINER_NAME }} || true && docker run -d --env-file /root/git/buti_ass/env/.env --name ${{ secrets.CONTAINER_NAME }} --restart unless-stopped ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}"
+
+    - name: Deploy to Server
+      run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            docker images -q ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }} | xargs -r docker rmi &&
+            docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }} &&
+            docker stop ${{ secrets.CONTAINER_NAME }} || true &&
+            docker rm ${{ secrets.CONTAINER_NAME }} || true &&
+            docker run -d --env-file /root/git/buti_ass/env/.env --name ${{ secrets.CONTAINER_NAME }} --restart unless-stopped ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}"
+    
+
 
     - name: Check if Container is Running
       run: |
