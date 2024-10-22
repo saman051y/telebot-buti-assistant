@@ -12,20 +12,21 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+      
+    - name: Create .env file
+      run: |
+          echo "BOT_TOKEN=${{ secrets.BOT_TOKEN }}" > .env
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
+          echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
+          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
 
     - name: Build Docker image
       run: |
         docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }} .
         docker images  # بررسی تصویرهای ساخته‌شده
 
-    - name: Create .env file
-      run: |
-        echo "BOT_TOKEN=${{ secrets.BOT_TOKEN }}" > .env
-        echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
-        echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
-        echo "DB_USER=${{ secrets.DB_USER }}" >> .env
-        echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-        echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
 
     - name: Login to Docker Hub
       uses: docker/login-action@v1
@@ -52,16 +53,21 @@ jobs:
       run: |
         scp .env ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/root/git/buti_ass/env/.env # کپی کردن فایل .env به سرور
 
-    - name: Deploy to Server
+    - name: Stop and Remove Old Container
       run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            docker images -q ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }} | xargs -r docker rmi &&
-            docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }} &&
-            docker stop ${{ secrets.CONTAINER_NAME }} || true &&
-            docker rm ${{ secrets.CONTAINER_NAME }} || true &&
-            docker run -d --env-file /root/git/buti_ass/env/.env --name ${{ secrets.CONTAINER_NAME }} --restart unless-stopped ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}"
-    
-
+        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "docker stop ${{ secrets.CONTAINER_NAME }} || true && docker rm ${{ secrets.CONTAINER_NAME }} || true"
+      
+    - name: Pull Docker Image
+      run: |
+        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+          docker images -q ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }} | xargs -r docker rmi && 
+          docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}"
+      
+    - name: Run Docker Container
+      run: |
+        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+          docker run -d --env-file /root/git/buti_ass/env/.env --name ${{ secrets.CONTAINER_NAME }} --restart unless-stopped ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}"
+      
 
     - name: Check if Container is Running
       run: |
