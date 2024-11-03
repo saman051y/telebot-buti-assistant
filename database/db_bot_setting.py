@@ -31,7 +31,7 @@ def db_bot_setting_update(name, new_value):
                     logging.info("Record updated successfully")
                     return True
     except Error as e:
-        logging.error(f"Ercror updating record: {e}")
+        logging.error(f"Error updating record: {e}")
         return False
 ###############################get
 def db_bot_setting_get_value_by_name(name:str):
