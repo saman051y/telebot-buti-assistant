@@ -14,3 +14,4 @@ from functions.time_date import *
 ##############################################################################
 result=get_free_time_for_next_7day(duration="0:45:00")
 print(result) 
+#skjdghkjdfg
