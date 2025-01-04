@@ -76,7 +76,7 @@ def insert_basic_setting():
         db_WeeklySetting_Insert(name='part2', value='15:00:01/20:00:00')
         logging.info("db_bot_setting and db_weekly_setting is done")
 
-    logging.info("DB seting is complited")
+    logging.info("DB setting is completed")
 
 #######################################################################################
 def createUserTable():

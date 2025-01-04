@@ -49,6 +49,8 @@ def bot_setting(msg : Message):
     if services is None or len(services) ==0:
         bot.send_message(chat_id=msg.from_user.id,text=text_no_service_available)
         return False
+    sorted_serviceData_by_price = sorted(services, key=lambda item: item[3], reverse=True)
+    services = sorted(sorted_serviceData_by_price, key=lambda item: item[4], reverse=True)
     services = [service + (0,) for service in services]
     markup=markup_generate_services_for_reserve(services,total_selected=counter,admin=True)
 
@@ -245,7 +247,9 @@ def msg_handler(msg : Message):
         duration=time_difference(time1=f"{start_time}",time2=f"{end_time}")
     result,reserve_id=db_make_reserve_transaction(date=date,duration=f"{duration}",price=price,
                                 services=services,start_time=f"{start_time}",user_id=user_id)
-    text=text_reserve_custom_is_done
+    
+    text=text_cleaner_info_reserve(date=date , start_time=start_time) 
+    text=f'{text_reserve_custom_is_done}\n\n{text}'
     bot.send_message(chat_id=msg.from_user.id,text=text)
     bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)  
     
@@ -526,12 +530,30 @@ def getInfoReservation(call:CallbackQuery):
     user_id=call.data.split('_')[2]
     start_time=call.data.split('_')[3]
     text_reserve =text_cleaner_info_reserve(date=date , start_time=start_time) 
+    id_reserved=db_reserve_get_info_reserve_by_date_and_start_time(date=date , start_time=start_time)
+    id_reserved = int(id_reserved[0])
     data_user=db_Users_Find_User_By_Id(user_id)
     text_user = text_cleaner_info_user(data=data_user)
     text = f'{text_reserve}\n\n اطلاعات کاربر 👩🏼‍🦰\n{text_user}'
     markup = InlineKeyboardMarkup()
-    markup = makrup_generate_empty_time_of_day(delete_day=str(date))
+    markup = makrup_generate_empty_time_of_day(delete_day='0')
+    button = InlineKeyboardButton(text='❌ 🗑 حذف رزرو 🗑 ❌',callback_data=f'deleteReservedTime_{id_reserved}_{date}_{start_time}')
+    markup.add(button)
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text, reply_markup=markup)
+########################################## delete reservation
+@bot.callback_query_handler(func= lambda m:m.data.startswith("deleteReservedTime_"))
+def deleteReservedTime(call:CallbackQuery):
+    id_reserve=call.data.split('_')[1] 
+    date=call.data.split('_')[2]
+    start_time=call.data.split('_')[3]   
+    text = f'{text_delete_reserve}'
+    text_info= text_cleaner_info_reserve(date=date , start_time=start_time)
+    text =f'{text_delete_reserve}\n\n{text_info}'
+    db_Reserve_Delete_Reserve(id_reserve)
+    markup = InlineKeyboardMarkup()
+    markup = makrup_generate_empty_time_of_day(delete_day='0')
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text, reply_markup=markup)
+
 ############################################################################################ markup set work time
 @bot.message_handler(func= lambda m:m.text == mark_text_admin_set_work_time)
 def reserve_time(msg : Message):
@@ -1110,6 +1132,10 @@ def reserve_time(msg : Message):
     if services is None or len(services) ==0:
         bot.send_message(chat_id=msg.from_user.id,text=text_no_service_available)
         return False
+    
+    sorted_serviceData_by_price = sorted(services, key=lambda item: item[3], reverse=True)
+    services = sorted(sorted_serviceData_by_price, key=lambda item: item[4], reverse=True)
+
     services = [service + (0,) for service in services]
     markup=markup_generate_services_for_reserve(services,total_selected=counter)
 

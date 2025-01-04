@@ -67,8 +67,8 @@ def accountInfoCreateTextToShow(user_id=str,admin:bool=False) :
             text =  f'{text_info_user}\nhttps://t.me/{username}'
         if admin==True:
             name =data_user[4]
-            text_message_by_id=f"""<a href='tg://user?id={user_id}'> برا ارتباط با {name} روی این متن کلیک کنید </a>"""
-        text= f'{text}\n{text_message_by_id}'
+            text_message_by_id=f"""<a href='tg://user?id={user_id}'> برای ارتباط با {name} روی این متن کلیک کنید </a>"""
+            text= f'{text}\n{text_message_by_id}'
     return text
 #######################################################################
 def ConvertVariableInWeeklySettingToPersian(data:str):
@@ -196,7 +196,6 @@ def text_make_admin_info(admin,is_mainAdmin:bool=False):
     is_main="ادمین اصلی" if is_mainAdmin else ""
     text=f"""
 نام : {admin[4]}
-نام خانوادگی : {admin[5]}
 شناسه : {admin[0]}
 {is_main}
     """

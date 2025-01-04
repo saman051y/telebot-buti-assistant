@@ -24,7 +24,6 @@ def db_make_reserve_transaction(user_id,price,start_time,date,services,duration)
                     reserve_id = cursor.lastrowid
                     if reserve_id == 0:
                         raise Exception("Insert failed, reserve_id is 0.")
-                    print(reserve_id)
                     # sql_work_time=
                     # cursor.execute(sql_set_time)
                     for service in services:
@@ -55,7 +54,6 @@ def delete_reservation(reserve_id):
         with mysql.connector.connect(**DB_CONFIG) as connection:
             if connection.is_connected():
                 with connection.cursor()  as cursor:
-                    print(reserve_id)
                     connection.start_transaction()
                     sql_delete_reserve = f"""
                     DELETE FROM reserve 
