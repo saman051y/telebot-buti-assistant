@@ -1348,7 +1348,7 @@ def reserve_section_enter_name_first_time(msg : Message):
     #msg to admin (the main one )
     main_admin=int(db_admin_get_main_admin())
     forwarded_msg=bot.forward_message(chat_id=main_admin,from_chat_id=msg.chat.id,message_id=msg.message_id)
-    end_time=add_times(time1=f"{time}",time2=f"{end_time}")
+    # end_time=add_times(time1=f"{time}",time2=f"{total_time}")
     per_date=convertDateToPersianCalendar(date=date)
     text=make_reservation_info_text_for_user(date=per_date,start_time=time,price=total_price,end_time=total_time,services=services, )
     user_id =msg.from_user.id
