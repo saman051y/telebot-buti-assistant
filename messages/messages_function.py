@@ -6,6 +6,7 @@ from database.db_service import *
 from database.db_users import *
 from functions.time_date import *
 import re
+from datetime import datetime,timedelta
 ####################################################################### return a text of information user
 def text_cleaner_info_user(data):
     user_id = data[0]
@@ -23,7 +24,8 @@ def text_cleaner_info_user(data):
 #######################################################################return a text of information user
 def text_cleaner_info_reserve(date , start_time):
     data_reserve = db_reserve_get_info_reserve_by_date_and_start_time(date , start_time)
-    end_time  = str(data_reserve[4])
+    end_time = str(data_reserve[4])
+    end_time=convert_to_standard_time(time_string=end_time)
     start_time=str(start_time)
     start_time_without_seconds =start_time[:5]
     end_time_without_seconds = end_time[:5]
