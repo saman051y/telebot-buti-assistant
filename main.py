@@ -1350,9 +1350,16 @@ def reserve_section_enter_name_first_time(msg : Message):
     forwarded_msg=bot.forward_message(chat_id=main_admin,from_chat_id=msg.chat.id,message_id=msg.message_id)
     # end_time=add_times(time1=f"{time}",time2=f"{total_time}")
     per_date=convertDateToPersianCalendar(date=date)
-    text=make_reservation_info_text_for_user(date=per_date,start_time=time,price=total_price,end_time=total_time,services=services, )
+    start_time_obj = datetime.strptime(time, "%H:%M:%S")
+    duration_parts = list(map(int, total_time.split(':')))
+    duration_obj = timedelta(hours=duration_parts[0], minutes=duration_parts[1], seconds=duration_parts[2])
+    end_time_obj = start_time_obj + duration_obj
+    end_time = end_time_obj.strftime("%H:%M:%S")
+    text=make_reservation_info_text_for_user(date=per_date,start_time=time,price=total_price,end_time=end_time,services=services, )
     user_id =msg.from_user.id
-    text=f"{text} \n reserve_id={reserve_id} \n user_id={user_id}" #! do not change it
+    data_user =db_Users_Find_User_By_Id(user_id=user_id)
+    text_user_info = text_cleaner_info_user(data=data_user)
+    text=f"{text} \n\n{text_user_info}\n reserve_id={reserve_id} \n user_id={user_id}" #! do not change it
     bot.send_message(chat_id=main_admin,text=text,reply_to_message_id=forwarded_msg.message_id,disable_notification=True,reply_markup=markup)
     bot.delete_state(user_id= msg.from_user.id,chat_id=msg.chat.id)
 

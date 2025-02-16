@@ -124,7 +124,7 @@ def make_reservation_info_text_for_user(price:int,end_time:str,date:str,start_ti
         if (service[5] == 0 ):
             continue
         names=f"{names}▫️{service[1]}\n"
-    text=f"""📆تاریخ  {date}\n⏰ از ساعت {start_time[:5]} الی {end_time[:5]} برای خدمات زیر رزرو خواهد شد\n\n{names}
+    text=f"""📆تاریخ  {date}\n⏰ از ساعت {start_time[:5]} الی {end_time[:5]} رزرو خواهد شد \n\n{names}
 """
     return text
 #######################################################################
