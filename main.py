@@ -547,8 +547,11 @@ def deleteReservedTime(call:CallbackQuery):
     date=call.data.split('_')[2]
     start_time=call.data.split('_')[3]   
     text = f'{text_delete_reserve}'
+    reserved_data = db_Reserve_Get_Reserve_With_Id(id_reserve)
+    user_data=db_Users_Find_User_By_Id(reserved_data[1])
+    text_user = text_cleaner_info_user(data=user_data)
     text_info= text_cleaner_info_reserve(date=date , start_time=start_time)
-    text =f'{text_delete_reserve}\n\n{text_info}'
+    text =f'{text_delete_reserve}\n{text_info}\n{text_user}'
     db_Reserve_Delete_Reserve(id_reserve)
     markup = InlineKeyboardMarkup()
     markup = makrup_generate_empty_time_of_day(delete_day='0')
@@ -1055,8 +1058,8 @@ def get_message_to_send(msg : Message):
 def start(msg : Message):
     bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id) 
     if  not bot_is_enable:
-         bot_is_disable(user_id=msg.from_user.id) 
-         return
+        bot_is_disable(user_id=msg.from_user.id) 
+        return
     user_id=msg.from_user.id
     user_is_valid=db_Users_Validation_User_By_Id(user_id=user_id)
     if user_is_valid is False :
@@ -1183,8 +1186,8 @@ def callback_query(call:CallbackQuery):
     markup=markup_generate_services_for_reserve(services,total_selected=counter)
 
 
-    if counter<1 :
-        services_name=''
+    if counter==0 :
+        services_name="لیست خدمات انتخاب شده : "
     text=f"{services_name}"
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text, reply_markup=markup)
     
