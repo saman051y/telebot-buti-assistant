@@ -283,11 +283,82 @@ def GenerateNext7Day() :
         date = today + timedelta(days=i)
         day_of_week=convertDateToDayAsGregorianCalendar(date=str(date))
         day_status=db_WeeklySetting_Get_Value(day_of_week)
-        result=False
         if day_status[2] == '1':
             # exist_day = db_SetWork_exist_date(str(date))
             # if not exist_day:
-            result = db_SetWork_Create_date(date ,default_parts[0], default_parts[1], default_parts[2] , default_parts[3])
+            db_SetWork_Create_date(date ,default_parts[0], default_parts[1], default_parts[2] , default_parts[3])
+            
+########################################################## generate 7 day from now by default as weekly setting 
+def GenerateNext5Weeks() :
+    today = datetime.now().date()
+    get_default_parts= db_WeeklySetting_Get_Parts()
+    default_parts =[]
+    for i in range(2) :
+        default_part= get_default_parts[i][1]
+        start_time = 'Null'
+        end_time = 'Null'
+        if default_part not in [None , 'None' , 'Null']:
+            start_time=str(default_part.split('/')[0])
+            end_time=str(default_part.split('/')[1])
+        default_parts += [start_time , end_time]
+    for i in range(0,35):
+        date = today + timedelta(days=i)
+        day_of_week=convertDateToDayAsGregorianCalendar(date=str(date))
+        day_status=db_WeeklySetting_Get_Value(day_of_week)
+        if day_status[2] == '1':
+            # exist_day = db_SetWork_exist_date(str(date))
+            # if not exist_day:
+            db_SetWork_Create_date(date ,default_parts[0], default_parts[1], default_parts[2] , default_parts[3])
+########################################################## generate one day
+def GenerateSelectedDay(selected_date=None):
+    today = datetime.now().date()
+    
+    # If no date is provided, return without doing anything
+    if not selected_date:
+        return "No date selected."
+
+    # Convert selected_date to datetime object
+    try:
+        selected_date = datetime.strptime(selected_date, "%Y-%m-%d").date()
+    except ValueError:
+        return "Invalid date format. Use YYYY-MM-DD."
+
+    # Ensure the selected date is not in the past
+    if selected_date < today:
+        return "Selected date is in the past."
+
+    # Get default parts from weekly settings
+    get_default_parts = db_WeeklySetting_Get_Parts()
+    default_parts = []
+    for i in range(2):
+        default_part = get_default_parts[i][1]
+        start_time, end_time = 'Null', 'Null'
+        
+        if default_part not in [None, 'None', 'Null']:
+            times = default_part.split('/')
+            start_time = str(times[0]) if len(times) > 0 else 'Null'
+            end_time = str(times[1]) if len(times) > 1 else 'Null'
+        
+        default_parts += [start_time, end_time]
+
+    # Get the day of the week
+    day_of_week = convertDateToDayAsGregorianCalendar(str(selected_date))
+    
+    # Check if the selected day is active in weekly settings
+    day_status = db_WeeklySetting_Get_Value(day_of_week)
+    if day_status[2] != '1':
+        return f"Selected date {selected_date} is not active in weekly settings."
+
+    # Check if the selected date already exists in the database
+    exist_day = db_SetWork_exist_date(str(selected_date))
+    if exist_day:
+        return f"Selected date {selected_date} already exists in the database."
+
+    # Create work entry for the selected date
+    result = db_SetWork_Create_date(selected_date, default_parts[0], default_parts[1], default_parts[2], default_parts[3])
+    
+    return f"Work entry created for {selected_date}." if result else "Failed to create work entry."
+
 ########################################################## calculate slot_number from start_time
 def convert_slot_number_to_duration(start_time:str,slot_number:str):
     """input is time like 08:30:00 and slot_number like 2 

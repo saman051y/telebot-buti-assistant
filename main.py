@@ -134,6 +134,7 @@ def callback_query(call:CallbackQuery):
 @bot.callback_query_handler(func= lambda m:m.data.startswith("customReserve"))
 def convertUserID(call:CallbackQuery):
     date=call.data.split(":")[1]
+    GenerateSelectedDay(selected_date=date)
     with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
         services =data['services_choosing']
         total_time=data['total_time']
@@ -489,6 +490,8 @@ def reserve_time(msg : Message):
 def convertUserID(call:CallbackQuery):
     GenerateNext7Day()
     date=call.data.split(':')[1]
+    GenerateSelectedDay(selected_date=date)
+
     date_persian = convertDateToPersianCalendar(date=date)
     # list_empty_time=[]
     list_empty_time=calculate_empty_time_and_reserved_time(date=date)
@@ -522,6 +525,23 @@ def convertUserID(call:CallbackQuery):
         markup = makrup_generate_empty_time_of_day(delete_day=str(date))
         text = f'📅 {date_persian}\n{text_empty_time_error_null}'
         bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text , reply_markup=markup)
+
+
+
+
+########################################## change days in markup next or previous 7 days
+@bot.callback_query_handler(func=lambda call: call.data.startswith("change_days"))
+def change_days_callback(call):
+    start_offset = int(call.data.split(":")[1])  # Extract new offset
+    adminStr = str(call.data.split(":")[2])  # Extract new offset
+    admin=True if adminStr=='True' else False
+    markup = makrup_generate_empty_time_of_day(delete_day='0', start_offset=start_offset , admin = admin)
+    bot.edit_message_reply_markup(chat_id=call.message.chat.id,message_id=call.message.message_id,reply_markup=markup)
+
+
+
+# Example usage:
+
 ########################################## get information of select reservation 
 #input is data, user_id, star_time, end_time and make and send message with markup 
 @bot.callback_query_handler(func= lambda m:m.data.startswith("getInfoReserved_"))
@@ -1211,50 +1231,29 @@ def callback_query(call:CallbackQuery):
     total_time=convert_to_standard_time(time_string=f"{total_time}") 
     available_day_list=get_free_time_for_next_7day(duration=total_time)
     available_day_list = sorted(available_day_list, key=lambda x: x[0])
-
-    #create markups
-    markup=InlineKeyboardMarkup()
-    if len(available_day_list) <1 :
-        markup.add(InlineKeyboardButton(text=text_no_time_for_reservations,callback_data="!!!!!!!!!!!"))
-    else:
-        is_tow_part_open=False
-        len_available_day_list=len(available_day_list)
-        for index,day in enumerate(available_day_list):
-            
-            if is_tow_part_open:
-                is_tow_part_open=False
-                continue
-            
-            if len_available_day_list!=(index+1) and day[0] == available_day_list[index+1][0]:
-                #part 1
-                date=day[0]
-                date_persian=convertDateToPersianCalendar(date)
-                time=day[2]
-                weekDay=get_weekday(f"{date}")
-                btn=makrup_reserve_date(date=date,date_persian=date_persian,time=time,weekDay=weekDay)
-                #part 2
-                time=available_day_list[index+1][2]
-                btn2=makrup_reserve_date(date=date,date_persian=date_persian,time=time,weekDay=weekDay)
-                markup.add(btn,btn2)
-                #scape next time (because we generate index +1 markup)
-                is_tow_part_open=True
-            else:
-                #just one part exist
-                date=day[0]
-                date_persian=convertDateToPersianCalendar(date)
-                time=day[2]
-                weekDay=get_weekday(f"{date}")
-                btn=makrup_reserve_date(date=date,date_persian=date_persian,time=time,weekDay=weekDay)
-                markup.add(btn)
-
-
-
+    markup = markup_generate_days_for_reserve(available_day_list=available_day_list)
+    
     text=text_make_reservation_info(price=total_price,time=total_time,services=services)
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text,reply_markup=markup)
     with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
         data['services_choosing']=services 
         data['total_time']=total_time
         data['total_price']=total_price
+
+## btn is send pic 
+@bot.callback_query_handler(func=lambda call: call.data.startswith("user_panel_change_days"))
+def callback_query(call:CallbackQuery):
+    with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
+        total_time=data['total_time']
+    text=call.message.text
+
+    offset=int(call.data.split(":")[1])
+    available_day_list=get_free_time_for_next_7day(duration=total_time,offset=offset)
+    available_day_list = sorted(available_day_list, key=lambda x: x[0])
+
+    markup = markup_generate_days_for_reserve(available_day_list=available_day_list,offset=offset)
+    bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text,reply_markup=markup)
+
 
 
 ## btn is send pic 

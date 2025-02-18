@@ -66,7 +66,7 @@ def db_SetWork_Get_ALL_Days():
     except Error as e:
         logging.error(f" db_Setwork_Get_ALL_Days: {e}") 
 ###################################### get parts of a day
-def db_Setwork_Get_One_Day(date:str):
+def db_SetWork_Get_One_Day(date:str):
     """request a day and get all parts of a day"""
     try:
         date_exist=db_SetWork_exist_date(date=date)
