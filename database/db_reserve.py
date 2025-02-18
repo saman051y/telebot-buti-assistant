@@ -293,13 +293,10 @@ def get_reserves_for_user(user_id):
             if connection.is_connected():
                 with connection.cursor(dictionary=True) as cursor:
                     today = datetime.now().date()
-                   
-                    
                     sql_query = f"""
                     SELECT * FROM reserve 
                     WHERE user_id = {user_id} 
                     AND date >= '{today}';"""
-                    
                     cursor.execute(sql_query)
                     results = cursor.fetchall()
                     return results

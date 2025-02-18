@@ -186,8 +186,8 @@ def makrup_generate_empty_time_of_day(delete_day:str,start_offset: int = 0,admin
             button = InlineKeyboardButton(text=text, callback_data=f'{custom_reserve_text}getEmptyTime:{date}')
             markup.add(button)
     # Add navigation buttons
-    prev_button = InlineKeyboardButton("⬅️ 7 روز قبل", callback_data=f"change_days:{start_offset - 7}:{admin}")
-    next_button = InlineKeyboardButton("7 روز بعد ➡️", callback_data=f"change_days:{start_offset + 7}:{admin}")
+    prev_button = InlineKeyboardButton(" ⬅️  هفته قبلی", callback_data=f"change_days:{start_offset - 7}:{admin}")
+    next_button = InlineKeyboardButton("هفته بعدی  ➡️", callback_data=f"change_days:{start_offset + 7}:{admin}")
     markup.add(prev_button, next_button)
     return markup
 ##########################################
@@ -293,8 +293,8 @@ def markup_generate_days_for_reserve(available_day_list,offset:int=0):
                 btn=makrup_reserve_date(date=date,date_persian=date_persian,time=time,weekDay=weekDay)
                 markup.add(btn)
 
-    prev_button = InlineKeyboardButton("⬅️ 7 روز قبل", callback_data=f"user_panel_change_days:{offset - 7}")
-    next_button = InlineKeyboardButton("7 روز بعد ➡️", callback_data=f"user_panel_change_days:{offset + 7}")
+    prev_button = InlineKeyboardButton(" ⬅️  هفته قبلی", callback_data=f"user_panel_change_days:{offset - 7}")
+    next_button = InlineKeyboardButton("هفته بعدی  ➡️", callback_data=f"user_panel_change_days:{offset + 7}")
     # 0 7 14 21 28 
     if offset==28:
         markup.add(prev_button)
