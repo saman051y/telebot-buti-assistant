@@ -1105,7 +1105,7 @@ def reserve_time(msg : Message):
         return
 
     user_id=msg.from_user.id
-    reserves= get_reserves_for_user(user_id=user_i)
+    reserves= get_reserves_for_user(user_id=user_id)
     reserves=sorted(reserves, key=lambda x: (x['date'], x['start_time']))
 
     markup=InlineKeyboardMarkup()
@@ -1121,7 +1121,7 @@ def reserve_time(msg : Message):
 def callback_query(call:CallbackQuery):
     reserve_id=call.data.split("_")[1]
     user_id=call.data.split("_")[2]
-    reserves= get_reserves_for_user(user_id=user_id,days=7)
+    reserves= get_reserves_for_user(user_id=user_id)
     reserves=sorted(reserves, key=lambda x: (x['date'], x['start_time']))
 
     markup=InlineKeyboardMarkup()

@@ -112,7 +112,28 @@ def db_SetWork_Get_Part1_or_Part2_of_Day(date:str, part:int):
     except Error as e :
         logging.error(f"Error in db_Setwork_Get_Day : {e}") 
         return False
-######################################  is day exist or nor ?
+    ######################################  get one part of a month
+def db_SetWork_Get_Part1_or_Part2_of_Day_for_1Month(data , date_range):
+    """ """
+    try:
+        sql = f"""
+        SELECT date, part1_start_time, part1_end_time, part2_start_time, part2_end_time
+        FROM setwork
+        WHERE date IN ({data});
+        """
+
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+                if connection.is_connected():
+                    with connection.cursor(dictionary=True) as cursor:
+                        cursor.execute(sql, date_range)
+                        results = cursor.fetchall()
+                        return results
+                else:
+                    logging.error("Error in db_SetWork_Get_Part1_or_Part2_of_Day_for_1Month")
+    except Error as e :
+        logging.error(f"Error in db_SetWork_Get_Part1_or_Part2_of_Day_for_1Month : {e}") 
+        return False
+######################################  is day exist or not ?
 def db_SetWork_exist_date(date:str):
     """request a day to know if exist"""
     try:
