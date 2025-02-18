@@ -170,19 +170,25 @@ def markup_generate_services_for_reserve(services,total_selected:int=0,admin:boo
             markup.add(InlineKeyboardButton(text="تایید نهایی 💫",callback_data="make_reservation"))
     return markup
 ########################################## show parts of days by needed time for reserve 
-
 ##########################################
-def makrup_generate_empty_time_of_day(delete_day:str,admin:bool=False) :
+def makrup_generate_empty_time_of_day(delete_day:str,start_offset: int = 0,admin:bool=False) :
+
     markup = InlineKeyboardMarkup()
     today = datetime.now().date()
-    custom_reserve_text= "customReserve" if admin else ''
-    for i in range(7):
-        date = today + timedelta(days=i)
-        if delete_day != str(date) :
-            text_date=convertDateToPersianCalendar(date=str(date))
+    start_date = today + timedelta(days=start_offset)  # Start from the given offset
+    custom_reserve_text = "customReserve" if admin else ''
+    
+    for i in range(7):  # Generate only 7 days at a time
+        date = start_date + timedelta(days=i)
+        if delete_day != str(date):
+            text_date = convertDateToPersianCalendar(str(date))
             text = f'🗓 {text_date}'
-            button = InlineKeyboardButton(text=text ,callback_data=f'{custom_reserve_text}getEmptyTime:{date}')
+            button = InlineKeyboardButton(text=text, callback_data=f'{custom_reserve_text}getEmptyTime:{date}')
             markup.add(button)
+    # Add navigation buttons
+    prev_button = InlineKeyboardButton("⬅️ 7 روز قبل", callback_data=f"change_days:{start_offset - 7}:{admin}")
+    next_button = InlineKeyboardButton("7 روز بعد ➡️", callback_data=f"change_days:{start_offset + 7}:{admin}")
+    markup.add(prev_button, next_button)
     return markup
 ##########################################
 def makrup_reserve_date(date_persian,weekDay,time,date):
@@ -249,4 +255,53 @@ def markup_generate_reserved_list(reserve_list , delete_reserve_id:str):
             text=f"🗓{date} ⏰{start_time} 💰{payment} هزار تومان"
             btn=InlineKeyboardButton(text=text,callback_data=f"userSeeReserve_{reserve_id}_{user_id}")
             markup.add(btn)
+    return markup
+##########################################
+def markup_generate_days_for_reserve(available_day_list,offset:int=0): 
+    markup=InlineKeyboardMarkup()
+    if len(available_day_list) <1 :
+        markup.add(InlineKeyboardButton(text=text_no_time_for_reservations,callback_data="!!!!!!!!!!!"))
+    else:
+        is_tow_part_open=False
+        len_available_day_list=len(available_day_list)
+        # for index,day in enumerate(available_day_list):
+        for index, day in enumerate(available_day_list):
+    
+            if is_tow_part_open:
+                is_tow_part_open=False
+                continue
+            
+            if len_available_day_list!=(index+1) and day[0] == available_day_list[index+1][0]:
+                #part 1
+                date=day[0]
+                date_persian=convertDateToPersianCalendar(date)
+                time=day[2]
+                weekDay=get_weekday(f"{date}")
+                btn=makrup_reserve_date(date=date,date_persian=date_persian,time=time,weekDay=weekDay)
+                #part 2
+                time=available_day_list[index+1][2]
+                btn2=makrup_reserve_date(date=date,date_persian=date_persian,time=time,weekDay=weekDay)
+                markup.add(btn,btn2)
+                #scape next time (because we generate index +1 markup)
+                is_tow_part_open=True
+            else:
+                #just one part exist
+                date=day[0]
+                date_persian=convertDateToPersianCalendar(date)
+                time=day[2]
+                weekDay=get_weekday(f"{date}")
+                btn=makrup_reserve_date(date=date,date_persian=date_persian,time=time,weekDay=weekDay)
+                markup.add(btn)
+
+    prev_button = InlineKeyboardButton("⬅️ 7 روز قبل", callback_data=f"user_panel_change_days:{offset - 7}")
+    next_button = InlineKeyboardButton("7 روز بعد ➡️", callback_data=f"user_panel_change_days:{offset + 7}")
+    # 0 7 14 21 28 
+    if offset==28:
+        markup.add(prev_button)
+    elif offset ==0 :
+        markup.add(next_button)
+    else:
+        markup.add(prev_button,next_button)
+
+
     return markup

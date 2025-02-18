@@ -4,7 +4,7 @@
 from datetime import datetime, timedelta
 from database.db_reserve import db_Reserve_Get_Date_And_parts_Not_Reserved
 from database.db_setwork import db_SetWork_Get_Part1_or_Part2_of_Day
-from functions.time_date import GenerateNext7Day, convert_duration_to_slot_number, convert_slot_number_to_duration, find_consecutive_sequence
+from functions.time_date import GenerateNext5Weeks, GenerateNext7Day, convert_duration_to_slot_number, convert_slot_number_to_duration, find_consecutive_sequence
 
 import re
 ##################################3
@@ -20,7 +20,7 @@ def extract_reserveId_and_userId(text):
     else:
         return None, None
 ###########################
-def get_free_time_for_next_7day(duration:str):
+def get_free_time_for_next_7day(duration:str,offset:int=0):
     """ input is part just duration like 01:00:00 and output is [(date,part, hour_for_set)] that user
          could reserve for next 7 day in each part of each day"""
 
@@ -28,16 +28,18 @@ def get_free_time_for_next_7day(duration:str):
     #convert duration to 15Min time slots (like 01:00:00 is 4)
     duration_as_time_slot = convert_duration_to_slot_number(duration)
     #generate all day bu default value from weekly setting
-    GenerateNext7Day()
+    GenerateNext5Weeks()
     #get all day that user could reserve 
     for part in range(1,3):
         days_list=[]
-        for i in range(7):
-            today = datetime.now().date()
+        ##*
+        for i in range(7):#todo change it to one request for db 
+            today = datetime.now().date()+ timedelta(days=int(offset))
             date = today + timedelta(days=i)
             parts_of_Day = db_SetWork_Get_Part1_or_Part2_of_Day(date=date , part=part)
             if parts_of_Day : 
                 days_list.append((date, parts_of_Day[0], parts_of_Day[1]))
+        
         #search empty time by duration in each day that user could reserve
         for i in range(len(days_list)):
             array_all_time_slot_for_each_day=[]
