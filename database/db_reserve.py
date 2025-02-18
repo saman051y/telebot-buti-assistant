@@ -287,20 +287,18 @@ def db_Reserve_Delete_Reserve(reserve_id:int):
     except Error as e:
         logging.error(f"DeleteReserve : {e}")
 ##################################################
-def get_reserves_for_user(user_id, days):
+def get_reserves_for_user(user_id):
     try:
         with mysql.connector.connect(**DB_CONFIG) as connection:
             if connection.is_connected():
                 with connection.cursor(dictionary=True) as cursor:
                     today = datetime.now().date()
-                    end_date = today + timedelta(days=days)
+                   
                     
                     sql_query = f"""
                     SELECT * FROM reserve 
                     WHERE user_id = {user_id} 
-                    AND date >= '{today}' 
-                    AND date <= '{end_date}';
-                    """
+                    AND date >= '{today}';"""
                     
                     cursor.execute(sql_query)
                     results = cursor.fetchall()
