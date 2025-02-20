@@ -476,7 +476,7 @@ def convertUserID(call:CallbackQuery):
 ############################################################################################ markup empty time
 @bot.message_handler(func= lambda m:m.text == mark_text_admin_empty_time)
 def reserve_time(msg : Message):
-    bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id)  
+    bot.delete_state(user_id=msg.from_user.id,chat_id=msg.chat.id) 
     if not validation_admin(msg.from_user.id) : 
         bot.send_message(chat_id=msg.from_user.id,text=text_user_is_not_admin)
         return False    
@@ -533,15 +533,17 @@ def convertUserID(call:CallbackQuery):
 @bot.callback_query_handler(func=lambda call: call.data.startswith("change_days"))
 def change_days_callback(call):
     # generate waiting markup
+    markup = InlineKeyboardMarkup()
+    waiting_button = InlineKeyboardButton("لطفا صبر کنید", callback_data=f"!!!!!!!!!!!!!!!!!!!!!!!!!")
+    markup.add(waiting_button)
+    bot.edit_message_reply_markup(chat_id=call.message.chat.id,message_id=call.message.message_id,reply_markup=markup)
+
+
     start_offset = int(call.data.split(":")[1])  # Extract new offset
     adminStr = str(call.data.split(":")[2])  # Extract new offset
     admin=True if adminStr=='True' else False
     markup = makrup_generate_empty_time_of_day(delete_day='0', start_offset=start_offset , admin = admin)
     bot.edit_message_reply_markup(chat_id=call.message.chat.id,message_id=call.message.message_id,reply_markup=markup)
-
-
-
-# Example usage:
 
 ########################################## get information of select reservation 
 #input is data, user_id, star_time, end_time and make and send message with markup 
@@ -599,10 +601,24 @@ def convertUserID(call:CallbackQuery):
     text = f'📅 {date_text}'
     #check activation of day if day be disable , admin can change day status
     date_as_day=convertDateToDayAsGregorianCalendar(date=date)
-    check_is_active_day=db_WeeklySetting_Get_Value(name=date_as_day)
+    check_is_active_day=db_WeeklySetting_Get_Value_one_day(name=date_as_day)
     if check_is_active_day[2] =='0':
         text =f'📅 {text} \n {text_error_disable_day}'
     bot.edit_message_text(chat_id=call.message.chat.id,message_id=call.message.id,text=text, reply_markup=markup)
+#########################################   change days in calendare
+@bot.callback_query_handler(func=lambda call: call.data.startswith("setworktime_change_days"))
+def change_days_callback(call):
+    # generate waiting markup
+    markup = InlineKeyboardMarkup()
+    waiting_button = InlineKeyboardButton("لطفا صبر کنید", callback_data=f"!!!!!!!!!!!!!!!!!!!!!!!!!")
+    markup.add(waiting_button)
+    bot.edit_message_reply_markup(chat_id=call.message.chat.id,message_id=call.message.message_id,reply_markup=markup)
+
+
+    start_offset = int(call.data.split(":")[1])  # Extract new offset
+    markup = makrup_generate_set_work_list_of_days(offset=start_offset)
+    bot.edit_message_reply_markup(chat_id=call.message.chat.id,message_id=call.message.message_id,reply_markup=markup)
+
 
 #########################################  call update setWork part1
 @bot.callback_query_handler(func= lambda m:m.data.startswith("SetWorkUpdatePart:"))
@@ -707,7 +723,7 @@ def reserve_time(msg : Message):
 def forwardToStateUpdatePart(call:CallbackQuery):
     bot.delete_state(user_id=call.message.id,chat_id=call.message.chat.id) 
     name = str(call.data.split(':')[1])
-    data= db_WeeklySetting_Get_Value(name=name)
+    data= db_WeeklySetting_Get_Value_one_day(name=name)
     value=data[2]
     name_persian=ConvertVariableInWeeklySettingToPersian(name)
     if value == '1':

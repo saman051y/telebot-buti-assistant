@@ -89,15 +89,18 @@ def makrup_generate_weekly_time_list():
         markup.row(*buttons[7:9])  # Last 2 buttons in the fifth row
     return markup
 ########################################## generate markup setwork list until 7 days
-def makrup_generate_set_work_list_of_days() :
+def makrup_generate_set_work_list_of_days(offset:int=0) :
     markup = InlineKeyboardMarkup()
-    today = datetime.now().date()
+    start_day = datetime.now().date()+ timedelta(days=offset)
     for i in range(7):
-        date = today + timedelta(days=i)
+        date = start_day + timedelta(days=i)
         text=convertDateToPersianCalendar(date=str(date))
         text =f'🗓 {text}'
         button = InlineKeyboardButton(text=text ,callback_data=f'SetWorkTime:{date}')
         markup.add(button)
+    prev_button = InlineKeyboardButton("⬅️  هفته قبلی", callback_data=f"setworktime_change_days:{offset - 7}")
+    next_button = InlineKeyboardButton("هفته بعدی  ➡️", callback_data=f"setworktime_change_days:{offset + 7}")
+    markup.add(prev_button,next_button)
     return markup
 ########################################## generate markup for parts list of set work  
 def makrup_generate_parts_list_of_set_work(date):

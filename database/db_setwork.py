@@ -158,31 +158,6 @@ def db_SetWork_exist_date(date:str):
         logging.error(f"Error in db_Setwork_Get_Day : {e}") 
         return False
     
-######################################
-# generate day with checking is exist day ? or is active day ? after all insert day bu defaul bot setting value 
-# def db_Setwork_Generate_day(date:str):
-#     try:
-#        date_exist=db_SetWork_exist_date(date=date)
-#        if date_exist is False:
-#             day_name=convertDateToDayAsGregorianCalendar(date)
-#             day_info=db_WeeklySetting_Get_Value(day_name)
-#             is_day_active= day_info[2]
-#             if is_day_active == '1':
-#                 list_parts=db_WeeklySetting_Get_Parts()
-#                 part1_start_time=list_parts[0][1]
-#                 part1_end_time=list_parts[1][1]
-#                 part2_start_time=list_parts[2][1]
-#                 part2_end_time=list_parts[3][1]
-#                 db_SetWork_Insert_New_date(date=date , part1_start_time=part1_start_time, part1_end_time=part1_end_time, part2_start_time=part2_start_time, part2_end_time=part2_end_time)
-#                 return True
-#             if is_day_active == '0':
-#                 return False
-#             return False
-               
-#     except Error as e :
-#         logging.error(f"Error in db_Setwork_Generate_day : {e}") 
-#         return False
-######################################
 #######################################################################################!update section
 ###################################### update all part ofday with date
 def db_Setwork_Update_All_Part_Of_Day(date: str, part1_start_time: str, part1_end_time: str, part2_start_time: str, part2_end_time: str):

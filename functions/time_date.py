@@ -352,7 +352,7 @@ def GenerateSelectedDay(selected_date=None):
     day_of_week = convertDateToDayAsGregorianCalendar(str(selected_date))
     
     # Check if the selected day is active in weekly settings
-    day_status = db_WeeklySetting_Get_Value(day_of_week)
+    day_status = db_WeeklySetting_Get_Value_one_day(day_of_week)
     if day_status[2] != '1':
         return f"Selected date {selected_date} is not active in weekly settings."
 

@@ -64,6 +64,24 @@ def db_WeeklySetting_Get_Value():
     except Error as e:
         logging.error(f" db_WeeklySetting_Get_Value: {e}") 
 ######################################################################################################
+def db_WeeklySetting_Get_Value_one_day(name):
+    """ output is all info about one day """
+    try:
+        sql = f"""SELECT * FROM weekly_setting where name = '{name}';"""
+        with mysql.connector.connect(**DB_CONFIG) as connection:
+            if connection.is_connected():
+                with connection.cursor()  as cursor:
+                     cursor.execute(sql)
+                     result=cursor.fetchone()
+                     cursor.close()
+                     connection.close()
+                     return result
+            else:
+                logging.error("connection to database is not working")
+                return False
+    except Error as e:
+        logging.error(f" db_WeeklySetting_Get_Value_one_day: {e}") 
+######################################################################################################
 def db_WeeklySetting_Get_All():
     """get all data"""
     try:
