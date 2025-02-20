@@ -172,7 +172,6 @@ def markup_generate_services_for_reserve(services,total_selected:int=0,admin:boo
 ########################################## show parts of days by needed time for reserve 
 ##########################################
 def makrup_generate_empty_time_of_day(delete_day:str,start_offset: int = 0,admin:bool=False) :
-
     markup = InlineKeyboardMarkup()
     today = datetime.now().date()
     start_date = today + timedelta(days=start_offset)  # Start from the given offset
