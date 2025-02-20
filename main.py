@@ -112,6 +112,12 @@ def convertUserID(call:CallbackQuery):
 #### admin end of selection reserve
 @bot.callback_query_handler(func=lambda call: call.data == ("admin_make_reservation"))
 def callback_query(call:CallbackQuery):
+        # generate waiting markup
+    markup = InlineKeyboardMarkup()
+    waiting_button = InlineKeyboardButton("لطفا صبر کنید", callback_data=f"!!!!!!!!!!!!!!!!!!!!!!!!!")
+    markup.add(waiting_button)
+    bot.edit_message_reply_markup(chat_id=call.message.chat.id,message_id=call.message.message_id,reply_markup=markup)
+
     with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
         services=data['services_choosing']
     total_time = timedelta()
@@ -1236,6 +1242,12 @@ def callback_query(call:CallbackQuery):
 ####end of selection 
 @bot.callback_query_handler(func=lambda call: call.data == ("make_reservation"))
 def callback_query(call:CallbackQuery):
+    # generate waiting markup
+    markup = InlineKeyboardMarkup()
+    waiting_button = InlineKeyboardButton("لطفا صبر کنید", callback_data=f"!!!!!!!!!!!!!!!!!!!!!!!!!")
+    markup.add(waiting_button)
+    bot.edit_message_reply_markup(chat_id=call.message.chat.id,message_id=call.message.message_id,reply_markup=markup)
+
     with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
         services=data['services_choosing']
     total_time = timedelta()
