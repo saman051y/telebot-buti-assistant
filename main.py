@@ -532,6 +532,7 @@ def convertUserID(call:CallbackQuery):
 ########################################## change days in markup next or previous 7 days
 @bot.callback_query_handler(func=lambda call: call.data.startswith("change_days"))
 def change_days_callback(call):
+    # generate waiting markup
     start_offset = int(call.data.split(":")[1])  # Extract new offset
     adminStr = str(call.data.split(":")[2])  # Extract new offset
     admin=True if adminStr=='True' else False
@@ -1240,9 +1241,14 @@ def callback_query(call:CallbackQuery):
         data['total_time']=total_time
         data['total_price']=total_price
 
-## btn is send pic 
+## btn is send pic
 @bot.callback_query_handler(func=lambda call: call.data.startswith("user_panel_change_days"))
 def callback_query(call:CallbackQuery):
+    markup = InlineKeyboardMarkup()
+    waiting_button = InlineKeyboardButton(" لطفا صبر کنید", callback_data=f"!!!!!!!!!!!!!!!!!!!!!!!!!")
+    markup.add(waiting_button)
+    bot.edit_message_reply_markup(chat_id=call.message.chat.id,message_id=call.message.message_id,reply_markup=markup)
+
     with bot.retrieve_data(user_id=call.message.chat.id , chat_id=call.message.chat.id) as data:
         total_time=data['total_time']
     text=call.message.text
