@@ -46,15 +46,15 @@ def db_WeeklySetting_Update(name:str, value:str):
         logging.error(f"Error in db_WeeklySetting_Update : {e}") 
         return False
 ######################################################################################################
-def db_WeeklySetting_Get_Value(name:str):
-    """input name:str , output is value """
+def db_WeeklySetting_Get_Value():
+    """ output is all info about weekly setting """
     try:
-        sql = f"""SELECT * FROM weekly_setting WHERE name='{name}';"""
+        sql = f"""SELECT * FROM weekly_setting;"""
         with mysql.connector.connect(**DB_CONFIG) as connection:
             if connection.is_connected():
                 with connection.cursor()  as cursor:
                      cursor.execute(sql)
-                     result=cursor.fetchone()
+                     result=cursor.fetchall()
                      cursor.close()
                      connection.close()
                      return result

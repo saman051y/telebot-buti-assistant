@@ -259,7 +259,6 @@ def markup_generate_reserved_list(reserve_list , delete_reserve_id:str):
 ##########################################
 def markup_generate_days_for_reserve(available_day_list,offset:int=0): 
     markup=InlineKeyboardMarkup()
-
     if len(available_day_list) <1 :
         markup.add(InlineKeyboardButton(text=text_no_time_for_reservations,callback_data="!!!!!!!!!!!"))
     else:
@@ -303,6 +302,4 @@ def markup_generate_days_for_reserve(available_day_list,offset:int=0):
         markup.add(next_button)
     else:
         markup.add(prev_button,next_button)
-
-
     return markup

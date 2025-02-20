@@ -279,15 +279,18 @@ def GenerateNext7Day() :
             start_time=str(default_part.split('/')[0])
             end_time=str(default_part.split('/')[1])
         default_parts += [start_time , end_time]
+    week_value=db_WeeklySetting_Get_Value()
     for i in range(0,7):
         date = today + timedelta(days=i)
-        day_of_week=convertDateToDayAsGregorianCalendar(date=str(date))
-        day_status=db_WeeklySetting_Get_Value(day_of_week)
-        if day_status[2] == '1':
+        name_day_of_week=convertDateToDayAsGregorianCalendar(date=str(date))
+        day_status = '0'
+        for j in week_value : 
+            if week_value[1] == name_day_of_week :
+                day_status = week_value[i][2]
+        if day_status == '1':
             # exist_day = db_SetWork_exist_date(str(date))
             # if not exist_day:
             db_SetWork_Create_date(date ,default_parts[0], default_parts[1], default_parts[2] , default_parts[3])
-            
 ########################################################## generate 7 day from now by default as weekly setting 
 def GenerateNext5Weeks() :
     today = datetime.now().date()
@@ -301,11 +304,15 @@ def GenerateNext5Weeks() :
             start_time=str(default_part.split('/')[0])
             end_time=str(default_part.split('/')[1])
         default_parts += [start_time , end_time]
+    week_value=db_WeeklySetting_Get_Value()
     for i in range(0,35):
         date = today + timedelta(days=i)
-        day_of_week=convertDateToDayAsGregorianCalendar(date=str(date))
-        day_status=db_WeeklySetting_Get_Value(day_of_week)
-        if day_status[2] == '1':
+        name_day_of_week=convertDateToDayAsGregorianCalendar(date=str(date))
+        day_status = '0'
+        for j in week_value : 
+            if week_value[1] == name_day_of_week :
+                day_status = week_value[i][2]
+        if day_status == '1':
             # exist_day = db_SetWork_exist_date(str(date))
             # if not exist_day:
             db_SetWork_Create_date(date ,default_parts[0], default_parts[1], default_parts[2] , default_parts[3])
